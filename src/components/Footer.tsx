@@ -1,15 +1,12 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-
 const Footer = () => {
-  return (
-    <footer className="bg-white border-t">
+  return <footer className="bg-white border-t">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <Link to="/" className="flex items-center">
-              <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">LeadMarket</span>
+              <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">StayConnect</span>
             </Link>
             <p className="mt-4 text-sm text-gray-600">
               Connecting lead generation companies with contractors looking for quality leads.
@@ -111,8 +108,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
