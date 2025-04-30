@@ -32,7 +32,7 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
       return;
     }
     
-    const newLead = {
+    const newLead: Omit<Lead, 'id'> = {
       type: leadType,
       location,
       description,
@@ -41,7 +41,7 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
       contactPhone,
       price: Number(price),
       qualityRating: quality,
-      status: 'new',
+      status: 'new' as const, // Explicitly type this as a literal type
       sellerId: 'current-seller-id', // In a real app, this would come from auth context
       createdAt: new Date().toISOString(),
     };
