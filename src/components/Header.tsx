@@ -1,46 +1,27 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from 'react-router-dom';
 import { Menu, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
-
 const Header = () => {
   const navigate = useNavigate();
-  const { role, isLoggedIn, logout } = useUserRole();
+  const {
+    role,
+    isLoggedIn,
+    logout
+  } = useUserRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const handleLogout = () => {
     logout();
     navigate('/');
   };
-
-  const renderNavItems = () => (
-    <>
+  const renderNavItems = () => <>
       <NavigationMenuItem>
         <Link to="/" className={navigationMenuTriggerStyle()}>
           Home
@@ -51,25 +32,18 @@ const Header = () => {
           Marketplace
         </Link>
       </NavigationMenuItem>
-      {role === 'seller' && (
-        <NavigationMenuItem>
+      {role === 'seller' && <NavigationMenuItem>
           <Link to="/my-leads" className={navigationMenuTriggerStyle()}>
             My Leads
           </Link>
-        </NavigationMenuItem>
-      )}
-      {role === 'buyer' && (
-        <NavigationMenuItem>
+        </NavigationMenuItem>}
+      {role === 'buyer' && <NavigationMenuItem>
           <Link to="/purchases" className={navigationMenuTriggerStyle()}>
             My Purchases
           </Link>
-        </NavigationMenuItem>
-      )}
-    </>
-  );
-
-  const renderMobileNavItems = () => (
-    <>
+        </NavigationMenuItem>}
+    </>;
+  const renderMobileNavItems = () => <>
       <SheetClose asChild>
         <Link to="/" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
           Home
@@ -80,20 +54,16 @@ const Header = () => {
           Marketplace
         </Link>
       </SheetClose>
-      {role === 'seller' && (
-        <SheetClose asChild>
+      {role === 'seller' && <SheetClose asChild>
           <Link to="/my-leads" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             My Leads
           </Link>
-        </SheetClose>
-      )}
-      {role === 'buyer' && (
-        <SheetClose asChild>
+        </SheetClose>}
+      {role === 'buyer' && <SheetClose asChild>
           <Link to="/purchases" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             My Purchases
           </Link>
-        </SheetClose>
-      )}
+        </SheetClose>}
       <SheetClose asChild>
         <Link to="/profile" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
           Profile
@@ -101,24 +71,18 @@ const Header = () => {
       </SheetClose>
       <div className="border-t border-gray-200 mt-2 pt-2">
         <SheetClose asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={handleLogout}
-          >
+          <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
             Logout
           </Button>
         </SheetClose>
       </div>
-    </>
-  );
-
-  return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    </>;
+  return <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center space-x-2">
-            <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">LeadMarket</span>
+            <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">StayConnect
+          </span>
           </Link>
           
           <NavigationMenu className="hidden md:flex">
@@ -129,8 +93,7 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          {isLoggedIn ? (
-            <>
+          {isLoggedIn ? <>
               <div className="hidden md:flex">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -152,23 +115,14 @@ const Header = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => navigate('/profile')}
-                    >
+                    <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => navigate('/dashboard')}
-                    >
+                    <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/dashboard')}>
                       Dashboard
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      className="cursor-pointer"
-                      onClick={handleLogout}
-                    >
+                    <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                       Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -187,19 +141,14 @@ const Header = () => {
                   </div>
                 </SheetContent>
               </Sheet>
-            </>
-          ) : (
-            <div className="flex items-center gap-4">
+            </> : <div className="flex items-center gap-4">
               <Link to="/login">
                 <Button variant="ghost" className="hidden md:flex">
                   Log In
                 </Button>
               </Link>
               <Link to="/register">
-                <Button className={cn(
-                  "hidden md:flex",
-                  "bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600"
-                )}>
+                <Button className={cn("hidden md:flex", "bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600")}>
                   Register
                 </Button>
               </Link>
@@ -237,12 +186,9 @@ const Header = () => {
                   </div>
                 </SheetContent>
               </Sheet>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
