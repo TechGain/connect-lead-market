@@ -64,7 +64,7 @@ const Register = () => {
       const result = await register(
         email, 
         password, 
-        selectedRole as 'seller' | 'buyer',
+        selectedRole,
         name,
         companyName
       );
@@ -74,13 +74,13 @@ const Register = () => {
         
         // We need a small delay to ensure the user state is properly updated
         setTimeout(() => {
-          console.log("Registration completed, redirecting with role:", role);
-          if (role === 'seller') {
+          console.log("Registration completed, redirecting with role:", selectedRole);
+          if (selectedRole === 'seller') {
             navigate('/my-leads');
           } else {
             navigate('/marketplace');
           }
-        }, 500); // Increased timeout to ensure state updates
+        }, 1000); // Increased timeout to ensure state updates
       } else {
         setIsLoading(false); // Reset loading state on failure
         // If result is null, show a more detailed error

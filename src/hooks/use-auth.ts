@@ -175,15 +175,16 @@ export function useAuth() {
       if (data.user) {
         console.log("User created successfully, creating profile:", data.user.id);
         
-        // Create a profile for the user with their role
+        // Create a profile for the user with their role - ENSURING role is explicitly set
         const { error: profileError, data: profileData } = await supabase
           .from('profiles')
           .insert({
             id: data.user.id,
             full_name: fullName,
-            role,
+            role: role, // Explicitly set this to the role parameter
             company: company || null,
             rating: role === 'seller' ? 5 : null, // Default rating for sellers
+            created_at: new Date().toISOString() // Explicitly set creation timestamp
           })
           .select()
           .single();

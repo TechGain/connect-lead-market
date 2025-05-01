@@ -57,6 +57,8 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const refreshUserRole = () => {
     console.log("Manual role refresh requested");
+    setHasAttemptedRefresh(false); // Reset the flag to allow further attempts
+    setRetryCount(0); // Reset retry count
     refreshRole();
   };
 
