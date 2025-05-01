@@ -74,9 +74,9 @@ const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps)
           <Button 
             variant={isLimitedData ? "default" : "outline"} 
             onClick={onRefresh}
-            className="flex items-center gap-2"
+            className={`flex items-center gap-2 ${isLimitedData ? "bg-brand-600 hover:bg-brand-700" : ""}`}
           >
-            <RefreshCw size={16} className={isLimitedData ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={isLimitedData ? "" : ""} />
             {isLimitedData ? "Load Complete Profile" : "Refresh Profile"}
           </Button>
         </CardFooter>

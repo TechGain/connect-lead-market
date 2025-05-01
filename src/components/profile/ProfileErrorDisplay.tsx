@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 
 interface ProfileErrorDisplayProps {
   error: string;
@@ -19,17 +19,25 @@ const ProfileErrorDisplay = ({ error, onRetry }: ProfileErrorDisplayProps) => {
                       error?.toLowerCase().includes('session') ||
                       error?.toLowerCase().includes('not authenticated');
   const isNetworkError = error?.toLowerCase().includes('network') ||
-                         error?.toLowerCase().includes('failed to fetch');
+                         error?.toLowerCase().includes('failed to fetch') ||
+                         error?.toLowerCase().includes('connection');
   const isLimitedData = error?.toLowerCase().includes('limited');
 
   return (
     <div className={`p-6 border rounded-lg ${isLimitedData ? 'bg-yellow-50' : 'bg-red-50'} text-center`}>
       <div className="flex justify-center mb-4">
-        <AlertTriangle size={32} className={isLimitedData ? 'text-yellow-500' : 'text-red-500'} />
+        {isTimeout || isNetworkError ? (
+          <WifiOff size={32} className="text-red-500" />
+        ) : isLimitedData ? (
+          <Wifi size={32} className="text-yellow-500" />
+        ) : (
+          <AlertTriangle size={32} className={isLimitedData ? 'text-yellow-500' : 'text-red-500'} />
+        )}
       </div>
       
       <h3 className={`text-xl font-medium ${isLimitedData ? 'text-yellow-700' : 'text-red-700'} mb-2`}>
         {isTimeout ? "Connection Timeout" : 
+         isNetworkError ? "Network Connection Issue" :
          isLimitedData ? "Limited Profile Data" : 
          "Error Loading Profile"}
       </h3>
