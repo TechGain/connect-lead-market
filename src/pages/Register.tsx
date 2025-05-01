@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useUserRole } from '@/hooks/use-user-role';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -40,16 +42,27 @@ const Register = () => {
   const validateForm = () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       toast.error('Please fill in all required fields');
+      setRegistrationError('Please fill in all required fields');
       return false;
     }
     
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
+      setRegistrationError('Passwords do not match');
       return false;
     }
 
     if (password.length < 6) {
       toast.error('Password must be at least 6 characters');
+      setRegistrationError('Password must be at least 6 characters');
+      return false;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address');
+      setRegistrationError('Please enter a valid email address');
       return false;
     }
     
@@ -121,9 +134,11 @@ const Register = () => {
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 {registrationError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <span className="block sm:inline">{registrationError}</span>
-                  </div>
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{registrationError}</AlertDescription>
+                  </Alert>
                 )}
                 
                 <div className="space-y-2">

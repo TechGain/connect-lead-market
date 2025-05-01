@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client'; // Use the client from integrations folder
+import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
 
 export function useAuth() {
@@ -96,6 +96,21 @@ export function useAuth() {
   ) => {
     try {
       console.log("Registration starting with:", { email, role, fullName, company });
+      
+      // First check if user with this email already exists
+      const { data: existingUsers, error: existingUserError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email);
+      
+      if (existingUserError) {
+        console.error("Error checking existing user:", existingUserError);
+      } else if (existingUsers && existingUsers.length > 0) {
+        console.error("User with this email already exists");
+        toast.error('An account with this email already exists');
+        return null;
+      }
+      
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -114,6 +129,7 @@ export function useAuth() {
       
       if (data.user) {
         console.log("User created successfully, creating profile:", data.user.id);
+        
         // Create a profile for the user with their role
         const { error: profileError } = await supabase
           .from('profiles')
@@ -127,16 +143,32 @@ export function useAuth() {
         
         if (profileError) {
           console.error("Profile creation error:", profileError);
+          console.error("Profile creation details:", {
+            userId: data.user.id,
+            fullName,
+            role,
+            company
+          });
           throw profileError;
         }
         
         console.log("Profile created successfully");
+      } else {
+        console.error("No user data returned after signup");
+        throw new Error("Registration failed - no user data returned");
       }
       
       return data;
     } catch (error: any) {
       console.error("Registration error:", error);
-      toast.error(error.message || 'Failed to create account');
+      // Provide more specific error messages based on the error
+      if (error.message?.includes('email')) {
+        toast.error('This email address is already registered');
+      } else if (error.message?.includes('password')) {
+        toast.error('Password does not meet requirements');
+      } else {
+        toast.error(error.message || 'Failed to create account');
+      }
       return null;
     }
   };
