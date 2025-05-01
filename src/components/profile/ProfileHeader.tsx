@@ -2,7 +2,7 @@
 import React from 'react';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, WifiOff } from 'lucide-react';
 
 interface ProfileHeaderProps {
   error: string | null;
@@ -11,6 +11,11 @@ interface ProfileHeaderProps {
 const ProfileHeader = ({ error }: ProfileHeaderProps) => {
   const { isLoggedIn, role, user, refreshUserRole } = useUserRole();
   
+  // Detect connection issues from error message
+  const hasConnectionIssue = error?.toLowerCase().includes('connection') || 
+                            error?.toLowerCase().includes('timeout') ||
+                            error?.toLowerCase().includes('limited');
+  
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center">
@@ -18,6 +23,11 @@ const ProfileHeader = ({ error }: ProfileHeaderProps) => {
           <h1 className="text-3xl font-bold mb-2">My Profile</h1>
           <p className="text-gray-600">
             Manage your account information and settings
+            {hasConnectionIssue && (
+              <span className="ml-2 inline-flex items-center text-yellow-600 text-sm">
+                <WifiOff className="h-3 w-3 mr-1" /> Limited connectivity
+              </span>
+            )}
           </p>
         </div>
         
