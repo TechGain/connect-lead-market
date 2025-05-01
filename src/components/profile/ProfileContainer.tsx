@@ -7,7 +7,7 @@ import ProfileFallbackView from './ProfileFallbackView';
 import ProfileNoDataView from './ProfileNoDataView';
 import { useProfileFetcher } from '@/hooks/use-profile-fetcher';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const ProfileContainer = () => {
@@ -42,12 +42,13 @@ const ProfileContainer = () => {
         {connectionIssue && (
           <Alert className="mb-6 bg-yellow-50 border-yellow-200">
             <AlertTitle className="text-yellow-800 flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" /> Connection Issues Detected
+              <WifiOff className="h-4 w-4" /> Connection Issues Detected
             </AlertTitle>
             <AlertDescription className="text-yellow-700">
-              We're having trouble maintaining a stable connection. Your profile may show limited information.
+              We're having trouble connecting to the database. Your profile may show limited information.
               <div className="mt-2">
                 <Button variant="outline" size="sm" onClick={handleRetry} className="bg-white">
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Retry Connection
                 </Button>
               </div>

@@ -45,7 +45,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
             
           if (error) {
             console.error("Error directly fetching role:", error);
@@ -103,7 +103,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // DIRECT DATABASE QUERY - Get role directly
         const { data, error } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, full_name, company, rating')
           .eq('id', user.id)
           .single();
           

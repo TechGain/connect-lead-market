@@ -111,21 +111,27 @@ export const useProfileFetcher = () => {
       
       // Get profile from profiles table with improved timeout handling
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), PROFILE_TIMEOUT);
+        console.log("ProfileFetcher: Attempting to fetch profile for user ID:", userToUse.id);
         
+        // Create a promise for the profile query with AbortController for cancellation
+        const profilePromise = supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userToUse.id)
+          .maybeSingle();
+        
+        // Create a timeout promise
+        const timeoutPromise = new Promise<any>((_, reject) => 
+          setTimeout(() => reject({ error: { message: "Profile fetch timeout" }}), PROFILE_TIMEOUT)
+        );
+        
+        // Race the two promises
         const { data: profile, error: profileError } = await Promise.race([
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userToUse.id)
-            .maybeSingle(),
-          new Promise<any>((_, reject) => 
-            setTimeout(() => reject({ error: { message: "Profile fetch timeout" }}), PROFILE_TIMEOUT)
-          )
+          profilePromise,
+          timeoutPromise
         ]);
         
-        clearTimeout(timeoutId);
+        console.log("ProfileFetcher: Profile fetch complete:", profile);
         
         if (profileError) {
           console.warn("ProfileFetcher: Error fetching profile:", profileError);
@@ -143,18 +149,30 @@ export const useProfileFetcher = () => {
         let totalLeads = 0;
         if (profile?.role?.toLowerCase() === 'seller') {
           try {
-            const { count } = await supabase
+            // Create a promise for the leads count query
+            const leadsPromise = supabase
               .from('leads')
               .select('*', { count: 'exact', head: true })
-              .eq('seller_id', userToUse.id)
-              .limit(0)
-              .timeout(2000);
+              .eq('seller_id', userToUse.id);
             
-            if (count !== null) {
+            // Create a timeout promise for leads count
+            const leadsTimeoutPromise = new Promise<any>((_, reject) => 
+              setTimeout(() => reject({ error: { message: "Leads count timeout" }}), 3000)
+            );
+            
+            // Race the two promises
+            const { count, error: leadsError } = await Promise.race([
+              leadsPromise,
+              leadsTimeoutPromise
+            ]);
+            
+            if (leadsError) {
+              console.warn("ProfileFetcher: Error counting leads:", leadsError);
+            } else if (count !== null) {
               totalLeads = count;
             }
           } catch (err) {
-            console.warn("Error fetching leads count:", err);
+            console.warn("ProfileFetcher: Error fetching leads count:", err);
             // Don't fail the whole profile for leads count errors
           }
         }
