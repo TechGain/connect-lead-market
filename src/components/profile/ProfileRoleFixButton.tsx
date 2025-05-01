@@ -29,7 +29,6 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
         .upsert({
           id: userId,
           role: desiredRole,
-          // Remove updated_at as it's not in the profiles table schema
           full_name: 'User' // Providing a default value for required fields
         }, { onConflict: 'id' });
       
