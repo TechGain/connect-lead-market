@@ -14,7 +14,7 @@ import { useUserRole } from '@/hooks/use-user-role';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useUserRole();
+  const { register, isLoggedIn } = useUserRole();
   const [searchParams] = useSearchParams();
   
   const [firstName, setFirstName] = useState('');
@@ -27,19 +27,40 @@ const Register = () => {
     (searchParams.get('role') as 'buyer' | 'seller') || 'buyer'
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // If user is already logged in, redirect them
+  useEffect(() => {
+    if (isLoggedIn) {
+      const redirectPath = role === 'seller' ? '/my-leads' : '/marketplace';
+      navigate(redirectPath);
+    }
+  }, [isLoggedIn, navigate, role]);
+
+  const validateForm = () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       toast.error('Please fill in all required fields');
-      return;
+      return false;
     }
     
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
-      return;
+      return false;
     }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegistrationError(null);
+    
+    if (!validateForm()) return;
     
     // Combine first name and last name for full name
     const fullName = `${firstName} ${lastName}`;
@@ -47,8 +68,14 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Add console logs for debugging
-      console.log("About to register with:", { email, role, fullName, companyName });
+      // Add detailed console logs for debugging
+      console.log("Registration form submitted with:", { 
+        email, 
+        role, 
+        fullName, 
+        companyName,
+        passwordLength: password.length 
+      });
       
       // Call the register function with proper parameters
       const result = await register(email, password, role, fullName, companyName);
@@ -64,10 +91,13 @@ const Register = () => {
           navigate('/marketplace');
         }
       } else {
+        // If result is null, show a more detailed error
+        setRegistrationError("Registration failed. This could be due to an existing account or invalid credentials.");
         toast.error("Registration failed. Please try again.");
       }
     } catch (error: any) {
-      console.error("Registration error:", error);
+      console.error("Registration error caught:", error);
+      setRegistrationError(error.message || "An unexpected error occurred");
       toast.error(error.message || "An error occurred during registration");
     } finally {
       setIsLoading(false);
@@ -90,6 +120,12 @@ const Register = () => {
             
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
+                {registrationError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span className="block sm:inline">{registrationError}</span>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="role">I am a:</Label>
                   <RadioGroup 
@@ -163,8 +199,9 @@ const Register = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={8}
+                    minLength={6}
                   />
+                  <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
                 </div>
                 
                 <div className="space-y-2">
@@ -175,7 +212,7 @@ const Register = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    minLength={8}
+                    minLength={6}
                   />
                 </div>
               </CardContent>

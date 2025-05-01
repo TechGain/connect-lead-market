@@ -28,7 +28,7 @@ export function useAuth() {
           
           if (error) throw error;
           
-          setUserRole(data?.role || null);
+          setUserRole(data?.role as 'seller' | 'buyer' | null);
         } else {
           setUser(null);
           setUserRole(null);
@@ -57,7 +57,7 @@ export function useAuth() {
           .eq('id', session.user.id)
           .single();
         
-        setUserRole(data?.role || null);
+        setUserRole(data?.role as 'seller' | 'buyer' | null);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUserRole(null);
@@ -115,13 +115,15 @@ export function useAuth() {
       if (data.user) {
         console.log("User created successfully, creating profile:", data.user.id);
         // Create a profile for the user with their role
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          full_name: fullName,
-          role,
-          company: company || null,
-          rating: role === 'seller' ? 5 : null, // Default rating for sellers
-        });
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            full_name: fullName,
+            role,
+            company: company || null,
+            rating: role === 'seller' ? 5 : null, // Default rating for sellers
+          });
         
         if (profileError) {
           console.error("Profile creation error:", profileError);

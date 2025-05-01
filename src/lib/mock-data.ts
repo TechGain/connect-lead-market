@@ -1,7 +1,7 @@
 
 import { Lead, mapDbLeadToLead, mapLeadToDbLead } from '@/types/lead';
 import { generateId, getRandomInt } from '@/lib/utils';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Generate mock data for initial seeding
@@ -48,7 +48,7 @@ export const fetchLeads = async (): Promise<Lead[]> => {
       throw error;
     }
     
-    return data.map(mapDbLeadToLead);
+    return data ? data.map(mapDbLeadToLead) : [];
   } catch (error) {
     console.error('Error fetching leads:', error);
     toast.error('Failed to load leads');
@@ -68,7 +68,7 @@ export const fetchLeadsBySeller = async (sellerId: string): Promise<Lead[]> => {
       throw error;
     }
     
-    return data.map(mapDbLeadToLead);
+    return data ? data.map(mapDbLeadToLead) : [];
   } catch (error) {
     console.error('Error fetching seller leads:', error);
     toast.error('Failed to load your leads');
@@ -88,7 +88,7 @@ export const fetchLeadsByBuyer = async (buyerId: string): Promise<Lead[]> => {
       throw error;
     }
     
-    return data.map(mapDbLeadToLead);
+    return data ? data.map(mapDbLeadToLead) : [];
   } catch (error) {
     console.error('Error fetching purchased leads:', error);
     toast.error('Failed to load your purchased leads');
@@ -110,7 +110,7 @@ export const createLead = async (lead: Omit<Lead, 'id'>): Promise<Lead | null> =
       throw error;
     }
     
-    return mapDbLeadToLead(data);
+    return data ? mapDbLeadToLead(data) : null;
   } catch (error) {
     console.error('Error creating lead:', error);
     toast.error('Failed to create lead');
@@ -137,7 +137,7 @@ export const updateLead = async (id: string, updates: Partial<Lead>): Promise<Le
       throw error;
     }
     
-    return mapDbLeadToLead(data);
+    return data ? mapDbLeadToLead(data) : null;
   } catch (error) {
     console.error('Error updating lead:', error);
     toast.error('Failed to update lead');
@@ -163,7 +163,7 @@ export const purchaseLead = async (leadId: string, buyerId: string): Promise<Lea
       throw error;
     }
     
-    return mapDbLeadToLead(data);
+    return data ? mapDbLeadToLead(data) : null;
   } catch (error) {
     console.error('Error purchasing lead:', error);
     toast.error('Failed to purchase lead');

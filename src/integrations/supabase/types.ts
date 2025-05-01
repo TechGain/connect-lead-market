@@ -9,7 +9,119 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      lead_ratings: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          lead_id: string
+          rating: number
+          review: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          rating: number
+          review?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          rating?: number
+          review?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_ratings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          buyer_id: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          location: string
+          price: number
+          purchased_at: string | null
+          quality_rating: number | null
+          seller_id: string
+          status: string
+          type: string
+        }
+        Insert: {
+          buyer_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location: string
+          price: number
+          purchased_at?: string | null
+          quality_rating?: number | null
+          seller_id: string
+          status?: string
+          type: string
+        }
+        Update: {
+          buyer_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string
+          price?: number
+          purchased_at?: string | null
+          quality_rating?: number | null
+          seller_id?: string
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          full_name: string
+          id: string
+          rating: number | null
+          role: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          rating?: number | null
+          role: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          rating?: number | null
+          role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
