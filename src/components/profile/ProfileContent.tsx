@@ -27,10 +27,12 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
   // Direct fetch of role from database
   const fetchDatabaseRole = async () => {
     try {
+      setIsRefreshing(true);
       const { data: session } = await supabase.auth.getSession();
       
       if (!session?.session?.user?.id) {
         console.log("ProfileContent: No user session found");
+        setIsRefreshing(false);
         return;
       }
       
@@ -40,11 +42,12 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
         .from('profiles')
         .select('role')
         .eq('id', session.session.user.id)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("ProfileContent: Error fetching role from database:", error);
         console.error("ProfileContent: Error details:", error.message, error.code, error.details);
+        setIsRefreshing(false);
         return;
       }
       
@@ -58,6 +61,8 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
       }
     } catch (err) {
       console.error("ProfileContent: Exception fetching role from database:", err);
+    } finally {
+      setIsRefreshing(false);
     }
   };
   
@@ -83,13 +88,13 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
   };
 
   // Final role to display - prioritize direct database query result
-  const displayRole = actualDatabaseRole || contextRole;
+  const displayRole = actualDatabaseRole || contextRole || 'buyer'; // Default to 'buyer' if no role found
   console.log("ProfileContent: Final display role:", displayRole);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <ProfileInfoCard profileData={profileData} role={displayRole} />
-      <ProfileSettingsCard role={displayRole as 'seller' | 'buyer'} />
+      <ProfileSettingsCard role={displayRole} />
       
       <div className="lg:col-span-3 mt-4">
         <div className="flex justify-center">
@@ -108,7 +113,7 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
           <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
             <p>Database role: {actualDatabaseRole || 'Not found'}</p>
             <p>Context role: {contextRole || 'None'}</p>
-            <p>Display role: {displayRole || 'None'}</p>
+            <p>Display role: {displayRole}</p>
           </div>
         )}
       </div>
