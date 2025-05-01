@@ -12,6 +12,7 @@ import { useProfileData } from '@/hooks/use-profile-data';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const Profile = () => {
   const { profileData, isLoading: profileLoading, error, refreshData } = useProfileData();
   const [hasAttemptedReload, setHasAttemptedReload] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [directDatabaseRole, setDirectDatabaseRole] = useState<'seller' | 'buyer' | null>(null);
   
   // Log detailed debug information
   useEffect(() => {
@@ -30,6 +32,7 @@ const Profile = () => {
       hasError: !!error,
       errorMessage: error,
       userId: user?.id,
+      directDatabaseRole
     });
     
     // Force a timeout to proceed even if authentication is taking too long
@@ -41,7 +44,45 @@ const Profile = () => {
     }, 8000); // Extended timeout to 8 seconds
     
     return () => clearTimeout(timer);
-  }, [isLoggedIn, role, authLoading, profileLoading, error, user?.id, loadingTimeout]);
+  }, [isLoggedIn, role, authLoading, profileLoading, error, user?.id, loadingTimeout, directDatabaseRole]);
+  
+  // Direct fetch of role from database if we're logged in
+  useEffect(() => {
+    const fetchDirectRole = async () => {
+      if (!user?.id) return;
+      
+      try {
+        console.log("Profile page: Directly fetching role from database for user:", user.id);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching role from database:", error);
+          return;
+        }
+        
+        console.log("Profile page: Direct database role check result:", data?.role);
+        
+        if (data?.role) {
+          const dbRole = String(data.role).toLowerCase();
+          if (dbRole === 'seller' || dbRole === 'buyer') {
+            console.log("Profile page: Setting direct database role to:", dbRole);
+            setDirectDatabaseRole(dbRole as 'seller' | 'buyer');
+          }
+        }
+      } catch (err) {
+        console.error("Exception in direct role fetch:", err);
+      }
+    };
+    
+    if (isLoggedIn && user?.id) {
+      fetchDirectRole();
+    }
+  }, [isLoggedIn, user?.id]);
   
   // If user not logged in, redirect to login
   useEffect(() => {
@@ -69,6 +110,9 @@ const Profile = () => {
   // or loading takes too long, let's render the profile anyway with a default role
   const shouldProceedAnyway = (isLoggedIn && (role === null || loadingTimeout));
   
+  // Use direct database role if available, otherwise fall back to context role
+  const displayRole = directDatabaseRole || role;
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -95,7 +139,7 @@ const Profile = () => {
           <>
             <ProfileContent 
               profileData={profileData} 
-              role={role || 'buyer'} // Fallback to 'buyer' if role is null
+              role={displayRole}
             />
           </>
         )}
