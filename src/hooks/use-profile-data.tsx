@@ -91,8 +91,8 @@ export const useProfileData = () => {
             .select('*', { count: 'exact', head: true })
             .eq('seller_id', user.id);
           
-          if (!leadsError) {
-            totalLeads = count || 0;
+          if (!leadsError && count !== null) {
+            totalLeads = count;
           }
         }
 
@@ -105,7 +105,7 @@ export const useProfileData = () => {
         
         // Update profile data state
         setProfileData({
-          name: profile?.full_name || 'User',
+          name: profile?.full_name || user.email?.split('@')[0] || 'User',
           email: user.email || '',
           company: profile?.company || 'Not specified',
           rating: profile?.rating || 4.7,
@@ -141,8 +141,9 @@ export const useProfileData = () => {
         }, 1000); // Wait 1 second before retrying
         
         return () => clearTimeout(timer);
-      } else {
-        setError("No user ID available");
+      } else if (isLoggedIn && !user?.id) {
+        setError("No user ID available. Please try logging out and back in.");
+        toast.error("Authentication error. Please try logging out and back in.");
       }
     }
   }, [isLoggedIn, user, role, retryCount, authLoading]);

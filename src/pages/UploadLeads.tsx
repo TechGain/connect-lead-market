@@ -36,7 +36,13 @@ const UploadLeads = () => {
     
     if (role !== 'seller') {
       console.log("User is not a seller, redirecting to home", { actualRole: role });
-      toast.error("Only sellers can upload leads");
+      toast.error(`Only sellers can upload leads. Your current role is: ${role || 'not set'}`);
+      
+      // If role is null, suggest refreshing
+      if (role === null) {
+        toast.info("Your account role couldn't be determined. Try refreshing the page.");
+      }
+      
       navigate('/');
       return;
     }
@@ -46,7 +52,7 @@ const UploadLeads = () => {
     navigate('/my-leads?tab=upload');
   }, [isLoggedIn, role, navigate, isLoading, user?.id]);
   
-  // This component now shows a loading state while checking auth
+  // Show a loading state
   if (isLoading || !hasChecked) {
     return (
       <div className="flex items-center justify-center min-h-screen">

@@ -35,8 +35,8 @@ const ProfileContent = ({ profileData, role }: ProfileContentProps) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <ProfileInfoCard profileData={profileData} role={displayRole} />
-      <ProfileSettingsCard role={displayRole} />
+      <ProfileInfoCard profileData={profileData} role={displayRole as 'seller' | 'buyer'} />
+      <ProfileSettingsCard role={displayRole as 'seller' | 'buyer'} />
     </div>
   );
 };

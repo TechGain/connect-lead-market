@@ -29,19 +29,21 @@ export function useAuth() {
           if (error) {
             console.error('Error fetching user role:', error);
             console.log('Raw error response:', error.message, error.details, error.hint);
-            throw error;
-          }
-          
-          console.log("Complete profile data:", data);
-          console.log("User role from profile:", data?.role);
-          
-          // Make sure to handle string case insensitively
-          const roleValue = data?.role?.toLowerCase();
-          if (roleValue === 'seller' || roleValue === 'buyer') {
-            setUserRole(roleValue as 'seller' | 'buyer');
+            
+            // Don't throw here, just log the error and continue
+            // This prevents blocking the auth flow if profile fetch fails
           } else {
-            console.warn("Invalid role value detected:", data?.role);
-            setUserRole(null);
+            console.log("Complete profile data:", data);
+            console.log("User role from profile:", data?.role);
+            
+            // Make sure to handle string case insensitively
+            const roleValue = data?.role?.toLowerCase();
+            if (roleValue === 'seller' || roleValue === 'buyer') {
+              setUserRole(roleValue as 'seller' | 'buyer');
+            } else {
+              console.warn("Invalid role value detected:", data?.role);
+              setUserRole(null);
+            }
           }
         } else {
           setUser(null);

@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, role, isLoading: authLoading } = useUserRole();
+  const { isLoggedIn, role, isLoading: authLoading, user } = useUserRole();
   const { profileData, isLoading: profileLoading, error } = useProfileData();
   const [hasAttemptedReload, setHasAttemptedReload] = useState(false);
   
@@ -25,7 +25,8 @@ const Profile = () => {
       authLoading,
       profileDataLoading: profileLoading,
       hasError: !!error,
-      errorMessage: error
+      errorMessage: error,
+      userId: user?.id
     });
     
     // If user not logged in, redirect to login
@@ -34,13 +35,14 @@ const Profile = () => {
       navigate('/login');
       return;
     }
-  }, [isLoggedIn, role, navigate, authLoading, profileLoading, error]);
+  }, [isLoggedIn, role, navigate, authLoading, profileLoading, error, user?.id]);
   
   // If we have role issues, attempt one reload
   useEffect(() => {
     if (!authLoading && isLoggedIn && role === null && !hasAttemptedReload) {
       console.log("Profile detected missing role, attempting to refresh...");
       setHasAttemptedReload(true);
+      toast.info("Your account role couldn't be determined. Refreshing the page...");
       
       // Wait a moment to ensure all state is settled
       const timer = setTimeout(() => {
@@ -62,7 +64,10 @@ const Profile = () => {
         <ProfileHeader error={error} />
         
         {isLoading ? (
-          <ProfileSkeleton />
+          <>
+            <ProfileSkeleton />
+            <p className="text-center text-gray-500 mt-4">Loading your profile...</p>
+          </>
         ) : error ? (
           <ProfileErrorDisplay error={error} />
         ) : (
