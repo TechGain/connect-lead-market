@@ -19,8 +19,23 @@ interface ProfileContentProps {
 }
 
 const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileContentProps) => {
-  // Convert role string to expected type
-  const normalizedRole = profileData.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer';
+  // Convert role string to expected type, with safe default
+  const normalizedRole = profileData?.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer';
+  
+  // Early return with error message if no profile data
+  if (!profileData) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600">Unable to load profile data.</p>
+        <button
+          onClick={refreshProfile}
+          className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

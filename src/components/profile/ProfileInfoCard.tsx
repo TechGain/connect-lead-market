@@ -19,29 +19,40 @@ interface ProfileInfoCardProps {
 }
 
 const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps) => {
+  // Make sure we have valid data with defaults
+  const safeData = {
+    name: profileData?.name || 'User',
+    email: profileData?.email || 'No email provided',
+    company: profileData?.company || 'Not specified',
+    rating: profileData?.rating || 4.5,
+    joinedDate: profileData?.joinedDate || 'Unknown',
+    avatar: profileData?.avatar,
+    totalLeads: profileData?.totalLeads || 0
+  };
+
   return (
     <Card className="lg:col-span-1">
       <CardHeader className="flex flex-col items-center text-center">
         <ProfileBadge
-          name={profileData.name}
-          rating={profileData.rating}
-          avatar={profileData.avatar}
+          name={safeData.name}
+          rating={safeData.rating}
+          avatar={safeData.avatar}
           role={role}
-          totalLeads={profileData.totalLeads}
+          totalLeads={safeData.totalLeads}
         />
         <CardDescription className="mt-2">
-          Member since {profileData.joinedDate}
+          Member since {safeData.joinedDate}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Email</p>
-            <p>{profileData.email}</p>
+            <p>{safeData.email}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Company</p>
-            <p>{profileData.company || 'Not specified'}</p>
+            <p>{safeData.company}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Account Type</p>
