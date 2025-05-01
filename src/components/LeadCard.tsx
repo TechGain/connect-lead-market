@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import StarRating from '@/components/StarRating'; // Fixed import
+import StarRating from '@/components/StarRating';
 import { formatCurrency } from '@/lib/utils';
 import { Lead } from '@/types/lead';
 import { MapPin } from 'lucide-react';
@@ -12,7 +12,7 @@ interface LeadCardProps {
   lead: Lead;
   onPurchase?: (lead: Lead) => void;
   showFullDetails?: boolean;
-  isPurchased?: boolean; // Added missing property
+  isPurchased?: boolean;
 }
 
 const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {

@@ -104,7 +104,7 @@ const Purchases = () => {
               <div key={lead.id} className="relative">
                 <LeadCard
                   lead={lead}
-                  onPurchase={() => {}}
+                  showFullDetails={true}
                   isPurchased={true}
                 />
                 <div className="mt-2 flex justify-end">

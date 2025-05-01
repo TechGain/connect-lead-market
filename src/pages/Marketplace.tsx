@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
-import { fetchLeads, purchaseLead } from '@/lib/mock-data';
+import { fetchLeads } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
+import { supabase } from '@/integrations/supabase/client';
 
 const Marketplace = () => {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ const Marketplace = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   useEffect(() => {
     // Check if user is logged in and is a buyer
@@ -54,6 +57,47 @@ const Marketplace = () => {
     
     loadLeads();
   }, [isLoggedIn, role, navigate]);
+
+  useEffect(() => {
+    // Check URL parameters for successful purchase
+    const queryParams = new URLSearchParams(window.location.search);
+    const success = queryParams.get('success');
+    const canceled = queryParams.get('canceled');
+    const leadId = queryParams.get('lead_id');
+
+    if (success === 'true' && leadId) {
+      // Complete the lead purchase after successful payment
+      handleCompletePurchase(leadId);
+    } else if (canceled === 'true') {
+      toast.error('Payment was canceled');
+    }
+
+    // Clear URL parameters
+    if (success || canceled) {
+      navigate('/marketplace', { replace: true });
+    }
+  }, [navigate]);
+
+  const handleCompletePurchase = async (leadId: string) => {
+    try {
+      setIsProcessing(true);
+      
+      const { data, error } = await supabase.functions.invoke('complete-lead-purchase', {
+        body: { leadId }
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || 'Failed to complete purchase');
+      
+      toast.success('Lead purchased successfully!');
+      navigate('/purchases');
+    } catch (error) {
+      console.error('Error completing purchase:', error);
+      toast.error('Failed to complete the purchase. Please contact support.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   
   const handleFilterChange = (filters: any) => {
     let filtered = [...leads];
@@ -107,26 +151,28 @@ const Marketplace = () => {
     setIsPreviewDialogOpen(true);
   };
   
-  const confirmPurchase = async () => {
+  const initiateCheckout = async () => {
     if (!selectedLead || !user) return;
     
     try {
-      const updatedLead = await purchaseLead(selectedLead.id, user.id);
+      setIsProcessing(true);
       
-      if (updatedLead) {
-        toast.success(`Lead purchased successfully!`);
-        
-        // Update the local leads list
-        setLeads(leads.filter(l => l.id !== selectedLead.id));
-        setFilteredLeads(filteredLeads.filter(l => l.id !== selectedLead.id));
-        setIsPreviewDialogOpen(false);
-        
-        // Navigate to the purchases page
-        navigate('/purchases');
-      }
+      const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
+        body: { leadId: selectedLead.id }
+      });
+      
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || 'Failed to create checkout session');
+      
+      // Close the dialog
+      setIsPreviewDialogOpen(false);
+      
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
     } catch (error) {
-      console.error('Error purchasing lead:', error);
-      toast.error('Failed to purchase lead');
+      console.error('Error initiating checkout:', error);
+      toast.error('Failed to initiate checkout');
+      setIsProcessing(false);
     }
   };
 
@@ -215,9 +261,18 @@ const Marketplace = () => {
               )}
               
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>Cancel</Button>
-                <Button onClick={confirmPurchase}>
-                  Purchase for {selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsPreviewDialogOpen(false)}
+                  disabled={isProcessing}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={initiateCheckout}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Processing...' : `Purchase for ${selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}`}
                 </Button>
               </DialogFooter>
             </DialogContent>

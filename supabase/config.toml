@@ -1,1 +1,8 @@
+
 project_id = "bfmxxuarnqmxqqnpxqjf"
+
+[functions.create-lead-checkout]
+verify_jwt = true
+
+[functions.complete-lead-purchase]
+verify_jwt = true
