@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,7 +40,7 @@ const Register = () => {
     }
   }, [isLoggedIn, navigate, role, searchParams]);
 
-  // This function now handles the form submission with enhanced error handling and logging
+  // This function now handles the form submission with direct role management
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -84,37 +83,32 @@ const Register = () => {
       );
       
       if (result) {
-        // Verify that the profile was created with the correct role
-        try {
-          const { data: profileCheck, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', result.user.id)
-            .maybeSingle();
+        // Directly ensure the profile exists with the correct role
+        const { user } = result;
+        
+        if (user?.id) {
+          console.log("Registration successful, ensuring profile exists with role:", userRole);
+          
+          try {
+            // Import and use the ensureUserProfile function directly
+            const { ensureUserProfile } = await import('@/utils/roleManager');
+            await ensureUserProfile(user.id, userRole, name);
             
-          if (profileError) {
-            console.error("Error verifying profile after registration:", profileError);
-          } else {
-            console.log("Profile check after registration:", profileCheck);
+            // Double check that the role was saved correctly
+            const { getUserRole } = await import('@/utils/roleManager');
+            const savedRole = await getUserRole(user.id);
             
-            if (profileCheck && profileCheck.role !== userRole) {
-              console.warn(`Role mismatch! Expected: ${userRole}, Got: ${profileCheck.role}`);
-              
-              // Attempt to fix the role
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ role: userRole })
-                .eq('id', result.user.id);
-                
-              if (updateError) {
-                console.error("Error fixing profile role:", updateError);
-              } else {
-                console.log("Role fixed successfully");
-              }
+            if (savedRole !== userRole) {
+              console.warn(`Role mismatch after registration! Expected: ${userRole}, Got: ${savedRole}`);
+              // Try once more to save the correct role
+              const { updateUserRole } = await import('@/utils/roleManager');
+              await updateUserRole(user.id, userRole);
+            } else {
+              console.log("Role saved successfully:", savedRole);
             }
+          } catch (err) {
+            console.error("Error ensuring profile during registration:", err);
           }
-        } catch (verifyError) {
-          console.error("Error during profile verification:", verifyError);
         }
         
         toast.success(`Registration successful! Welcome ${name}`);

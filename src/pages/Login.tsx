@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,28 +9,68 @@ import { toast } from "sonner";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useUserRole } from '@/hooks/use-user-role';
+import { ensureUserProfile } from '@/utils/roleManager';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useUserRole();
-  
+  const { login, isLoggedIn, role, user } = useUserRole();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please enter your email and password');
-      return;
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // If the user is already logged in, redirect them
+    if (isLoggedIn) {
+      if (role === 'seller') {
+        navigate('/my-leads');
+      } else {
+        navigate('/marketplace');
+      }
     }
+  }, [isLoggedIn, role, navigate]);
+
+  // When user logs in and we detect they have a valid user ID but no role,
+  // this effect will try to ensure their profile exists
+  useEffect(() => {
+    const checkAndFixProfile = async () => {
+      if (isLoggedIn && user?.id && role === null) {
+        console.log("Logged in but no role detected. Attempting to fix profile...");
+        
+        try {
+          // Try to get role from metadata first
+          const metadataRole = user.user_metadata?.role;
+          const validRole = (metadataRole === 'seller' || metadataRole === 'buyer') 
+            ? metadataRole as 'seller' | 'buyer'
+            : 'buyer'; // Default to buyer
+          
+          await ensureUserProfile(user.id, validRole);
+          toast.info(`Your profile has been updated with role: ${validRole}`);
+        } catch (err) {
+          console.error("Error fixing profile after login:", err);
+        }
+      }
+    };
     
-    // Call the login function with both email and password
-    const result = await login(email, password);
+    checkAndFixProfile();
+  }, [isLoggedIn, user?.id, role]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
     
-    if (result) {
-      toast.success(`Successfully logged in`);
-      navigate('/marketplace');
+    try {
+      const result = await login(email, password);
+      if (!result) {
+        setError('Invalid email or password');
+        toast.error('Login failed. Please check your credentials.');
+      }
+    } catch (error: any) {
+      setError(error.message || 'An error occurred during login');
+      toast.error(error.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
