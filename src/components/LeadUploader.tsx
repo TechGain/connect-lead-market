@@ -31,6 +31,7 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [address, setAddress] = useState(''); // Add address state
 
   // Generate time slots in 2-hour windows (8 AM to 6 PM)
   const timeSlots = [
@@ -44,7 +45,7 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!leadType || !location || !description || !contactName || !contactEmail || !price || !appointmentDate || !appointmentTimeSlot) {
+    if (!leadType || !location || !description || !contactName || !contactEmail || !price || !appointmentDate || !appointmentTimeSlot || !address) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -67,6 +68,7 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
         sellerId: 'current-seller-id', // This will be replaced by the actual seller ID in MyLeads
         createdAt: new Date().toISOString(),
         appointmentTime: appointmentInfo, // Add the appointment time
+        address, // Add the address field
       };
       
       await onLeadSubmit(newLead);
@@ -82,6 +84,7 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
       setQuality(3);
       setAppointmentDate(undefined);
       setAppointmentTimeSlot('');
+      setAddress(''); // Reset address
     } catch (error) {
       console.error('Error submitting lead:', error);
       toast.error('Failed to upload lead');
@@ -134,6 +137,18 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Provide details about the job..."
               rows={3}
+              required
+            />
+          </div>
+          
+          {/* Add address input field */}
+          <div className="space-y-2">
+            <Label htmlFor="address">Property Address *</Label>
+            <Input
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="123 Main St, City, State"
               required
             />
           </div>
