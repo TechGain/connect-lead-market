@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -25,56 +24,72 @@ const Marketplace = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
-  // Check authentication and role first
+  // Check authentication and role first - with improved error handling
   useEffect(() => {
-    if (!authLoading) {
-      setAuthChecked(true);
-      
-      if (!isLoggedIn) {
-        console.log('User not logged in, redirecting to login');
-        toast.error("Please log in to access the marketplace");
-        navigate('/login');
-        return;
-      }
+    const checkAuth = async () => {
+      try {
+        if (!authLoading) {
+          console.log('Auth loading completed, checking auth status:', { isLoggedIn, role });
+          setAuthChecked(true);
+          
+          if (!isLoggedIn) {
+            console.log('User not logged in, redirecting to login');
+            toast.error("Please log in to access the marketplace");
+            navigate('/login');
+            return;
+          }
 
-      if (role !== 'buyer') {
-        console.log('User is not a buyer, role:', role);
-        toast.error("Only buyers can access the marketplace");
-        navigate('/');
-        return;
+          if (role !== 'buyer') {
+            console.log('Access denied: User role is', role);
+            setAuthError(`Only buyers can access the marketplace. Your role: ${role || 'not set'}`);
+            return;
+          }
+          
+          // Clear any previous auth errors if we got here successfully
+          setAuthError(null);
+        }
+      } catch (error) {
+        console.error('Error in auth checking:', error);
+        setAuthError('Error verifying your account. Please try refreshing the page.');
+        setAuthChecked(true); // Still mark as checked so we can show error UI
       }
-    }
+    };
+    
+    checkAuth();
   }, [isLoggedIn, role, authLoading, navigate]);
 
   // Load leads once auth check is complete and user is authorized
   useEffect(() => {
-    if (authChecked && isLoggedIn && role === 'buyer') {
-      const loadLeads = async () => {
-        setIsLoading(true);
-        try {
-          console.log('Loading marketplace leads...');
-          const leadsData = await fetchLeads();
-          // Only show available leads (not sold)
-          const availableLeads = leadsData.filter(lead => lead.status !== 'sold');
-          setLeads(availableLeads);
-          setFilteredLeads(availableLeads);
-          console.log('Loaded leads:', availableLeads.length);
-        } catch (error) {
-          console.error('Error loading marketplace leads:', error);
-          toast.error('Failed to load marketplace leads');
-        } finally {
-          setIsLoading(false);
-        }
-      };
+    const loadLeads = async () => {
+      if (!authChecked) return; // Don't attempt to load until auth is checked
+      if (authError) return; // Don't attempt to load if there's an auth error
+      if (!isLoggedIn || role !== 'buyer') return; // Don't attempt to load if user isn't authorized
       
-      loadLeads();
-    }
-  }, [authChecked, isLoggedIn, role]);
+      setIsLoading(true);
+      try {
+        console.log('Loading marketplace leads...');
+        const leadsData = await fetchLeads();
+        // Only show available leads (not sold)
+        const availableLeads = leadsData.filter(lead => lead.status !== 'sold');
+        setLeads(availableLeads);
+        setFilteredLeads(availableLeads);
+        console.log('Loaded leads:', availableLeads.length);
+      } catch (error) {
+        console.error('Error loading marketplace leads:', error);
+        toast.error('Failed to load marketplace leads');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadLeads();
+  }, [authChecked, authError, isLoggedIn, role]);
 
   // Check URL parameters for successful purchase
   useEffect(() => {
-    if (!authChecked) return;
+    if (!authChecked || !isLoggedIn || role !== 'buyer') return;
     
     const queryParams = new URLSearchParams(window.location.search);
     const success = queryParams.get('success');
@@ -92,7 +107,7 @@ const Marketplace = () => {
     if (success || canceled) {
       navigate('/marketplace', { replace: true });
     }
-  }, [authChecked, navigate]);
+  }, [authChecked, isLoggedIn, role, navigate]);
 
   const handleCompletePurchase = async (leadId: string) => {
     try {
@@ -201,6 +216,28 @@ const Marketplace = () => {
           <div className="text-center">
             <p className="mb-2 text-lg">Checking your account...</p>
             <p className="text-sm text-gray-500">Please wait while we verify your credentials</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // If there was an authentication error
+  if (authChecked && authError) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex-1 container mx-auto px-4 py-16 text-center">
+          <h1 className="text-3xl font-bold mb-4">Authentication Error</h1>
+          <p className="text-gray-600 mb-6">{authError}</p>
+          <div className="space-x-4">
+            <Button onClick={() => navigate('/')}>
+              Return to Home
+            </Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Refresh Page
+            </Button>
           </div>
         </div>
         <Footer />
