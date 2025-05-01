@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import ProfileInfoCard from './ProfileInfoCard';
 import ProfileSettingsCard from './ProfileSettingsCard';
 import { toast } from 'sonner';
@@ -38,6 +38,19 @@ const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileConten
     refreshProfile();
     toast.info("Refreshing profile data...");
   };
+  
+  // Auto-retry once if using limited data
+  useEffect(() => {
+    if (profileData && !profileData.company && profileData.name) {
+      // We have some data but it might be incomplete - quietly try to refresh once
+      const timer = setTimeout(() => {
+        console.log("ProfileContent: Detected limited data, auto-refreshing...");
+        refreshProfile();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [profileData, refreshProfile]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

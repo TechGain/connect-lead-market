@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import ProfileBadge from '@/components/ProfileBadge';
 
 interface ProfileInfoCardProps {
@@ -30,6 +31,9 @@ const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps)
     totalLeads: typeof profileData?.totalLeads === 'number' ? profileData.totalLeads : 0
   };
 
+  // Determine if we're displaying limited data
+  const isLimitedData = !profileData?.company || profileData.company === 'Not specified';
+
   return (
     <Card className="lg:col-span-1">
       <CardHeader className="flex flex-col items-center text-center">
@@ -43,6 +47,11 @@ const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps)
         <CardDescription className="mt-2">
           Member since {safeData.joinedDate}
         </CardDescription>
+        {isLimitedData && (
+          <div className="bg-yellow-50 text-yellow-700 text-xs px-2 py-1 rounded-md mt-2">
+            Limited profile data. Refresh to load complete data.
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -62,8 +71,13 @@ const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps)
       </CardContent>
       {onRefresh && (
         <CardFooter className="flex justify-center">
-          <Button variant="outline" onClick={onRefresh}>
-            Refresh Profile
+          <Button 
+            variant={isLimitedData ? "default" : "outline"} 
+            onClick={onRefresh}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw size={16} className={isLimitedData ? "animate-spin" : ""} />
+            {isLimitedData ? "Load Complete Profile" : "Refresh Profile"}
           </Button>
         </CardFooter>
       )}
