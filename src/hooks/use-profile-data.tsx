@@ -35,7 +35,7 @@ export const useProfileData = () => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log("Fetching profile data for user:", user.id);
+      console.log("useProfileData: Fetching profile data for user:", user.id);
       
       // Get profile data from Supabase
       const { data: profile, error } = await supabase
@@ -45,11 +45,12 @@ export const useProfileData = () => {
         .single();
       
       if (error) {
-        console.error("Error fetching profile:", error);
+        console.error("useProfileData: Error fetching profile:", error);
+        console.error("useProfileData: Error details:", error.message, error.code, error.details);
         throw error;
       }
       
-      console.log("Profile data retrieved:", profile);
+      console.log("useProfileData: Profile data retrieved:", profile);
       
       // Format registration date
       const registrationDate = new Date(user.created_at);
@@ -72,8 +73,9 @@ export const useProfileData = () => {
       }
 
       // Log the exact role information we're getting
-      console.log("Role information in use-profile-data:", { 
+      console.log("useProfileData: Role information:", { 
         profileRole: profile?.role,
+        roleType: typeof profile?.role,
         profileObject: profile 
       });
       

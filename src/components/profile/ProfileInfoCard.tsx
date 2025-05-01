@@ -25,51 +25,52 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
   const [error, setError] = useState<string | null>(null);
 
   // Fetch the role directly from the database
-  useEffect(() => {
-    const fetchDirectRole = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const { data: session } = await supabase.auth.getSession();
-        
-        if (session?.session?.user?.id) {
-          const userId = session.session.user.id;
-          console.log("ProfileInfoCard: Directly fetching role for user:", userId);
+  const fetchDirectRoleFromDb = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (session?.session?.user?.id) {
+        const userId = session.session.user.id;
+        console.log("ProfileInfoCard: Directly fetching role for user:", userId);
 
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', userId)
-            .single();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
 
-          if (error) {
-            console.error("Error fetching direct role:", error);
-            setError("Could not retrieve your account type");
-            return;
-          }
-
-          if (data && data.role) {
-            const dbRole = data.role.toLowerCase();
-            console.log("ProfileInfoCard: Direct database role:", dbRole);
-            
-            if (dbRole === 'seller' || dbRole === 'buyer') {
-              setDirectRole(dbRole as 'seller' | 'buyer');
-            } else {
-              setError(`Invalid role found: ${dbRole}`);
-            }
-          } else {
-            setError("No role found in your profile");
-          }
+        if (error) {
+          console.error("Error fetching direct role:", error);
+          setError("Could not retrieve your account type");
+          return;
         }
-      } catch (err) {
-        console.error("Exception in direct role fetch:", err);
-        setError("Error loading your account type");
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchDirectRole();
+        if (data && data.role) {
+          const dbRole = data.role.toLowerCase();
+          console.log("ProfileInfoCard: Direct database role:", dbRole);
+          
+          if (dbRole === 'seller' || dbRole === 'buyer') {
+            setDirectRole(dbRole as 'seller' | 'buyer');
+          } else {
+            setError(`Invalid role found: ${dbRole}`);
+          }
+        } else {
+          setError("No role found in your profile");
+        }
+      }
+    } catch (err) {
+      console.error("Exception in direct role fetch:", err);
+      setError("Error loading your account type");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Call the function on component mount
+  useEffect(() => {
+    fetchDirectRoleFromDb();
   }, []);
   
   return (
@@ -107,7 +108,7 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
                   variant="ghost" 
                   size="sm" 
                   className="h-6 px-2 text-xs" 
-                  onClick={() => fetchDirectRole()}
+                  onClick={() => fetchDirectRoleFromDb()}
                 >
                   Retry
                 </Button>

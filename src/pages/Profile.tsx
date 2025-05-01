@@ -61,6 +61,7 @@ const Profile = () => {
       
       if (error) {
         console.error("Error fetching role from database:", error);
+        console.error("Error details:", error.message, error.code, error.details);
         return;
       }
       
@@ -68,10 +69,16 @@ const Profile = () => {
       
       if (data?.role) {
         const dbRole = String(data.role).toLowerCase();
+        console.log("Profile page: Role type and value:", typeof dbRole, dbRole);
+        
         if (dbRole === 'seller' || dbRole === 'buyer') {
           console.log("Profile page: Setting direct database role to:", dbRole);
           setDirectDatabaseRole(dbRole as 'seller' | 'buyer');
+        } else {
+          console.error("Profile page: Invalid role value:", dbRole);
         }
+      } else {
+        console.error("Profile page: No role data found in profile");
       }
     } catch (err) {
       console.error("Exception in direct role fetch:", err);
@@ -96,8 +103,31 @@ const Profile = () => {
     setHasAttemptedReload(true);
     
     // Try to directly fix the role in the database if needed
-    if (user?.id && role) {
+    if (user?.id && directDatabaseRole) {
       try {
+        console.log("Manually updating role in database to:", directDatabaseRole);
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            role: directDatabaseRole,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          console.error("Error updating role:", updateError);
+          console.error("Error details:", updateError.message, updateError.code, updateError.details);
+        } else {
+          console.log("Successfully updated role in database to:", directDatabaseRole);
+        }
+      } catch (err) {
+        console.error("Error updating role:", err);
+      }
+    } else if (user?.id && role) {
+      try {
+        console.log("Falling back to context role for database update:", role);
+        
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
@@ -116,10 +146,12 @@ const Profile = () => {
       }
     }
     
+    // Refresh user role via context
     refreshUserRole();
     
     // Wait a bit for the role refresh to complete
     setTimeout(() => {
+      // Refresh profile data
       if (refreshData) {
         refreshData();
       }

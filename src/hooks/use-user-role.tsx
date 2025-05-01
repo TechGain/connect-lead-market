@@ -49,6 +49,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             
           if (error) {
             console.error("Error directly fetching role:", error);
+            console.error("Error details:", error.message, error.code, error.details);
             return;
           }
           
