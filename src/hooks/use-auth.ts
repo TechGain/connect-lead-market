@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
@@ -17,27 +16,69 @@ export function useAuth() {
     }
     
     console.log("Refreshing role for user:", user.id);
-    setIsLoadingUser(true);
     
     try {
       // Force a delay to ensure any database updates have time to propagate
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const role = await getUserRole(user.id);
-      console.log("Role refresh result:", role);
-      
-      if (role) {
-        console.log("Role refreshed successfully:", role);
-        setUserRole(role);
+      // DIRECT DATABASE QUERY - Get the role directly from the database
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+        
+      if (profileError) {
+        console.error("Error directly fetching profile:", profileError);
+      } else if (profileData?.role) {
+        // Normalize the role value
+        const normalizedRole = String(profileData.role).toLowerCase();
+        
+        if (normalizedRole === 'seller' || normalizedRole === 'buyer') {
+          console.log("Role directly fetched from database:", normalizedRole);
+          setUserRole(normalizedRole as 'seller' | 'buyer');
+        } else {
+          console.warn("Invalid role found in database:", normalizedRole);
+        }
       } else {
-        console.warn("Failed to refresh role or role not found");
+        console.warn("No profile found in database for user:", user.id);
+        
+        // Fallback to metadata
+        if (user.user_metadata?.role) {
+          const metadataRole = user.user_metadata.role;
+          console.log("Falling back to metadata role:", metadataRole);
+          
+          if (metadataRole === 'seller' || metadataRole === 'buyer') {
+            setUserRole(metadataRole);
+            
+            // Try to create profile with metadata role
+            try {
+              const { error: createError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: user.id,
+                  role: metadataRole,
+                  full_name: user.user_metadata?.full_name || 'User',
+                  created_at: new Date().toISOString()
+                }, { onConflict: 'id' });
+                
+              if (createError) {
+                console.error("Error creating profile from metadata:", createError);
+              } else {
+                console.log("Profile created from metadata with role:", metadataRole);
+              }
+            } catch (err) {
+              console.error("Error creating profile from metadata:", err);
+            }
+          }
+        }
       }
     } catch (error) {
       console.error("Error in refreshRole:", error);
     } finally {
       setIsLoadingUser(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
     // Check current auth state
@@ -105,10 +146,24 @@ export function useAuth() {
       
       // After successful login, explicitly fetch and set the role
       if (data.user) {
-        const role = await getUserRole(data.user.id);
-        if (role) {
-          setUserRole(role);
-          console.log("Role set after login:", role);
+        setUser(data.user);
+        
+        // DIRECT DATABASE QUERY - Get role directly after login
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .maybeSingle();
+          
+        if (profileError) {
+          console.error("Error fetching profile after login:", profileError);
+        } else if (profileData?.role) {
+          const normalizedRole = String(profileData.role).toLowerCase();
+          
+          if (normalizedRole === 'seller' || normalizedRole === 'buyer') {
+            console.log("Role fetched after login:", normalizedRole);
+            setUserRole(normalizedRole as 'seller' | 'buyer');
+          }
         }
       }
       
@@ -156,6 +211,32 @@ export function useAuth() {
       // Explicitly set the role in state after successful registration
       setUserRole(role);
       setUser(data.user);
+      
+      // CRITICAL: Create a profile with the role IMMEDIATELY after signup
+      if (data.user?.id) {
+        try {
+          console.log("Creating profile for new user with role:", role);
+          
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              role: role,
+              full_name: fullName,
+              company: company || null,
+              created_at: new Date().toISOString()
+            });
+            
+          if (profileError) {
+            console.error("Error creating profile during registration:", profileError);
+          } else {
+            console.log("Profile successfully created with role:", role);
+          }
+        } catch (err) {
+          console.error("Exception creating profile during registration:", err);
+        }
+      }
+      
       setIsLoadingUser(false);
       
       // Add a log to confirm state was set

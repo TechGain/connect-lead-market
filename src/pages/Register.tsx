@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -90,21 +91,31 @@ const Register = () => {
           console.log("Registration successful, ensuring profile exists with role:", userRole);
           
           try {
-            // Import and use the ensureUserProfile function directly
-            const { ensureUserProfile } = await import('@/utils/roleManager');
-            await ensureUserProfile(user.id, userRole, name);
-            
-            // Double check that the role was saved correctly
-            const { getUserRole } = await import('@/utils/roleManager');
-            const savedRole = await getUserRole(user.id);
-            
-            if (savedRole !== userRole) {
-              console.warn(`Role mismatch after registration! Expected: ${userRole}, Got: ${savedRole}`);
-              // Try once more to save the correct role
-              const { updateUserRole } = await import('@/utils/roleManager');
-              await updateUserRole(user.id, userRole);
+            // DIRECT DATABASE UPDATE - Explicitly insert or update the profile
+            const { error } = await supabase
+              .from('profiles')
+              .upsert({
+                id: user.id,
+                full_name: name,
+                role: userRole,
+                company: companyName || null,
+                created_at: new Date().toISOString()
+              }, { onConflict: 'id' });
+              
+            if (error) {
+              console.error("Error directly creating profile:", error);
+              toast.error("Error creating your profile. Please try again.");
             } else {
-              console.log("Role saved successfully:", savedRole);
+              console.log("Profile directly created/updated with role:", userRole);
+              
+              // Double check that the profile was created correctly
+              const { data: profileCheck } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .maybeSingle();
+                
+              console.log("Profile check after creation:", profileCheck);
             }
           } catch (err) {
             console.error("Error ensuring profile during registration:", err);

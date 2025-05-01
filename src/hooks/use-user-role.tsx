@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import { getUserRole, ensureUserProfile } from '@/utils/roleManager';
+import { getUserRole } from '@/utils/roleManager';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserRoleContextType {
   isLoggedIn: boolean;
@@ -38,36 +40,36 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log("UserRoleProvider - Directly fetching role from database:", user.id);
         
         try {
-          const directRole = await getUserRole(user.id);
-          console.log("Direct role check result:", directRole);
+          // DIRECT DATABASE QUERY - Get role directly
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (error) {
+            console.error("Error directly fetching role:", error);
+            return;
+          }
           
-          if (directRole) {
-            // Only update if role is different to avoid unnecessary rerenders
-            if (role !== directRole) {
-              console.log("Setting role from database check:", directRole);
-              setRole(directRole);
+          console.log("Direct role check result:", data?.role);
+          
+          if (data?.role) {
+            // Normalize the role value
+            const dbRole = String(data.role).toLowerCase();
+            
+            if (dbRole === 'seller' || dbRole === 'buyer') {
+              // Only update if role is different to avoid unnecessary rerenders
+              if (role !== dbRole) {
+                console.log("Setting role from database check:", dbRole);
+                setRole(dbRole as 'seller' | 'buyer');
+              }
             }
           } else {
-            console.log("No role found in database, attempting to fix...");
+            console.log("No role found in database, using auth role");
             
-            // Try to get role from user metadata
-            const metadataRole = user.user_metadata?.role;
-            const defaultRole = (metadataRole === 'seller' || metadataRole === 'buyer')
-              ? metadataRole as 'seller' | 'buyer'
-              : 'buyer'; // Default to buyer
-            
-            const fixedRole = await ensureUserProfile(
-              user.id, 
-              defaultRole,
-              user.user_metadata?.full_name || user.email?.split('@')[0]
-            );
-            
-            if (fixedRole) {
-              console.log("Role fixed in database:", fixedRole);
-              setRole(fixedRole);
-            } else {
-              console.error("Failed to fix role in database");
-              // Keep using the auth role or default to null
+            // Use auth role if available
+            if (authRole) {
               setRole(authRole);
             }
           }
@@ -84,7 +86,53 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!isLoading && (user?.id || !user)) {
       fetchAndUpdateRole();
     }
-  }, [user?.id, isLoading, authRole]);
+  }, [user?.id, isLoading, authRole, role]);
+
+  const refreshUserRole = async () => {
+    console.log("Manual role refresh requested");
+    setIsForceRefreshing(true);
+    toast.info("Refreshing your profile...");
+    
+    try {
+      // First refresh the auth role
+      refreshRole();
+      
+      // Then directly check the database
+      if (user?.id) {
+        // DIRECT DATABASE QUERY - Get role directly
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error fetching role during refresh:", error);
+          toast.error("Error refreshing your role");
+          return;
+        }
+        
+        if (data?.role) {
+          const dbRole = String(data.role).toLowerCase();
+          console.log("Database role during refresh:", dbRole);
+          
+          if (dbRole === 'seller' || dbRole === 'buyer') {
+            setRole(dbRole as 'seller' | 'buyer');
+            toast.success(`Your role has been refreshed: ${dbRole}`);
+          } else {
+            toast.warning(`Invalid role found: ${dbRole}`);
+          }
+        } else {
+          toast.warning("No role found in your profile");
+        }
+      }
+    } catch (err) {
+      console.error("Error during role refresh:", err);
+      toast.error("An error occurred while refreshing your role");
+    } finally {
+      setIsForceRefreshing(false);
+    }
+  };
 
   // Add more detailed console logs to track role state
   useEffect(() => {
@@ -98,57 +146,10 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [authRole, role, isLoggedIn, user?.id, isLoading, isForceRefreshing]);
 
-  const refreshUserRole = async () => {
-    console.log("Manual role refresh requested");
-    setIsForceRefreshing(true);
-    toast.info("Refreshing your profile...");
-    
-    try {
-      // First try to refresh the auth role
-      refreshRole();
-      
-      // Then directly check the database
-      if (user?.id) {
-        const directRole = await getUserRole(user.id);
-        console.log("Direct role check on refresh:", directRole);
-        
-        if (directRole) {
-          setRole(directRole);
-        } else {
-          console.warn("No role found during refresh");
-          
-          // Try to create/fix profile if no role found
-          const metadataRole = user.user_metadata?.role;
-          const defaultRole = (metadataRole === 'seller' || metadataRole === 'buyer')
-            ? metadataRole as 'seller' | 'buyer'
-            : 'buyer';
-          
-          const fixedRole = await ensureUserProfile(
-            user.id,
-            defaultRole,
-            user.user_metadata?.full_name || user.email?.split('@')[0]
-          );
-          
-          if (fixedRole) {
-            setRole(fixedRole);
-            toast.success(`Profile fixed with role: ${fixedRole}`);
-          } else {
-            toast.error("Could not fix your profile. Please try logging out and back in.");
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error during role refresh:", err);
-    } finally {
-      setIsForceRefreshing(false);
-    }
-  };
-
   return (
     <UserRoleContext.Provider value={{ 
       isLoggedIn, 
       isLoading: isLoading || isForceRefreshing,
-      // Use our directly managed role state instead of authRole
       role,
       user,
       login,
