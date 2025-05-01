@@ -19,29 +19,25 @@ interface ProfileContentProps {
 }
 
 const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileContentProps) => {
-  // Convert role string to expected type, with safe default
-  const normalizedRole = profileData?.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer';
+  // Make sure we have valid data - provide defaults as needed
+  const safeProfileData = {
+    name: profileData?.name || 'User',
+    email: profileData?.email || 'No email available',
+    company: profileData?.company || 'Not specified',
+    role: profileData?.role || 'buyer',
+    rating: profileData?.rating || 4.5,
+    joinedDate: profileData?.joinedDate || 'Unknown',
+    totalLeads: profileData?.totalLeads || 0
+  };
   
-  // Early return with error message if no profile data
-  if (!profileData) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">Unable to load profile data.</p>
-        <button
-          onClick={refreshProfile}
-          className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  // Convert role string to expected type, with safe default
+  const normalizedRole = safeProfileData.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer';
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <ProfileInfoCard 
         profileData={{
-          ...profileData,
+          ...safeProfileData,
           avatar: undefined // No avatar support yet
         }} 
         role={normalizedRole}

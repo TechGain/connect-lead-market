@@ -27,7 +27,7 @@ const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps)
     rating: profileData?.rating || 4.5,
     joinedDate: profileData?.joinedDate || 'Unknown',
     avatar: profileData?.avatar,
-    totalLeads: profileData?.totalLeads || 0
+    totalLeads: typeof profileData?.totalLeads === 'number' ? profileData.totalLeads : 0
   };
 
   return (
