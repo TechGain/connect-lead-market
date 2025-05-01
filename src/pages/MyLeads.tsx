@@ -11,15 +11,30 @@ import { toast } from "sonner";
 import { Lead } from '@/types/lead';
 import { fetchLeadsBySeller, createLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, FileUp } from 'lucide-react';
 
 const MyLeads = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, role, user } = useUserRole();
   const [myLeads, setMyLeads] = useState<Lead[]>([]);
-  const [activeTab, setActiveTab] = useState('active');
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Get tab from URL query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const tabFromUrl = queryParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl === 'upload' ? 'upload' : 'active');
+  
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === 'upload') {
+      navigate('/my-leads?tab=upload', { replace: true });
+    } else {
+      navigate('/my-leads', { replace: true });
+    }
+  };
   
   useEffect(() => {
     if (!isLoggedIn) {
@@ -139,7 +154,7 @@ const MyLeads = () => {
           
           {/* Quick access button for uploading new leads */}
           <Button 
-            onClick={() => setActiveTab('upload')}
+            onClick={() => handleTabChange('upload')}
             className="mt-4 md:mt-0 bg-brand-500 hover:bg-brand-600"
           >
             <FileUp className="mr-2 h-4 w-4" />
@@ -147,7 +162,7 @@ const MyLeads = () => {
           </Button>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="active" className="relative">
               Active Leads
