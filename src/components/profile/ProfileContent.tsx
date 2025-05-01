@@ -38,6 +38,13 @@ const ProfileContent = ({
     toast.info("Refreshing profile data...");
   };
   
+  console.log("ProfileContent rendering with:", {
+    name: profileData.name,
+    company: profileData.company,
+    role,
+    isOffline
+  });
+  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <ProfileInfoCard 

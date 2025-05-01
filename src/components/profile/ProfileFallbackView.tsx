@@ -31,6 +31,14 @@ const ProfileFallbackView = ({
   // Ensure the role is properly typed
   const safeRole = profileData.role === 'seller' ? 'seller' : 'buyer';
   
+  console.log("ProfileFallbackView rendering with data:", { 
+    name: profileData.name,
+    company: profileData.company,
+    role: safeRole,
+    error,
+    isOffline
+  });
+  
   return (
     <>
       <ProfileHeader error={error} isOffline={isOffline} />

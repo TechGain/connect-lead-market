@@ -31,96 +31,110 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>(null);
   
-  // Function to get profile data directly (without complex hooks)
+  // Simple direct fetch function without complex hooks
   const fetchProfileData = async () => {
+    console.log("Fetching profile data directly...");
     setIsLoading(true);
     setError(null);
     
     try {
-      // If offline, try to get from local storage
-      if (isOffline) {
-        const cachedData = localStorage.getItem('profile_data');
-        if (cachedData) {
-          setProfileData(JSON.parse(cachedData));
-          setIsLoading(false);
-          return;
-        }
+      if (!user?.id) {
+        console.log("No user ID available");
+        throw new Error("Please sign in to view your profile");
       }
       
-      // If no user is available, try to get the session
-      let userId = user?.id;
-      if (!userId) {
-        const { data } = await supabase.auth.getSession();
-        userId = data?.session?.user?.id;
-      }
+      console.log("Fetching profile for user ID:", user.id);
       
-      if (!userId) {
-        throw new Error("No user authenticated. Please log in.");
-      }
-      
-      // Directly fetch from profiles table
-      const { data: profile, error: profileError } = await supabase
+      // Directly fetch from profiles table with simple error handling
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', user.id)
         .single();
       
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw new Error("Could not load profile data");
+      if (error) {
+        console.error("Supabase query error:", error);
+        throw new Error("Could not load profile");
       }
       
-      // Format profile data
+      if (!data) {
+        console.log("No profile data found");
+        throw new Error("No profile found");
+      }
+      
+      console.log("Profile data retrieved:", data);
+      
+      // Format data in a simple way
       const formattedProfile = {
-        name: profile.full_name || user?.user_metadata?.full_name || 'User',
-        email: user?.email || '',
-        company: profile.company || 'Not specified',
-        role: (profile.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer'),
-        rating: profile.rating || 4.7,
-        joinedDate: user?.created_at ? 
-          new Date(user.created_at).toLocaleDateString('en-US', {year: 'numeric', month: 'long'}) : 
-          'Unknown',
-        totalLeads: 0 // We'll set this to 0 for simplicity
+        name: data.full_name || user?.user_metadata?.full_name || 'User',
+        email: user.email || '',
+        company: data.company || 'Not specified',
+        role: (data.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer'),
+        rating: data.rating || 4.7,
+        joinedDate: new Date(user.created_at || Date.now()).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long'
+        }),
+        totalLeads: 0 // We'll default to 0 for simplicity
       };
       
-      // Cache the profile data for offline use
+      console.log("Formatted profile:", formattedProfile);
+      
+      // Cache for offline mode
       localStorage.setItem('profile_data', JSON.stringify(formattedProfile));
       
       setProfileData(formattedProfile);
+      setError(null);
     } catch (err: any) {
-      console.error("Profile fetch error:", err);
+      console.error("Error fetching profile:", err);
       setError(err.message || "Failed to load profile");
       
       // Try to use cached data as fallback
-      const cachedData = localStorage.getItem('profile_data');
-      if (cachedData) {
-        setProfileData(JSON.parse(cachedData));
-        toast.warning("Using cached profile data");
-      } else {
-        // Use default data as last resort
-        setProfileData({
-          ...DEFAULT_PROFILE_DATA,
-          name: user?.user_metadata?.full_name || 'User',
-          email: user?.email || '',
-          role: userRole || 'buyer'
-        });
-        toast.warning("Using limited profile data");
+      try {
+        const cachedData = localStorage.getItem('profile_data');
+        if (cachedData) {
+          console.log("Using cached profile data");
+          setProfileData(JSON.parse(cachedData));
+          toast.warning("Using cached profile data");
+        } else {
+          console.log("No cached data, using default");
+          // Use minimal default data as last resort
+          setProfileData({
+            ...DEFAULT_PROFILE_DATA,
+            name: user?.user_metadata?.full_name || 'User',
+            email: user?.email || '',
+            role: userRole || 'buyer'
+          });
+        }
+      } catch (cacheErr) {
+        console.error("Cache retrieval error:", cacheErr);
+        // Absolute fallback
+        setProfileData(DEFAULT_PROFILE_DATA);
       }
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   // Simple refresh function
-  const refreshProfile = () => {
+  const handleRefresh = () => {
     toast.info("Refreshing profile...");
     fetchProfileData();
   };
   
   // Fetch on mount
   useEffect(() => {
+    console.log("ProfileContainer mounted, fetching data...");
     fetchProfileData();
-  }, [isOffline, user?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+  
+  console.log("Current profile render state:", { 
+    isLoading, 
+    hasError: !!error, 
+    hasData: !!profileData,
+    isOffline
+  });
   
   // Show loading state during initial load
   if (isLoading && !profileData) {
@@ -132,7 +146,7 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
     return (
       <ProfileErrorDisplay 
         error={error} 
-        onRetry={refreshProfile} 
+        onRetry={handleRefresh} 
         isOffline={isOffline}
       />
     );
@@ -157,7 +171,7 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
         <ProfileFallbackView 
           profileData={profileData}
           userData={user}
-          onRetry={refreshProfile}
+          onRetry={handleRefresh}
           error={error}
           isOffline={isOffline}
         />
@@ -167,7 +181,7 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
   
   // Fallback for no data state
   return (
-    <ProfileNoDataView onRetry={refreshProfile} isOffline={isOffline} />
+    <ProfileNoDataView onRetry={handleRefresh} isOffline={isOffline} />
   );
 };
 

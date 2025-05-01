@@ -34,6 +34,14 @@ const ProfileInfoCard = ({ profileData, role, onRefresh, isOffline }: ProfileInf
 
   // Determine if we're displaying limited data
   const isLimitedData = !profileData?.company || profileData.company === 'Not specified';
+  
+  console.log("ProfileInfoCard rendering with:", {
+    name: safeData.name,
+    company: safeData.company,
+    role,
+    isLimitedData,
+    isOffline
+  });
 
   return (
     <Card className="lg:col-span-1">
