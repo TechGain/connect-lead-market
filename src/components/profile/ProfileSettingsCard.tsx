@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 interface ProfileSettingsCardProps {
-  role: 'seller' | 'buyer' | null;
+  role: 'seller' | 'buyer';
 }
 
 const ProfileSettingsCard = ({ role }: ProfileSettingsCardProps) => {

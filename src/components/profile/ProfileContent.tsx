@@ -30,7 +30,8 @@ const ProfileContent = ({ profileData, role }: ProfileContentProps) => {
   }, [role]);
 
   // Default to a safe role for display purposes if null
-  const displayRole = role || 'user';
+  // Use a type assertion to tell TypeScript we know what we're doing
+  const displayRole = role || 'buyer';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

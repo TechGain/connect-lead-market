@@ -15,12 +15,11 @@ interface ProfileInfoCardProps {
     avatar: string | undefined;
     totalLeads: number;
   };
-  role: 'seller' | 'buyer' | string; // Allow string to accommodate our default fallback value
+  role: 'seller' | 'buyer'; // Keep it strict here since we're defaulting to 'buyer' in ProfileContent
 }
 
 const ProfileInfoCard = ({ profileData, role }: ProfileInfoCardProps) => {
-  // Ensure we have a valid role for ProfileBadge
-  const safeRole = (role === 'seller' || role === 'buyer') ? role as 'seller' | 'buyer' : 'buyer';
+  // Role is now guaranteed to be either 'seller' or 'buyer'
   
   return (
     <Card className="lg:col-span-1">
@@ -29,7 +28,7 @@ const ProfileInfoCard = ({ profileData, role }: ProfileInfoCardProps) => {
           name={profileData.name}
           rating={profileData.rating}
           avatar={profileData.avatar}
-          role={safeRole}
+          role={role}
           totalLeads={profileData.totalLeads}
         />
         <CardDescription className="mt-2">
