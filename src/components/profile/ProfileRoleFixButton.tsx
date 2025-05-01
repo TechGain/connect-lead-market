@@ -23,13 +23,20 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
     toast.info(`Setting your role to ${desiredRole}...`);
     
     try {
+      // Clear any mock leads if switching roles
+      if (desiredRole === 'buyer') {
+        // If switching to buyer, we might want to remove any seller-related data
+        console.log("Switching to buyer role");
+      }
+      
       // Direct database update to fix the role
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: userId,
           role: desiredRole,
-          full_name: 'User' // Providing a default value for required fields
+          full_name: 'User', // Providing a default value for required fields
+          updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
       
       if (error) {

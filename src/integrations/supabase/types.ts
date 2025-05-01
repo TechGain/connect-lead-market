@@ -103,6 +103,7 @@ export type Database = {
           id: string
           rating: number | null
           role: string
+          updated_at: string | null
         }
         Insert: {
           company?: string | null
@@ -111,6 +112,7 @@ export type Database = {
           id: string
           rating?: number | null
           role: string
+          updated_at?: string | null
         }
         Update: {
           company?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           id?: string
           rating?: number | null
           role?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
