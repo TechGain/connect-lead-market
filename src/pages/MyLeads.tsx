@@ -26,8 +26,19 @@ const MyLeads = () => {
   const tabFromUrl = queryParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabFromUrl === 'upload' ? 'upload' : 'active');
   
+  // Debug log to track role and login state
+  useEffect(() => {
+    console.log("MyLeads component - Current auth state:", { 
+      isLoggedIn, 
+      role,
+      userId: user?.id,
+      activeTab
+    });
+  }, [isLoggedIn, role, user?.id, activeTab]);
+  
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
+    console.log("Changing tab to:", value);
     setActiveTab(value);
     if (value === 'upload') {
       navigate('/my-leads?tab=upload', { replace: true });
@@ -86,6 +97,7 @@ const MyLeads = () => {
       if (newLead) {
         setMyLeads([newLead, ...myLeads]);
         setActiveTab('active');
+        navigate('/my-leads', { replace: true });
         toast.success("Lead uploaded successfully!");
       }
     } catch (error) {
@@ -200,7 +212,7 @@ const MyLeads = () => {
               <div className="text-center py-12">
                 <h3 className="text-xl font-semibold mb-2">No Active Leads</h3>
                 <p className="text-gray-600 mb-4">You don't have any active leads right now</p>
-                <Button onClick={() => setActiveTab('upload')}>Upload New Lead</Button>
+                <Button onClick={() => handleTabChange('upload')}>Upload New Lead</Button>
               </div>
             )}
           </TabsContent>
@@ -225,7 +237,7 @@ const MyLeads = () => {
               <div className="text-center py-12">
                 <h3 className="text-xl font-semibold mb-2">No Sold Leads</h3>
                 <p className="text-gray-600 mb-4">You haven't sold any leads yet</p>
-                <Button onClick={() => setActiveTab('upload')}>Upload New Lead</Button>
+                <Button onClick={() => handleTabChange('upload')}>Upload New Lead</Button>
               </div>
             )}
           </TabsContent>
