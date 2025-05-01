@@ -197,6 +197,13 @@ export function useAuth() {
   const logout = async () => {
     try {
       console.log("Attempting to sign out");
+      
+      // Clear state immediately without waiting for auth state change
+      setUser(null);
+      setUserRole(null);
+      console.log("User state cleared");
+      
+      // Then perform the actual signout
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -204,10 +211,9 @@ export function useAuth() {
         throw error;
       }
       
-      // Clear state immediately without waiting for auth state change
-      setUser(null);
-      setUserRole(null);
-      console.log("User state cleared after logout");
+      // Force a page reload to clear any cached state
+      window.location.href = '/';
+      
       toast.success('Signed out successfully');
     } catch (error: any) {
       console.error("Error during logout:", error);
