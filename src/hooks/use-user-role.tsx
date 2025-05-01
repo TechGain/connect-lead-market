@@ -43,15 +43,16 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     // If logged in but no role after initial load, try to refresh the role
-    if (isLoggedIn && !role && !isLoading && retryCount < 3 && !hasAttemptedRefresh) {
+    if (isLoggedIn && !role && !isLoading && retryCount < 5 && !hasAttemptedRefresh) {
       console.log("User logged in but no role detected. Attempting to refresh role...");
       setRetryCount(prev => prev + 1);
       setHasAttemptedRefresh(true);
       
       // Add a small delay before trying to refresh the role
       setTimeout(() => {
+        console.log("Executing delayed role refresh...");
         refreshRole();
-      }, 500);
+      }, 1000);
     }
   }, [role, isLoggedIn, user?.id, isLoading, retryCount, hasAttemptedRefresh, refreshRole]);
 
@@ -59,6 +60,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log("Manual role refresh requested");
     setHasAttemptedRefresh(false); // Reset the flag to allow further attempts
     setRetryCount(0); // Reset retry count
+    toast.info("Refreshing your profile...");
     refreshRole();
   };
 

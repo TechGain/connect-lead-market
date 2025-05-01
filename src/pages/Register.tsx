@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -61,10 +60,13 @@ const Register = () => {
     try {
       console.log("Starting registration with role:", selectedRole);
       
+      // Make sure the role is explicitly typed and validated
+      const userRole: 'seller' | 'buyer' = selectedRole;
+      
       const result = await register(
         email, 
         password, 
-        selectedRole,
+        userRole,
         name,
         companyName
       );
@@ -74,8 +76,8 @@ const Register = () => {
         
         // We need a small delay to ensure the user state is properly updated
         setTimeout(() => {
-          console.log("Registration completed, redirecting with role:", selectedRole);
-          if (selectedRole === 'seller') {
+          console.log("Registration completed, redirecting with role:", userRole);
+          if (userRole === 'seller') {
             navigate('/my-leads');
           } else {
             navigate('/marketplace');
@@ -109,7 +111,12 @@ const Register = () => {
             <CardContent className="grid gap-4">
               <div className="flex flex-row items-center justify-between space-x-2">
                 <Label>Account Type</Label>
-                <RadioGroup defaultValue={selectedRole} className="flex" onValueChange={(value) => setSelectedRole(value as 'seller' | 'buyer')}>
+                <RadioGroup 
+                  defaultValue={selectedRole} 
+                  className="flex" 
+                  value={selectedRole}
+                  onValueChange={(value) => setSelectedRole(value as 'seller' | 'buyer')}
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="buyer" id="buyer" />
                     <Label htmlFor="buyer">Buyer</Label>

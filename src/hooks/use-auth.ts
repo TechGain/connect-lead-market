@@ -27,13 +27,17 @@ export function useAuth() {
       console.log("Complete profile data:", data);
       console.log("User role from profile:", data?.role);
       
-      // Make sure to handle string case insensitively
-      const roleValue = data?.role?.toLowerCase();
-      if (roleValue === 'seller' || roleValue === 'buyer') {
-        return roleValue as 'seller' | 'buyer';
+      // Make sure to handle string case insensitively and validate
+      if (data && data.role) {
+        const roleValue = data.role.toLowerCase();
+        console.log("Normalized role value:", roleValue);
+        
+        if (roleValue === 'seller' || roleValue === 'buyer') {
+          return roleValue as 'seller' | 'buyer';
+        }
       }
       
-      console.warn("Invalid role value detected:", data?.role);
+      console.warn("Invalid or missing role value detected:", data?.role);
       return null;
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
@@ -50,11 +54,13 @@ export function useAuth() {
     
     try {
       const role = await fetchUserRole(user.id);
+      console.log("Role refreshed result:", role);
+      
       if (role) {
         console.log("Role refreshed successfully:", role);
         setUserRole(role);
       } else {
-        console.warn("Failed to refresh role");
+        console.warn("Failed to refresh role or role not found");
       }
     } catch (error) {
       console.error("Error refreshing role:", error);
@@ -175,15 +181,19 @@ export function useAuth() {
       if (data.user) {
         console.log("User created successfully, creating profile:", data.user.id);
         
-        // Create a profile for the user with their role - ENSURING role is explicitly set
+        // Explicitly store role in uppercase to avoid case-sensitivity issues
+        const normalizedRole = role.toLowerCase() as 'seller' | 'buyer';
+        console.log("Creating profile with normalized role:", normalizedRole);
+        
+        // Create a profile for the user with their role
         const { error: profileError, data: profileData } = await supabase
           .from('profiles')
           .insert({
             id: data.user.id,
             full_name: fullName,
-            role: role, // Explicitly set this to the role parameter
+            role: normalizedRole, // Ensure role is correctly set
             company: company || null,
-            rating: role === 'seller' ? 5 : null, // Default rating for sellers
+            rating: normalizedRole === 'seller' ? 5 : null, // Default rating for sellers
             created_at: new Date().toISOString() // Explicitly set creation timestamp
           })
           .select()
@@ -194,16 +204,16 @@ export function useAuth() {
           console.error("Profile creation details:", {
             userId: data.user.id,
             fullName,
-            role,
+            role: normalizedRole,
             company
           });
           throw profileError;
         }
         
-        console.log("Profile created successfully with role:", role, "Profile data:", profileData);
+        console.log("Profile created successfully with role:", normalizedRole, "Profile data:", profileData);
         
         // Explicitly set the role in state after successful registration
-        setUserRole(role);
+        setUserRole(normalizedRole);
         setUser(data.user);
         setIsLoadingUser(false);
         
