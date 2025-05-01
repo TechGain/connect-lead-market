@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useNavigate } from 'react-router-dom';
 import { Menu, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
@@ -18,36 +17,47 @@ const Header = () => {
     role,
     isLoggedIn,
     logout,
-    user
+    user,
+    isLoading,
+    refreshUserRole
   } = useUserRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Add an effect to log the current role for debugging
+  // Enhance logging for debugging
   useEffect(() => {
     console.log("Header component - Current auth state:", { 
       isLoggedIn, 
       role, 
-      userId: user?.id 
+      userId: user?.id,
+      isLoading
     });
-  }, [isLoggedIn, role, user]);
+  }, [isLoggedIn, role, user, isLoading]);
+
+  // Add effect to refresh role if logged in but no role detected
+  useEffect(() => {
+    if (isLoggedIn && !role && !isLoading) {
+      console.log("Header detected logged in state but no role, refreshing...");
+      refreshUserRole();
+    }
+  }, [isLoggedIn, role, isLoading, refreshUserRole]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  const handleSellerAction = () => {
+  const handleMarketplaceClick = () => {
     if (!isLoggedIn) {
       navigate('/login');
       return;
     }
     
-    if (role === 'seller') {
-      navigate('/my-leads');
-    } else {
-      toast.info("You need a seller account to upload leads. Please register as a seller.");
-      navigate('/register?role=seller');
+    if (role !== 'buyer') {
+      toast.info("Only buyers can access the marketplace");
+      return;
     }
+    
+    navigate('/marketplace');
   };
 
   // In the renderNavItems function:
@@ -57,23 +67,27 @@ const Header = () => {
           Home
         </Link>
       </NavigationMenuItem>
-      {role === 'buyer' && (
+      {isLoggedIn && role === 'buyer' && (
         <NavigationMenuItem>
           <Link to="/marketplace" className={navigationMenuTriggerStyle()}>
             Marketplace
           </Link>
         </NavigationMenuItem>
       )}
-      {role === 'seller' && <NavigationMenuItem>
+      {isLoggedIn && role === 'seller' && (
+        <NavigationMenuItem>
           <Link to="/my-leads" className={navigationMenuTriggerStyle()}>
             My Leads
           </Link>
-        </NavigationMenuItem>}
-      {role === 'buyer' && <NavigationMenuItem>
+        </NavigationMenuItem>
+      )}
+      {isLoggedIn && role === 'buyer' && (
+        <NavigationMenuItem>
           <Link to="/purchases" className={navigationMenuTriggerStyle()}>
             My Purchases
           </Link>
-        </NavigationMenuItem>}
+        </NavigationMenuItem>
+      )}
     </>;
 
   // Make sure the mobile nav has the same role-based conditions:
@@ -83,40 +97,50 @@ const Header = () => {
           Home
         </Link>
       </SheetClose>
-      {role === 'buyer' && (
+      {isLoggedIn && role === 'buyer' && (
         <SheetClose asChild>
           <Link to="/marketplace" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             Marketplace
           </Link>
         </SheetClose>
       )}
-      {role === 'seller' && <SheetClose asChild>
+      {isLoggedIn && role === 'seller' && (
+        <SheetClose asChild>
           <Link to="/my-leads" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             My Leads
           </Link>
-        </SheetClose>}
-      {role === 'buyer' && <SheetClose asChild>
+        </SheetClose>
+      )}
+      {isLoggedIn && role === 'buyer' && (
+        <SheetClose asChild>
           <Link to="/purchases" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             My Purchases
           </Link>
-        </SheetClose>}
-      <SheetClose asChild>
-        <Link to="/dashboard" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
-          Dashboard
-        </Link>
-      </SheetClose>
-      <SheetClose asChild>
-        <Link to="/profile" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
-          Profile
-        </Link>
-      </SheetClose>
-      <div className="border-t border-gray-200 mt-2 pt-2">
-        <SheetClose asChild>
-          <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
-            Logout
-          </Button>
         </SheetClose>
-      </div>
+      )}
+      {isLoggedIn && (
+        <SheetClose asChild>
+          <Link to="/dashboard" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+            Dashboard
+          </Link>
+        </SheetClose>
+      )}
+      {isLoggedIn && (
+        <SheetClose asChild>
+          <Link to="/profile" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+            Profile
+          </Link>
+        </SheetClose>
+      )}
+      {isLoggedIn && (
+        <div className="border-t border-gray-200 mt-2 pt-2">
+          <SheetClose asChild>
+            <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
+              Logout
+            </Button>
+          </SheetClose>
+        </div>
+      )}
     </>;
 
   return <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -124,7 +148,7 @@ const Header = () => {
         <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center space-x-2">
             <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">StayConnect
-          </span>
+            </span>
           </Link>
           
           <NavigationMenu className="hidden md:flex">
@@ -135,7 +159,8 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          {isLoggedIn ? <>
+          {isLoggedIn ? (
+            <>
               <div className="hidden md:flex">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -193,7 +218,9 @@ const Header = () => {
                   </div>
                 </SheetContent>
               </Sheet>
-            </> : <div className="flex items-center gap-4">
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
               <Link to="/login">
                 <Button variant="ghost" className="hidden md:flex">
                   Log In
@@ -218,11 +245,6 @@ const Header = () => {
                         Home
                       </Link>
                     </SheetClose>
-                    <SheetClose asChild>
-                      <Link to="/marketplace" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
-                        Marketplace
-                      </Link>
-                    </SheetClose>
                     <div className="border-t border-gray-200 mt-2 pt-2">
                       <SheetClose asChild>
                         <Link to="/login" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
@@ -238,7 +260,8 @@ const Header = () => {
                   </div>
                 </SheetContent>
               </Sheet>
-            </div>}
+            </div>
+          )}
         </div>
       </div>
     </header>;

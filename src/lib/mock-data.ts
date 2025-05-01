@@ -1,13 +1,69 @@
 
 import { Lead } from '@/types/lead';
 
-// Mock data for leads - cleared all mock leads as requested
-let mockLeads: Lead[] = [];
+// Mock data for leads with some initial sample data for testing
+let mockLeads: Lead[] = [
+  {
+    id: 'lead_1',
+    type: 'Residential Fence Installation',
+    description: 'Looking for a contractor to install a 50ft wooden fence around my backyard.',
+    location: 'Los Angeles, CA',
+    price: 75,
+    qualityRating: 4.5,
+    status: 'new',
+    sellerId: 'seller_1',
+    buyerId: null,
+    contactName: 'John Smith',
+    contactPhone: '(213) 555-1234',
+    contactEmail: 'john.smith@example.com',
+    appointmentTime: '2025-05-15T14:00:00',
+    address: '123 Main St, Los Angeles, CA 90001',
+    createdAt: '2025-05-01T10:00:00',
+    purchasedAt: null
+  },
+  {
+    id: 'lead_2',
+    type: 'Commercial Security Fencing',
+    description: 'Need security fencing installed around commercial property, approximately 200ft perimeter.',
+    location: 'San Diego, CA',
+    price: 120,
+    qualityRating: 5,
+    status: 'new',
+    sellerId: 'seller_2',
+    buyerId: null,
+    contactName: 'Business Property Management',
+    contactPhone: '(619) 555-6789',
+    contactEmail: 'property@example.com',
+    appointmentTime: '2025-05-20T10:00:00',
+    address: '456 Business Ave, San Diego, CA 92101',
+    createdAt: '2025-05-01T11:00:00',
+    purchasedAt: null
+  },
+  {
+    id: 'lead_3',
+    type: 'Pool Fencing Installation',
+    description: 'Need code-compliant pool fencing installed for residential property.',
+    location: 'Orange County, CA',
+    price: 95,
+    qualityRating: 4,
+    status: 'new',
+    sellerId: 'seller_1',
+    buyerId: null,
+    contactName: 'Sarah Johnson',
+    contactPhone: '(714) 555-3456',
+    contactEmail: 'sarah.j@example.com',
+    appointmentTime: '2025-05-18T13:00:00',
+    address: '789 Coastal Way, Newport Beach, CA 92660',
+    createdAt: '2025-05-01T12:00:00',
+    purchasedAt: null
+  }
+];
 
 // Function to fetch all leads
 export const fetchLeads = async (): Promise<Lead[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
+  console.log("Fetching leads, count:", mockLeads.length);
   return mockLeads;
 };
 
@@ -37,7 +93,7 @@ export const purchaseLead = async (leadId: string, buyerId: string): Promise<Lea
 
   mockLeads[leadIndex] = {
     ...mockLeads[leadIndex],
-    status: 'pending',
+    status: 'sold',  // Changed from 'pending' to 'sold'
     buyerId: buyerId,
     purchasedAt: new Date().toISOString(),
   };
@@ -60,7 +116,7 @@ export const createLead = async (lead: Omit<Lead, 'id'>): Promise<Lead> => {
   return newLead;
 };
 
-// New function to rate a lead
+// Function to rate a lead
 export const rateLead = async (leadId: string, buyerId: string, rating: number, review: string): Promise<boolean> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));

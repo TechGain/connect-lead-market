@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import UploadLeads from "./pages/UploadLeads";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,13 +33,25 @@ const queryClient = new QueryClient({
 
 // Buyer Route Guard
 const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isLoggedIn, role } = useUserRole();
+  const { isLoggedIn, role, isLoading } = useUserRole();
+  
+  useEffect(() => {
+    console.log("BuyerRoute - Current state:", { isLoggedIn, role, isLoading });
+  }, [isLoggedIn, role, isLoading]);
+  
+  // Show loading state while determining role
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <p>Loading...</p>
+    </div>;
+  }
   
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
   
   if (role !== 'buyer') {
+    console.log("Access denied: User role is", role);
     return <Navigate to="/" replace />;
   }
   
