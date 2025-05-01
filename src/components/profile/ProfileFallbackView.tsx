@@ -2,10 +2,11 @@
 import React from 'react';
 import ProfileHeader from './ProfileHeader';
 import ProfileContent from './ProfileContent';
+import { ProfileData } from '@/hooks/use-simple-profile';
 
 interface ProfileFallbackViewProps {
-  profileData: any;
-  userData: any;
+  profileData: ProfileData;
+  userData?: any;
   onRetry: () => void;
   error: string | null;
   isOffline?: boolean;
