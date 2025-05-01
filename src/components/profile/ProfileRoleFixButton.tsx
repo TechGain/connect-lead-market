@@ -23,21 +23,40 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
     toast.info(`Setting your role to ${desiredRole}...`);
     
     try {
-      // Clear any mock leads if switching roles
-      if (desiredRole === 'buyer') {
-        // If switching to buyer, we might want to remove any seller-related data
-        console.log("Switching to buyer role");
+      // Check if user has a profile first
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error("Error checking profile:", checkError);
+        toast.error("Failed to check your profile. Please try again.");
+        return;
+      }
+
+      // If profile exists and role is already set, we can't change it due to trigger restrictions
+      if (existingProfile?.role) {
+        if (existingProfile.role === desiredRole) {
+          console.log(`User already has role: ${desiredRole}`);
+          setIsFixed(true);
+          toast.success(`Your account is already set as a ${desiredRole}!`);
+        } else {
+          console.warn(`Cannot change role from ${existingProfile.role} to ${desiredRole} due to database restrictions`);
+          toast.error(`Your role is already set to ${existingProfile.role} and cannot be changed.`);
+        }
+        return;
       }
       
-      // Direct database update to fix the role
+      // If no profile exists, create one
       const { error } = await supabase
         .from('profiles')
-        .upsert({
+        .insert({
           id: userId,
           role: desiredRole,
-          full_name: 'User', // Providing a default value for required fields
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+          full_name: 'User' // Providing a default value for required fields
+        });
       
       if (error) {
         console.error("Error fixing role:", error);
@@ -45,7 +64,7 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
         return;
       }
       
-      console.log(`Role directly updated to ${desiredRole} for user:`, userId);
+      console.log(`Role set to ${desiredRole} for user:`, userId);
       
       // Verify the update was successful
       const { data: verifyData, error: verifyError } = await supabase
