@@ -52,7 +52,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setTimeout(() => {
         console.log("Executing delayed role refresh...");
         refreshRole();
-      }, 1500); // Increased delay to ensure DB propagation
+      }, 2000); // Increased delay to ensure DB propagation
     }
   }, [role, isLoggedIn, user?.id, isLoading, retryCount, hasAttemptedRefresh, refreshRole]);
 
@@ -61,7 +61,11 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setHasAttemptedRefresh(false); // Reset the flag to allow further attempts
     setRetryCount(0); // Reset retry count
     toast.info("Refreshing your profile...");
-    refreshRole();
+    
+    // Force delay to ensure any ongoing processes complete
+    setTimeout(() => {
+      refreshRole();
+    }, 500);
   };
 
   return (

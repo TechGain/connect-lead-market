@@ -16,7 +16,7 @@ export function useAuth() {
         .from('profiles')
         .select('role') // Only select the role column
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no profile exists
       
       if (error) {
         console.error('Error fetching user role:', error);
@@ -54,7 +54,7 @@ export function useAuth() {
     
     try {
       // Force a delay to ensure any database updates have time to propagate
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const role = await fetchUserRole(user.id);
       console.log("Role refreshed result:", role);
@@ -64,6 +64,35 @@ export function useAuth() {
         setUserRole(role);
       } else {
         console.warn("Failed to refresh role or role not found");
+        
+        // If role not found, check if profile exists and fix it
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, role')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (profile) {
+          console.log("Profile exists but role is invalid. Updating profile...");
+          // Update existing profile with default role
+          await supabase
+            .from('profiles')
+            .update({ role: 'buyer' })
+            .eq('id', user.id);
+          setUserRole('buyer');
+        } else {
+          console.log("No profile found. Creating new profile...");
+          // Create new profile with default role
+          await supabase
+            .from('profiles')
+            .insert({ 
+              id: user.id, 
+              role: 'buyer',
+              full_name: user.user_metadata?.full_name || 'User',
+              created_at: new Date().toISOString()
+            });
+          setUserRole('buyer');
+        }
       }
     } catch (error) {
       console.error("Error refreshing role:", error);
@@ -88,6 +117,9 @@ export function useAuth() {
           console.log("Initial role fetch result:", role, "for user:", session.user.id);
           if (role) {
             setUserRole(role);
+          } else {
+            // Try to create/fix profile if no valid role found
+            await refreshRole();
           }
         } else {
           setUser(null);
@@ -116,7 +148,9 @@ export function useAuth() {
         if (role) {
           setUserRole(role);
         } else {
-          toast.error('Failed to load user profile. Please try logging out and back in.');
+          // Try to create/fix profile if no valid role found on sign-in
+          await refreshRole();
+          toast.error('Had to repair your profile. Please refresh the page if you experience any issues.');
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -127,7 +161,7 @@ export function useAuth() {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [fetchUserRole]);
+  }, [fetchUserRole, refreshRole]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -144,6 +178,11 @@ export function useAuth() {
         const role = await fetchUserRole(data.user.id);
         if (role) {
           setUserRole(role);
+          console.log("Role set after login:", role);
+        } else {
+          // Try to create/fix profile if no valid role found on login
+          console.log("No valid role found after login. Attempting to repair profile...");
+          await refreshRole();
         }
       }
       
@@ -195,7 +234,7 @@ export function useAuth() {
           .from('profiles')
           .select('id')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
           
         if (existingProfile) {
           console.log("Profile already exists, updating instead:", existingProfile);
@@ -215,9 +254,18 @@ export function useAuth() {
             console.error("Profile update error:", updateError);
             throw updateError;
           }
+          
+          // Verify the update was successful
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .maybeSingle();
+            
+          console.log("Profile update verification:", verifyProfile);
         } else {
           // Create new profile with explicit role as text
-          const { error: profileError, data: profileData } = await supabase
+          const { error: profileError } = await supabase
             .from('profiles')
             .insert({
               id: data.user.id,
@@ -239,7 +287,14 @@ export function useAuth() {
             throw profileError;
           }
           
-          console.log("Profile created successfully with role:", normalizedRole);
+          // Verify the insert was successful
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .maybeSingle();
+            
+          console.log("Profile creation verification:", verifyProfile);
         }
         
         // Explicitly set the role in state after successful registration

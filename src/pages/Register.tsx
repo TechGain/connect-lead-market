@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,15 @@ const Register = () => {
       // Make sure the role is explicitly typed and validated
       const userRole: 'seller' | 'buyer' = selectedRole;
       
+      // Log to confirm the role is correctly formatted before registration
+      console.log("Registration role check:", {
+        selectedRole, 
+        type: typeof selectedRole, 
+        normalized: selectedRole.toLowerCase(),
+        isSeller: selectedRole.toLowerCase() === 'seller',
+        isBuyer: selectedRole.toLowerCase() === 'buyer'
+      });
+      
       const result = await register(
         email, 
         password, 
@@ -82,7 +92,7 @@ const Register = () => {
           } else {
             navigate('/marketplace');
           }
-        }, 1000); // Increased timeout to ensure state updates
+        }, 1500); // Increased timeout to ensure state updates
       } else {
         setIsLoading(false); // Reset loading state on failure
         // If result is null, show a more detailed error
@@ -115,7 +125,10 @@ const Register = () => {
                   defaultValue={selectedRole} 
                   className="flex" 
                   value={selectedRole}
-                  onValueChange={(value) => setSelectedRole(value as 'seller' | 'buyer')}
+                  onValueChange={(value) => {
+                    console.log("Role selected:", value);
+                    setSelectedRole(value as 'seller' | 'buyer');
+                  }}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="buyer" id="buyer" />
