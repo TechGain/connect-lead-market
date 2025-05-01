@@ -6,9 +6,10 @@ import { toast } from 'sonner';
 
 interface ProfileSettingsCardProps {
   role: 'seller' | 'buyer';
+  disabled?: boolean;
 }
 
-const ProfileSettingsCard = ({ role }: ProfileSettingsCardProps) => {
+const ProfileSettingsCard = ({ role, disabled = false }: ProfileSettingsCardProps) => {
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
@@ -27,6 +28,7 @@ const ProfileSettingsCard = ({ role }: ProfileSettingsCardProps) => {
             variant="outline" 
             size="sm"
             onClick={() => toast.info("Notification settings coming soon")}
+            disabled={disabled}
           >
             Configure
           </Button>
@@ -41,6 +43,7 @@ const ProfileSettingsCard = ({ role }: ProfileSettingsCardProps) => {
             variant="outline" 
             size="sm"
             onClick={() => toast.info("Security settings coming soon")}
+            disabled={disabled}
           >
             Manage
           </Button>
@@ -55,6 +58,7 @@ const ProfileSettingsCard = ({ role }: ProfileSettingsCardProps) => {
             variant="outline" 
             size="sm"
             onClick={() => toast.info("Payment settings coming soon")}
+            disabled={disabled}
           >
             Manage
           </Button>

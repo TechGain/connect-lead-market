@@ -17,9 +17,10 @@ interface ProfileInfoCardProps {
   };
   role: 'seller' | 'buyer';
   onRefresh?: () => void;
+  isOffline?: boolean;
 }
 
-const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps) => {
+const ProfileInfoCard = ({ profileData, role, onRefresh, isOffline }: ProfileInfoCardProps) => {
   // Make sure we have valid data with strict defaults
   const safeData = {
     name: profileData?.name || 'User',
@@ -74,6 +75,7 @@ const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps)
           <Button 
             variant={isLimitedData ? "default" : "outline"} 
             onClick={onRefresh}
+            disabled={isOffline}
             className={`flex items-center gap-2 ${isLimitedData ? "bg-brand-600 hover:bg-brand-700" : ""}`}
           >
             <RefreshCw size={16} className={isLimitedData ? "" : ""} />
