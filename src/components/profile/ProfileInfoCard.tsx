@@ -15,10 +15,13 @@ interface ProfileInfoCardProps {
     avatar: string | undefined;
     totalLeads: number;
   };
-  role: 'seller' | 'buyer' | null;
+  role: 'seller' | 'buyer' | string; // Allow string to accommodate our default fallback value
 }
 
 const ProfileInfoCard = ({ profileData, role }: ProfileInfoCardProps) => {
+  // Ensure we have a valid role for ProfileBadge
+  const safeRole = (role === 'seller' || role === 'buyer') ? role as 'seller' | 'buyer' : 'buyer';
+  
   return (
     <Card className="lg:col-span-1">
       <CardHeader className="flex flex-col items-center text-center">
@@ -26,7 +29,7 @@ const ProfileInfoCard = ({ profileData, role }: ProfileInfoCardProps) => {
           name={profileData.name}
           rating={profileData.rating}
           avatar={profileData.avatar}
-          role={role as 'seller' | 'buyer'}
+          role={safeRole}
           totalLeads={profileData.totalLeads}
         />
         <CardDescription className="mt-2">
