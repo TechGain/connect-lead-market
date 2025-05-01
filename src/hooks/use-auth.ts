@@ -97,19 +97,9 @@ export function useAuth() {
     try {
       console.log("Registration starting with:", { email, role, fullName, company });
       
-      // First check if user with this email already exists
-      const { data: existingUsers, error: existingUserError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email);
-      
-      if (existingUserError) {
-        console.error("Error checking existing user:", existingUserError);
-      } else if (existingUsers && existingUsers.length > 0) {
-        console.error("User with this email already exists");
-        toast.error('An account with this email already exists');
-        return null;
-      }
+      // First check if user with this email already exists - FIXED: Removed the problematic query
+      // Instead of querying profiles by email which was causing issues, 
+      // we'll handle duplicate email errors from the signup process
       
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
