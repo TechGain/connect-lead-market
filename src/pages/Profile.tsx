@@ -38,7 +38,7 @@ const Profile = () => {
         console.log("Loading is taking too long, marking timeout");
         setLoadingTimeout(true);
       }
-    }, 5000); // 5 seconds timeout
+    }, 8000); // Extended timeout to 8 seconds
     
     return () => clearTimeout(timer);
   }, [isLoggedIn, role, authLoading, profileLoading, error, user?.id, loadingTimeout]);
@@ -54,7 +54,11 @@ const Profile = () => {
   const handleRefresh = () => {
     setHasAttemptedReload(true);
     refreshUserRole();
-    if (refreshData) refreshData();
+    if (refreshData) {
+      setTimeout(() => {
+        refreshData();
+      }, 1000);
+    }
     toast.info("Refreshing profile data...");
   };
 

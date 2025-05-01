@@ -33,7 +33,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Add more detailed console logs to track role state
   useEffect(() => {
-    console.log("UserRoleProvider role updated:", { 
+    console.log("UserRoleProvider state update:", { 
       role, 
       isLoggedIn, 
       userId: user?.id,
@@ -52,7 +52,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setTimeout(() => {
         console.log("Executing delayed role refresh...");
         refreshRole();
-      }, 1000);
+      }, 1500); // Increased delay to ensure DB propagation
     }
   }, [role, isLoggedIn, user?.id, isLoading, retryCount, hasAttemptedRefresh, refreshRole]);
 

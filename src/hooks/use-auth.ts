@@ -14,7 +14,7 @@ export function useAuth() {
       console.log("Fetching role for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
-        .select('*') // Select all columns to debug
+        .select('role') // Only select the role column
         .eq('id', userId)
         .single();
       
@@ -24,12 +24,12 @@ export function useAuth() {
         return null;
       } 
       
-      console.log("Complete profile data:", data);
-      console.log("User role from profile:", data?.role);
+      console.log("Profile data from fetchUserRole:", data);
       
-      // Make sure to handle string case insensitively and validate
+      // Check if role exists and normalize it
       if (data && data.role) {
-        const roleValue = data.role.toLowerCase();
+        // Normalize to lowercase and validate
+        const roleValue = String(data.role).toLowerCase();
         console.log("Normalized role value:", roleValue);
         
         if (roleValue === 'seller' || roleValue === 'buyer') {
@@ -53,6 +53,9 @@ export function useAuth() {
     setIsLoadingUser(true);
     
     try {
+      // Force a delay to ensure any database updates have time to propagate
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const role = await fetchUserRole(user.id);
       console.log("Role refreshed result:", role);
       
@@ -82,6 +85,7 @@ export function useAuth() {
           
           // Fetch the user's role
           const role = await fetchUserRole(session.user.id);
+          console.log("Initial role fetch result:", role, "for user:", session.user.id);
           if (role) {
             setUserRole(role);
           }
@@ -108,6 +112,7 @@ export function useAuth() {
         
         // Fetch the user's role
         const role = await fetchUserRole(session.user.id);
+        console.log("Auth state change role fetch:", role);
         if (role) {
           setUserRole(role);
         } else {
@@ -211,18 +216,17 @@ export function useAuth() {
             throw updateError;
           }
         } else {
-          // Create new profile
+          // Create new profile with explicit role as text
           const { error: profileError, data: profileData } = await supabase
             .from('profiles')
             .insert({
               id: data.user.id,
               full_name: fullName,
-              role: normalizedRole, // Ensure role is correctly set
+              role: normalizedRole, // Explicitly set as text value 'seller' or 'buyer'
               company: company || null,
               rating: normalizedRole === 'seller' ? 5 : null,
               created_at: new Date().toISOString() // Explicitly set creation timestamp
-            })
-            .select();
+            });
           
           if (profileError) {
             console.error("Profile creation error:", profileError);
@@ -235,7 +239,7 @@ export function useAuth() {
             throw profileError;
           }
           
-          console.log("Profile created successfully with role:", normalizedRole, "Profile data:", profileData);
+          console.log("Profile created successfully with role:", normalizedRole);
         }
         
         // Explicitly set the role in state after successful registration
