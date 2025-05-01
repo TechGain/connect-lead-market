@@ -9,6 +9,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
 import StarRating from './StarRating';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 
 interface LeadUploaderProps {
   onLeadSubmit: (lead: Omit<Lead, 'id'>) => void;
@@ -23,12 +28,23 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
   const [contactPhone, setContactPhone] = useState('');
   const [price, setPrice] = useState('');
   const [quality, setQuality] = useState(3);
+  const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
+  const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Generate time slots in 2-hour windows (8 AM to 6 PM)
+  const timeSlots = [
+    '8:00 AM - 10:00 AM',
+    '10:00 AM - 12:00 PM',
+    '12:00 PM - 2:00 PM',
+    '2:00 PM - 4:00 PM',
+    '4:00 PM - 6:00 PM',
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!leadType || !location || !description || !contactName || !contactEmail || !price) {
+    if (!leadType || !location || !description || !contactName || !contactEmail || !price || !appointmentDate || !appointmentTimeSlot) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -36,6 +52,8 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
     setIsSubmitting(true);
     
     try {
+      const appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
+      
       const newLead: Omit<Lead, 'id'> = {
         type: leadType,
         location,
@@ -48,6 +66,7 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
         status: 'new',
         sellerId: 'current-seller-id', // This will be replaced by the actual seller ID in MyLeads
         createdAt: new Date().toISOString(),
+        appointmentTime: appointmentInfo, // Add the appointment time
       };
       
       await onLeadSubmit(newLead);
@@ -61,6 +80,8 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
       setContactPhone('');
       setPrice('');
       setQuality(3);
+      setAppointmentDate(undefined);
+      setAppointmentTimeSlot('');
     } catch (error) {
       console.error('Error submitting lead:', error);
       toast.error('Failed to upload lead');
@@ -115,6 +136,50 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
               rows={3}
               required
             />
+          </div>
+          
+          {/* Appointment date and time section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Appointment Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !appointmentDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {appointmentDate ? format(appointmentDate, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={appointmentDate}
+                    onSelect={setAppointmentDate}
+                    initialFocus
+                    disabled={(date) => date < new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Appointment Time *</Label>
+              <Select value={appointmentTimeSlot} onValueChange={setAppointmentTimeSlot}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select time slot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((slot) => (
+                    <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

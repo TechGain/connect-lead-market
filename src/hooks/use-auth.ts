@@ -97,10 +97,6 @@ export function useAuth() {
     try {
       console.log("Registration starting with:", { email, role, fullName, company });
       
-      // First check if user with this email already exists - FIXED: Removed the problematic query
-      // Instead of querying profiles by email which was causing issues, 
-      // we'll handle duplicate email errors from the signup process
-      
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -108,6 +104,7 @@ export function useAuth() {
         options: {
           data: {
             full_name: fullName,
+            role: role // Store role in user metadata
           }
         }
       });
@@ -142,7 +139,7 @@ export function useAuth() {
           throw profileError;
         }
         
-        console.log("Profile created successfully");
+        console.log("Profile created successfully with role:", role);
       } else {
         console.error("No user data returned after signup");
         throw new Error("Registration failed - no user data returned");
