@@ -14,17 +14,32 @@ const ProfileContainer = () => {
   const [error, setError] = useState<string | null>(null);
   const [userData, setUserData] = useState<any>(null);
   const [profileData, setProfileData] = useState<any>(null);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
   
   // Direct fetch of both user session and profile data
   const fetchProfileData = async () => {
     try {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+      
       setIsLoading(true);
       setError(null);
       
-      console.log("ProfileContainer: Directly fetching user session and profile data");
+      console.log("ProfileContainer: Fetching user session and profile data");
       
-      // Get current session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      // Get current session with a timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Session fetch timeout")), 5000)
+      );
+      
+      const sessionPromise = supabase.auth.getSession();
+      
+      // Race between timeout and actual request
+      const { data: sessionData, error: sessionError } = await Promise.race([
+        sessionPromise,
+        timeoutPromise.then(() => { throw new Error("Session fetch timeout"); })
+      ]) as any;
       
       if (sessionError) {
         console.error("ProfileContainer: Session error:", sessionError);
@@ -109,9 +124,17 @@ const ProfileContainer = () => {
           totalLeads
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("ProfileContainer: Exception in profile data fetch:", err);
-      setError("An unexpected error occurred. Please try again.");
+      setError(err.message || "An unexpected error occurred. Please try again.");
+      
+      // Set a timeout to retry loading if it's a timeout error
+      const timeout = setTimeout(() => {
+        console.log("Auto-retrying profile data fetch after timeout");
+        fetchProfileData();
+      }, 5000);
+      
+      setLoadingTimeout(timeout);
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +143,12 @@ const ProfileContainer = () => {
   // Fetch profile data on component mount
   useEffect(() => {
     fetchProfileData();
+    
+    return () => {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    };
   }, [navigate]);
   
   // Handle retry button click
@@ -145,6 +174,7 @@ const ProfileContainer = () => {
         <ProfileContent 
           profileData={profileData} 
           userData={userData}
+          refreshProfile={handleRetry}
         />
       ) : (
         <div className="text-center py-8">
