@@ -181,36 +181,62 @@ export function useAuth() {
       if (data.user) {
         console.log("User created successfully, creating profile:", data.user.id);
         
-        // Explicitly store role in uppercase to avoid case-sensitivity issues
+        // Explicitly store role in lowercase to avoid case-sensitivity issues
         const normalizedRole = role.toLowerCase() as 'seller' | 'buyer';
         console.log("Creating profile with normalized role:", normalizedRole);
         
-        // Create a profile for the user with their role
-        const { error: profileError, data: profileData } = await supabase
+        // First check if profile already exists to prevent duplicates
+        const { data: existingProfile } = await supabase
           .from('profiles')
-          .insert({
-            id: data.user.id,
-            full_name: fullName,
-            role: normalizedRole, // Ensure role is correctly set
-            company: company || null,
-            rating: normalizedRole === 'seller' ? 5 : null, // Default rating for sellers
-            created_at: new Date().toISOString() // Explicitly set creation timestamp
-          })
-          .select()
+          .select('id')
+          .eq('id', data.user.id)
           .single();
-        
-        if (profileError) {
-          console.error("Profile creation error:", profileError);
-          console.error("Profile creation details:", {
-            userId: data.user.id,
-            fullName,
-            role: normalizedRole,
-            company
-          });
-          throw profileError;
+          
+        if (existingProfile) {
+          console.log("Profile already exists, updating instead:", existingProfile);
+          // Update existing profile
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: fullName,
+              role: normalizedRole,
+              company: company || null,
+              rating: normalizedRole === 'seller' ? 5 : null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', data.user.id);
+            
+          if (updateError) {
+            console.error("Profile update error:", updateError);
+            throw updateError;
+          }
+        } else {
+          // Create new profile
+          const { error: profileError, data: profileData } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              full_name: fullName,
+              role: normalizedRole, // Ensure role is correctly set
+              company: company || null,
+              rating: normalizedRole === 'seller' ? 5 : null,
+              created_at: new Date().toISOString() // Explicitly set creation timestamp
+            })
+            .select();
+          
+          if (profileError) {
+            console.error("Profile creation error:", profileError);
+            console.error("Profile creation details:", {
+              userId: data.user.id,
+              fullName,
+              role: normalizedRole,
+              company
+            });
+            throw profileError;
+          }
+          
+          console.log("Profile created successfully with role:", normalizedRole, "Profile data:", profileData);
         }
-        
-        console.log("Profile created successfully with role:", normalizedRole, "Profile data:", profileData);
         
         // Explicitly set the role in state after successful registration
         setUserRole(normalizedRole);
