@@ -140,3 +140,26 @@ export const createLead = async (lead: Omit<Lead, 'id'>): Promise<Lead> => {
   mockLeads.push(newLead);
   return newLead;
 };
+
+// New function to rate a lead
+export const rateLead = async (leadId: string, buyerId: string, rating: number, review: string): Promise<boolean> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const leadIndex = mockLeads.findIndex(lead => lead.id === leadId);
+  
+  if (leadIndex === -1) {
+    return false; // Lead not found
+  }
+  
+  // Update the lead's quality rating
+  mockLeads[leadIndex] = {
+    ...mockLeads[leadIndex],
+    qualityRating: rating
+  };
+  
+  // In a real app, we would store the review in a separate table
+  console.log(`Review for lead ${leadId}: ${review}`);
+  
+  return true;
+};
