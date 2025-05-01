@@ -33,7 +33,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [role, setRole] = useState<'seller' | 'buyer' | null>(authRole);
   const [isForceRefreshing, setIsForceRefreshing] = useState(false);
 
-  // Direct database check for user role
+  // Direct database check for user role - this is the primary source of truth
   useEffect(() => {
     async function fetchAndUpdateRole() {
       if (user?.id) {
@@ -45,7 +45,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .maybeSingle();
+            .single();
             
           if (error) {
             console.error("Error directly fetching role:", error);
@@ -97,7 +97,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .maybeSingle();
+          .single();
           
         if (error) {
           console.error("Error fetching role during refresh:", error);
@@ -111,7 +111,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           
           if (dbRole === 'seller' || dbRole === 'buyer') {
             setRole(dbRole as 'seller' | 'buyer');
-            toast.success(`Your role has been refreshed: ${dbRole}`);
+            toast.success(`Your profile has been refreshed: ${dbRole}`);
           } else {
             toast.warning(`Invalid role found: ${dbRole}`);
           }

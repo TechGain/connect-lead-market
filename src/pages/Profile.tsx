@@ -97,16 +97,6 @@ const Profile = () => {
               profileData={profileData} 
               role={role || 'buyer'} // Fallback to 'buyer' if role is null
             />
-            
-            {role === null && (
-              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                <p className="text-yellow-700 mb-2">Your account role couldn't be determined. Some features may be limited.</p>
-                <Button onClick={handleRefresh} variant="outline" className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  Refresh Role Information
-                </Button>
-              </div>
-            )}
           </>
         )}
       </main>

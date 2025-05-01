@@ -44,7 +44,7 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .maybeSingle();
+            .single();
           
           if (error) {
             console.error("Error fetching role from database:", error);
@@ -65,7 +65,7 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
                 refreshUserRole();
               }
               
-              // If we have a role in the database, we don't need fixing
+              // Since we have a role in the database, we don't need fixing
               setRoleNeedsFixing(false);
             }
           } else {
@@ -86,43 +86,8 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
     
     setIsFixingRole(true);
     toast.info("Refreshing your role information...");
-    
-    try {
-      // Direct database query to get current role
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Error fetching role during refresh:", error);
-        toast.error("Error fetching your role information");
-        return;
-      }
-      
-      if (data?.role) {
-        const dbRole = String(data.role).toLowerCase();
-        console.log("Database role during refresh:", dbRole);
-        
-        if (dbRole === 'seller' || dbRole === 'buyer') {
-          setLocalRole(dbRole as 'seller' | 'buyer');
-          refreshUserRole();
-          toast.success(`Your role has been refreshed: ${dbRole}`);
-          setRoleNeedsFixing(false);
-        } else {
-          toast.warning("Invalid role found in database");
-        }
-      } else {
-        toast.warning("No role found in your profile");
-        setRoleNeedsFixing(true);
-      }
-    } catch (err) {
-      console.error("Exception during manual refresh:", err);
-      toast.error("An error occurred while refreshing your role");
-    } finally {
-      setIsFixingRole(false);
-    }
+    refreshUserRole();
+    setIsFixingRole(false);
   };
 
   // Use local role first, fallback to context role, then default to 'buyer'
@@ -133,29 +98,25 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
       <ProfileInfoCard profileData={profileData} role={displayRole as 'seller' | 'buyer'} />
       <ProfileSettingsCard role={displayRole as 'seller' | 'buyer'} />
       
-      {roleNeedsFixing && user?.id && (
+      {/* Only show role refresh UI if we have a user ID but no valid role detected */}
+      {(user?.id && !actualDatabaseRole) && (
         <div className="lg:col-span-3 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
-              <p className="text-yellow-700 mb-1 font-medium">Account Role Issue Detected</p>
+              <p className="text-yellow-700 mb-1 font-medium">Profile Information Issue</p>
               <p className="text-yellow-600 text-sm">
-                Your account role is not properly set. Please choose a role below:
+                Your profile information needs to be refreshed.
               </p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div>
               <Button 
                 onClick={handleManualRefresh} 
                 disabled={isFixingRole}
                 className="flex items-center gap-2 whitespace-nowrap"
               >
                 <RefreshCw className={`h-4 w-4 ${isFixingRole ? 'animate-spin' : ''}`} />
-                {isFixingRole ? 'Refreshing...' : 'Refresh Role'}
+                {isFixingRole ? 'Refreshing...' : 'Refresh Profile'}
               </Button>
-              
-              <div className="flex gap-2">
-                <ProfileRoleFixButton userId={user.id} desiredRole="buyer" />
-                <ProfileRoleFixButton userId={user.id} desiredRole="seller" />
-              </div>
             </div>
           </div>
         </div>

@@ -42,7 +42,7 @@ export const useProfileData = () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error("Error fetching profile:", error);
@@ -71,57 +71,23 @@ export const useProfileData = () => {
         }
       }
 
-      // If profile doesn't exist, create a default one
-      if (!profile) {
-        console.warn("No profile found for user:", user.id);
-        
-        // Create default profile
-        const defaultRole = role || 'buyer';
-        const { error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-            role: defaultRole,
-            created_at: new Date().toISOString()
-          });
-          
-        if (createError) {
-          console.error("Error creating default profile:", createError);
-          throw createError;
-        }
-        
-        console.log("Created default profile with role:", defaultRole);
-        
-        // Set profile data with default values
-        setProfileData({
-          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-          email: user.email || '',
-          company: 'Not specified',
-          rating: defaultRole === 'seller' ? 5 : 4.7,
-          joinedDate,
-          avatar: undefined,
-          totalLeads: 0
-        });
-      } else {
-        // Log the exact role information we're getting
-        console.log("Role information:", { 
-          profileRole: profile?.role,
-          contextRole: role,
-          profileObject: profile 
-        });
-        
-        // Update profile data state
-        setProfileData({
-          name: profile?.full_name || user.email?.split('@')[0] || 'User',
-          email: user.email || '',
-          company: profile?.company || 'Not specified',
-          rating: profile?.rating || 4.7,
-          joinedDate,
-          avatar: undefined,
-          totalLeads
-        });
-      }
+      // Log the exact role information we're getting
+      console.log("Role information in use-profile-data:", { 
+        profileRole: profile?.role,
+        contextRole: role,
+        profileObject: profile 
+      });
+      
+      // Update profile data state
+      setProfileData({
+        name: profile?.full_name || user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        company: profile?.company || 'Not specified',
+        rating: profile?.rating || 4.7,
+        joinedDate,
+        avatar: undefined,
+        totalLeads
+      });
     } catch (error: any) {
       console.error("Failed to load profile data:", error);
       setError(error.message || "Failed to load profile data");

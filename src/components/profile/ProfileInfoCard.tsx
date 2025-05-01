@@ -43,11 +43,11 @@ const ProfileInfoCard = ({ profileData, role }: ProfileInfoCardProps) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Company</p>
-            <p>{profileData.company}</p>
+            <p>{profileData.company || 'Not specified'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Account Type</p>
-            <p className="capitalize">{role || 'Loading...'}</p>
+            <p className="capitalize font-medium text-brand-600">{role}</p>
           </div>
         </div>
       </CardContent>
