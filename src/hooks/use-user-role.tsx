@@ -65,13 +65,6 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 setRole(dbRole as 'seller' | 'buyer');
               }
             }
-          } else {
-            console.log("No role found in database, using auth role");
-            
-            // Use auth role if available
-            if (authRole) {
-              setRole(authRole);
-            }
           }
         } catch (err) {
           console.error("Exception during direct database check:", err);

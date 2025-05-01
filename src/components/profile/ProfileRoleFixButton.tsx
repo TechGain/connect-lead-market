@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,40 @@ interface ProfileRoleFixButtonProps {
 const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps) => {
   const [isFixing, setIsFixing] = useState(false);
   const [isFixed, setIsFixed] = useState(false);
+  const [shouldShow, setShouldShow] = useState(true);
   const { refreshUserRole } = useUserRole();
+
+  // Check if user already has a role
+  useEffect(() => {
+    async function checkExistingRole() {
+      if (!userId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error checking profile:", error);
+          return;
+        }
+        
+        // If user already has any role, don't show the button
+        if (data?.role) {
+          setShouldShow(false);
+          if (data.role === desiredRole) {
+            setIsFixed(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking role:", err);
+      }
+    }
+    
+    checkExistingRole();
+  }, [userId, desiredRole]);
 
   const handleFix = async () => {
     if (isFixing || isFixed || !userId) return;
@@ -93,6 +126,11 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
       setIsFixing(false);
     }
   };
+  
+  // Don't render anything if button shouldn't be shown
+  if (!shouldShow) {
+    return null;
+  }
   
   return (
     <Button 

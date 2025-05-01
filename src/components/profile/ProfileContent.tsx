@@ -28,6 +28,7 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
   const [localRole, setLocalRole] = useState<'seller' | 'buyer' | null>(contextRole);
   const [isFixingRole, setIsFixingRole] = useState(false);
   const [actualDatabaseRole, setActualDatabaseRole] = useState<string | null>(null);
+  const [roleNeedsFixing, setRoleNeedsFixing] = useState(false);
   
   // Log to help debug role issues
   console.log("ProfileContent rendered with role:", contextRole);
@@ -63,7 +64,13 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
                 toast.info(`Your role was detected as ${dbRole}. Context will be refreshed.`);
                 refreshUserRole();
               }
+              
+              // If we have a role in the database, we don't need fixing
+              setRoleNeedsFixing(false);
             }
+          } else {
+            // If no role in database, we need fixing
+            setRoleNeedsFixing(true);
           }
         } catch (err) {
           console.error("Exception fetching role from database:", err);
@@ -102,11 +109,13 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
           setLocalRole(dbRole as 'seller' | 'buyer');
           refreshUserRole();
           toast.success(`Your role has been refreshed: ${dbRole}`);
+          setRoleNeedsFixing(false);
         } else {
           toast.warning("Invalid role found in database");
         }
       } else {
         toast.warning("No role found in your profile");
+        setRoleNeedsFixing(true);
       }
     } catch (err) {
       console.error("Exception during manual refresh:", err);
@@ -124,19 +133,14 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
       <ProfileInfoCard profileData={profileData} role={displayRole as 'seller' | 'buyer'} />
       <ProfileSettingsCard role={displayRole as 'seller' | 'buyer'} />
       
-      {(contextRole === null || localRole !== contextRole || actualDatabaseRole !== contextRole) && (
+      {roleNeedsFixing && user?.id && (
         <div className="lg:col-span-3 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
               <p className="text-yellow-700 mb-1 font-medium">Account Role Issue Detected</p>
               <p className="text-yellow-600 text-sm">
-                Your account role is {contextRole === null ? 'not set' : 'inconsistent'}. 
-                Currently displaying as: <span className="font-medium">{displayRole}</span>
+                Your account role is not properly set. Please choose a role below:
               </p>
-              <div className="text-yellow-600 text-xs mt-1">
-                <p>Database role: {actualDatabaseRole || 'Not set'}</p>
-                <p>Context role: {contextRole || 'Not set'}</p>
-              </div>
             </div>
             <div className="flex flex-col gap-2">
               <Button 
@@ -148,12 +152,10 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
                 {isFixingRole ? 'Refreshing...' : 'Refresh Role'}
               </Button>
               
-              {user?.id && (
-                <div className="flex gap-2">
-                  <ProfileRoleFixButton userId={user.id} desiredRole="buyer" />
-                  <ProfileRoleFixButton userId={user.id} desiredRole="seller" />
-                </div>
-              )}
+              <div className="flex gap-2">
+                <ProfileRoleFixButton userId={user.id} desiredRole="buyer" />
+                <ProfileRoleFixButton userId={user.id} desiredRole="seller" />
+              </div>
             </div>
           </div>
         </div>
