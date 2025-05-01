@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -50,6 +49,7 @@ const Header = () => {
     }
   };
 
+  // In the renderNavItems function:
   const renderNavItems = () => <>
       <NavigationMenuItem>
         <Link to="/" className={navigationMenuTriggerStyle()}>
@@ -73,6 +73,7 @@ const Header = () => {
         </NavigationMenuItem>}
     </>;
 
+  // Make sure the mobile nav has the same role-based conditions:
   const renderMobileNavItems = () => <>
       <SheetClose asChild>
         <Link to="/" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">

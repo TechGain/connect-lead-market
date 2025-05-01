@@ -127,6 +127,7 @@ export function useAuth() {
   ) => {
     try {
       console.log("Registration starting with:", { email, role, fullName, company });
+      setIsLoadingUser(true);
       
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
@@ -177,6 +178,7 @@ export function useAuth() {
         // Explicitly set the role in state after successful registration
         setUserRole(role);
         setUser(data.user);
+        setIsLoadingUser(false);
         
         return data;
       } else {
