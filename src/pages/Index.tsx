@@ -31,7 +31,7 @@ const Index = () => {
                     </Button>
                   </Link>
                   <Link to="/about">
-                    <Button variant="outline" className="border-white hover:bg-white/10 font-normal text-[#00ceff] text-[00a4cc]">
+                    <Button variant="outline" className="bg-white/10 font-normal text-[#00ceff] text-[00a4cc]">
                       Learn More
                     </Button>
                   </Link>
