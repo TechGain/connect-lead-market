@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,12 +5,11 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
-
 const Index = () => {
-  const { isLoggedIn } = useUserRole();
-
-  return (
-    <div className="flex flex-col min-h-screen">
+  const {
+    isLoggedIn
+  } = useUserRole();
+  return <div className="flex flex-col min-h-screen">
       <Header />
       
       <main className="flex-1">
@@ -33,18 +31,14 @@ const Index = () => {
                     </Button>
                   </Link>
                   <Link to="/about">
-                    <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                    <Button variant="outline" className="border-white hover:bg-white/10 font-normal text-[#00ceff] text-[00a4cc]">
                       Learn More
                     </Button>
                   </Link>
                 </div>
               </div>
               <div className="md:w-1/2">
-                <img 
-                  src="https://images.unsplash.com/photo-1586473219010-2ffc57b0d282?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80" 
-                  alt="Lead Marketplace" 
-                  className="rounded-lg shadow-lg w-full"
-                />
+                <img src="https://images.unsplash.com/photo-1586473219010-2ffc57b0d282?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80" alt="Lead Marketplace" className="rounded-lg shadow-lg w-full" />
               </div>
             </div>
           </div>
@@ -80,9 +74,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-bold mb-2">{isLoggedIn && !isLoggedIn ? "Upload or Browse Leads" : "Browse or Upload Leads"}</h3>
                   <p className="text-gray-600">
-                    {isLoggedIn && !isLoggedIn 
-                      ? "Sellers upload quality leads, buyers browse the marketplace"
-                      : "Find qualified leads or list your leads for sale on our marketplace"}
+                    {isLoggedIn && !isLoggedIn ? "Sellers upload quality leads, buyers browse the marketplace" : "Find qualified leads or list your leads for sale on our marketplace"}
                   </p>
                 </CardContent>
               </Card>
@@ -153,7 +145,7 @@ const Index = () => {
             </p>
             <div className="flex justify-center gap-4">
               <Link to="/register?role=seller">
-                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-brand-600">
+                <Button variant="outline" className="bg-white text-brand-600 text-base">
                   Become a Seller
                 </Button>
               </Link>
@@ -168,8 +160,6 @@ const Index = () => {
       </main>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
