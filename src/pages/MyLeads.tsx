@@ -12,6 +12,7 @@ import { Lead } from '@/types/lead';
 import { fetchLeadsBySeller, createLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useNavigate } from 'react-router-dom';
+import { AlertCircle, FileUp } from 'lucide-react';
 
 const MyLeads = () => {
   const navigate = useNavigate();
@@ -100,16 +101,50 @@ const MyLeads = () => {
   const activeLeadsCount = myLeads.filter(lead => lead.status === 'new' || lead.status === 'pending').length;
   const soldLeadsCount = myLeads.filter(lead => lead.status === 'sold').length;
 
+  // If not logged in as a seller, show a clear message
+  if (!isLoggedIn || role !== 'seller') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center p-8 rounded-lg border border-gray-200 shadow-sm max-w-md w-full">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
+            <p className="text-gray-600 mb-6">
+              You must be logged in as a seller to access this page.
+            </p>
+            <div className="space-x-4">
+              <Button onClick={() => navigate('/login')}>Log In</Button>
+              <Button variant="outline" onClick={() => navigate('/')}>Go Home</Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">My Leads</h1>
-          <p className="text-gray-600">
-            Manage your leads and track their status
-          </p>
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">My Leads</h1>
+            <p className="text-gray-600">
+              Manage your leads and track their status
+            </p>
+          </div>
+          
+          {/* Quick access button for uploading new leads */}
+          <Button 
+            onClick={() => setActiveTab('upload')}
+            className="mt-4 md:mt-0 bg-brand-500 hover:bg-brand-600"
+          >
+            <FileUp className="mr-2 h-4 w-4" />
+            Upload New Lead
+          </Button>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -126,7 +161,9 @@ const MyLeads = () => {
                 <Badge className="ml-2 bg-green-500">{soldLeadsCount}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="upload">Upload New Lead</TabsTrigger>
+            <TabsTrigger value="upload" className="relative">
+              Upload New Lead
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="active">
