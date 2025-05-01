@@ -162,18 +162,17 @@ const Register = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
-              {selectedRole === 'seller' && (
-                <div className="grid gap-2">
-                  <Label htmlFor="company-name">Company Name</Label>
-                  <Input
-                    id="company-name"
-                    placeholder="Company Name"
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                  />
-                </div>
-              )}
+              {/* Modified to show company name field for both buyer and seller */}
+              <div className="grid gap-2">
+                <Label htmlFor="company-name">Company Name {selectedRole !== 'seller' && <span className="text-xs text-muted-foreground">(Optional)</span>}</Label>
+                <Input
+                  id="company-name"
+                  placeholder="Company Name"
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
+              </div>
               {registrationError && (
                 <p className="text-red-500 text-sm">{registrationError}</p>
               )}
@@ -189,7 +188,7 @@ const Register = () => {
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link to="/login" className="text-brand-600 hover:underline">
-                  Log in
+                  Log In
                 </Link>
               </p>
             </CardFooter>

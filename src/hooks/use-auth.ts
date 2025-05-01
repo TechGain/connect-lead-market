@@ -22,7 +22,7 @@ export function useAuth() {
           // Fetch the user's profile to get the role
           const { data, error } = await supabase
             .from('profiles')
-            .select('role')
+            .select('*') // Select all columns to debug
             .eq('id', session.user.id)
             .single();
           
@@ -32,8 +32,17 @@ export function useAuth() {
             throw error;
           }
           
+          console.log("Complete profile data:", data);
           console.log("User role from profile:", data?.role);
-          setUserRole(data?.role as 'seller' | 'buyer' | null);
+          
+          // Make sure to handle string case insensitively
+          const roleValue = data?.role?.toLowerCase();
+          if (roleValue === 'seller' || roleValue === 'buyer') {
+            setUserRole(roleValue as 'seller' | 'buyer');
+          } else {
+            console.warn("Invalid role value detected:", data?.role);
+            setUserRole(null);
+          }
         } else {
           setUser(null);
           setUserRole(null);
@@ -59,7 +68,7 @@ export function useAuth() {
         try {
           const { data, error } = await supabase
             .from('profiles')
-            .select('role')
+            .select('*') // Select all columns to debug
             .eq('id', session.user.id)
             .single();
           
@@ -69,8 +78,17 @@ export function useAuth() {
             // We'll still display the error but not throw it to prevent breaking the auth flow
             toast.error('Failed to load user profile. Please try logging out and back in.');
           } else {
+            console.log("Complete profile data on auth change:", data);
             console.log("User role from profile on auth change:", data?.role);
-            setUserRole(data?.role as 'seller' | 'buyer' | null);
+            
+            // Make sure to handle string case insensitively
+            const roleValue = data?.role?.toLowerCase();
+            if (roleValue === 'seller' || roleValue === 'buyer') {
+              setUserRole(roleValue as 'seller' | 'buyer');
+            } else {
+              console.warn("Invalid role value detected on auth change:", data?.role);
+              setUserRole(null);
+            }
           }
         } catch (fetchError) {
           console.error('Error in profile fetch during auth state change:', fetchError);
@@ -110,7 +128,15 @@ export function useAuth() {
         } else {
           console.log("Complete profile data after login:", profileData);
           console.log("Setting user role after login:", profileData?.role);
-          setUserRole(profileData?.role as 'seller' | 'buyer' | null);
+          
+          // Make sure to handle string case insensitively
+          const roleValue = profileData?.role?.toLowerCase();
+          if (roleValue === 'seller' || roleValue === 'buyer') {
+            setUserRole(roleValue as 'seller' | 'buyer');
+          } else {
+            console.warn("Invalid role value detected after login:", profileData?.role);
+            setUserRole(null);
+          }
         }
       }
       
