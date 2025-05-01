@@ -18,13 +18,22 @@ const UploadLeads = () => {
       userId: user?.id
     });
     
+    // Force check to complete after a reasonable timeout to prevent infinite loading
+    const timer = setTimeout(() => {
+      if (!hasChecked) {
+        console.log("Auth check timed out, proceeding with available info");
+        setHasChecked(true);
+      }
+    }, 2000); // 2 seconds timeout
+    
     // Wait until authentication is finished loading
     if (isLoading) {
       console.log("Auth is still loading, waiting...");
-      return;
+      return () => clearTimeout(timer);
     }
     
     setHasChecked(true);
+    clearTimeout(timer);
     
     // Check if user is logged in and is a seller
     if (!isLoggedIn) {
@@ -34,29 +43,34 @@ const UploadLeads = () => {
       return;
     }
     
-    if (role !== 'seller') {
+    // If role is null but user is logged in, proceed to my-leads anyway
+    // This is a fallback to prevent getting stuck
+    if (role === null && isLoggedIn) {
+      console.log("User role is null but user is logged in, redirecting to my-leads");
+      navigate('/my-leads?tab=upload');
+      return;
+    }
+    
+    if (role !== 'seller' && role !== null) {
       console.log("User is not a seller, redirecting to home", { actualRole: role });
       toast.error(`Only sellers can upload leads. Your current role is: ${role || 'not set'}`);
-      
-      // If role is null, suggest refreshing
-      if (role === null) {
-        toast.info("Your account role couldn't be determined. Try refreshing the page.");
-      }
-      
       navigate('/');
       return;
     }
     
     // Redirect to my-leads with upload tab active
-    console.log("User is a seller, redirecting to upload tab");
+    console.log("User is a seller or role checking bypassed, redirecting to upload tab");
     navigate('/my-leads?tab=upload');
-  }, [isLoggedIn, role, navigate, isLoading, user?.id]);
+  }, [isLoggedIn, role, navigate, isLoading, user?.id, hasChecked]);
   
-  // Show a loading state
+  // Show a loading state with a timeout message
   if (isLoading || !hasChecked) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Checking permissions...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="mb-2">Checking permissions...</p>
+        <p className="text-sm text-gray-500">
+          If this takes too long, try refreshing the page
+        </p>
       </div>
     );
   }

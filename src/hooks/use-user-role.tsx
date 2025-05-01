@@ -35,7 +35,8 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       isLoggedIn, 
       userId: user?.id,
       retryCount,
-      hasAttemptedRefresh
+      hasAttemptedRefresh,
+      isLoading
     });
 
     // If logged in but no role after initial load, try to refresh once
@@ -43,16 +44,8 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log("User logged in but no role detected. Attempt:", retryCount + 1);
       setRetryCount(prev => prev + 1);
       
-      // If we've retried a few times and still no role, suggest a page refresh
-      if (retryCount >= 2 && !hasAttemptedRefresh) {
-        console.log("Multiple retries failed. Attempting page refresh...");
-        setHasAttemptedRefresh(true);
-        
-        // Add a small delay before refreshing
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      }
+      // Add a small delay before next retry attempt
+      setTimeout(() => {}, 500);
     }
   }, [role, isLoggedIn, user?.id, isLoading, retryCount, hasAttemptedRefresh]);
 

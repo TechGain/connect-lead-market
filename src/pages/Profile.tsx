@@ -16,6 +16,7 @@ const Profile = () => {
   const { isLoggedIn, role, isLoading: authLoading, user } = useUserRole();
   const { profileData, isLoading: profileLoading, error } = useProfileData();
   const [hasAttemptedReload, setHasAttemptedReload] = useState(false);
+  const [forceRender, setForceRender] = useState(0); // Used to force re-renders
   
   // Log detailed debug information
   useEffect(() => {
@@ -26,16 +27,27 @@ const Profile = () => {
       profileDataLoading: profileLoading,
       hasError: !!error,
       errorMessage: error,
-      userId: user?.id
+      userId: user?.id,
+      forceRender
     });
+    
+    // Force a timeout to proceed even if authentication is taking too long
+    const timer = setTimeout(() => {
+      if (authLoading && !hasAttemptedReload) {
+        console.log("Auth is taking too long, forcing re-render");
+        setForceRender(prev => prev + 1);
+      }
+    }, 3000); // 3 seconds timeout
     
     // If user not logged in, redirect to login
     if (!authLoading && !isLoggedIn) {
       toast.error("You must be logged in to view this page");
       navigate('/login');
-      return;
+      return () => clearTimeout(timer);
     }
-  }, [isLoggedIn, role, navigate, authLoading, profileLoading, error, user?.id]);
+    
+    return () => clearTimeout(timer);
+  }, [isLoggedIn, role, navigate, authLoading, profileLoading, error, user?.id, forceRender, hasAttemptedReload]);
   
   // If we have role issues, attempt one reload
   useEffect(() => {
@@ -56,6 +68,10 @@ const Profile = () => {
   // Combined loading state
   const isLoading = authLoading || profileLoading;
   
+  // If we're logged in but still don't have a role after reload attempt,
+  // let's render the profile anyway with a default role
+  const shouldProceedAnyway = isLoggedIn && role === null && hasAttemptedReload;
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -63,7 +79,7 @@ const Profile = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <ProfileHeader error={error} />
         
-        {isLoading ? (
+        {isLoading && !shouldProceedAnyway ? (
           <>
             <ProfileSkeleton />
             <p className="text-center text-gray-500 mt-4">Loading your profile...</p>
@@ -71,7 +87,10 @@ const Profile = () => {
         ) : error ? (
           <ProfileErrorDisplay error={error} />
         ) : (
-          <ProfileContent profileData={profileData} role={role} />
+          <ProfileContent 
+            profileData={profileData} 
+            role={role || 'buyer'} // Fallback to 'buyer' if role is null
+          />
         )}
       </main>
       

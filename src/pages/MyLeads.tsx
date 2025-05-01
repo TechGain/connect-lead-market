@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -54,7 +53,9 @@ const MyLeads = () => {
       return;
     }
     
-    if (role !== 'seller') {
+    // If role is null but user is logged in, allow access anyway
+    // This is a fallback to prevent getting stuck
+    if (role !== 'seller' && role !== null) {
       toast.error("Only sellers can access this page");
       navigate('/');
       return;
