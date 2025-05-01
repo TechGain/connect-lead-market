@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -11,12 +12,12 @@ import { Lead } from '@/types/lead';
 import { fetchLeadsBySeller, createLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { AlertCircle, FileUp } from 'lucide-react';
+import { AlertCircle, FileUp, ReloadIcon } from 'lucide-react';
 
 const MyLeads = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn, role, user } = useUserRole();
+  const { isLoggedIn, role, user, refreshUserRole } = useUserRole();
   const [myLeads, setMyLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -46,6 +47,28 @@ const MyLeads = () => {
     }
   };
   
+  // Refresh user role and data
+  const handleRefresh = () => {
+    refreshUserRole();
+    loadSellerLeads();
+    toast.info("Refreshing data...");
+  };
+  
+  const loadSellerLeads = async () => {
+    setIsLoading(true);
+    try {
+      if (user?.id) {
+        const leads = await fetchLeadsBySeller(user.id);
+        setMyLeads(leads);
+      }
+    } catch (error) {
+      console.error('Error loading seller leads:', error);
+      toast.error('Failed to load your leads');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
     if (!isLoggedIn) {
       toast.error("You must be logged in as a seller to view this page");
@@ -53,28 +76,17 @@ const MyLeads = () => {
       return;
     }
     
-    // If role is null but user is logged in, allow access anyway
-    // This is a fallback to prevent getting stuck
+    // Allow access if logged in, even if role is null (with warning)
     if (role !== 'seller' && role !== null) {
       toast.error("Only sellers can access this page");
       navigate('/');
       return;
     }
     
-    const loadSellerLeads = async () => {
-      setIsLoading(true);
-      try {
-        if (user?.id) {
-          const leads = await fetchLeadsBySeller(user.id);
-          setMyLeads(leads);
-        }
-      } catch (error) {
-        console.error('Error loading seller leads:', error);
-        toast.error('Failed to load your leads');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // If role is null but user is logged in, show a warning but allow access
+    if (role === null && isLoggedIn) {
+      toast.warning("We couldn't verify your seller status. Some features may be limited.");
+    }
     
     if (user?.id) {
       loadSellerLeads();
@@ -129,8 +141,8 @@ const MyLeads = () => {
   const activeLeadsCount = myLeads.filter(lead => lead.status === 'new' || lead.status === 'pending').length;
   const soldLeadsCount = myLeads.filter(lead => lead.status === 'sold').length;
 
-  // If not logged in as a seller, show a clear message
-  if (!isLoggedIn || role !== 'seller') {
+  // If not logged in, show a clear message
+  if (!isLoggedIn) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -152,11 +164,31 @@ const MyLeads = () => {
     );
   }
 
+  // If role is null but user is logged in, show a warning banner
+  const showRoleWarning = role === null && isLoggedIn;
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
+        {showRoleWarning && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md flex justify-between items-center">
+            <div>
+              <h3 className="font-medium text-yellow-800">Account role not detected</h3>
+              <p className="text-yellow-700 text-sm">Some features may be limited. Please refresh to verify your seller status.</p>
+            </div>
+            <Button 
+              onClick={handleRefresh}
+              variant="outline" 
+              className="flex items-center gap-2 bg-white hover:bg-white"
+            >
+              <ReloadIcon className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
+        )}
+      
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">My Leads</h1>

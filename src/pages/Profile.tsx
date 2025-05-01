@@ -10,13 +10,15 @@ import ProfileErrorDisplay from '@/components/profile/ProfileErrorDisplay';
 import ProfileContent from '@/components/profile/ProfileContent';
 import { useProfileData } from '@/hooks/use-profile-data';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, role, isLoading: authLoading, user } = useUserRole();
-  const { profileData, isLoading: profileLoading, error } = useProfileData();
+  const { isLoggedIn, role, isLoading: authLoading, user, refreshUserRole } = useUserRole();
+  const { profileData, isLoading: profileLoading, error, refreshData } = useProfileData();
   const [hasAttemptedReload, setHasAttemptedReload] = useState(false);
-  const [forceRender, setForceRender] = useState(0); // Used to force re-renders
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   
   // Log detailed debug information
   useEffect(() => {
@@ -28,49 +30,40 @@ const Profile = () => {
       hasError: !!error,
       errorMessage: error,
       userId: user?.id,
-      forceRender
     });
     
     // Force a timeout to proceed even if authentication is taking too long
     const timer = setTimeout(() => {
-      if (authLoading && !hasAttemptedReload) {
-        console.log("Auth is taking too long, forcing re-render");
-        setForceRender(prev => prev + 1);
+      if ((authLoading || profileLoading) && !loadingTimeout) {
+        console.log("Loading is taking too long, marking timeout");
+        setLoadingTimeout(true);
       }
-    }, 3000); // 3 seconds timeout
+    }, 5000); // 5 seconds timeout
     
-    // If user not logged in, redirect to login
+    return () => clearTimeout(timer);
+  }, [isLoggedIn, role, authLoading, profileLoading, error, user?.id, loadingTimeout]);
+  
+  // If user not logged in, redirect to login
+  useEffect(() => {
     if (!authLoading && !isLoggedIn) {
       toast.error("You must be logged in to view this page");
       navigate('/login');
-      return () => clearTimeout(timer);
     }
-    
-    return () => clearTimeout(timer);
-  }, [isLoggedIn, role, navigate, authLoading, profileLoading, error, user?.id, forceRender, hasAttemptedReload]);
+  }, [isLoggedIn, navigate, authLoading]);
   
-  // If we have role issues, attempt one reload
-  useEffect(() => {
-    if (!authLoading && isLoggedIn && role === null && !hasAttemptedReload) {
-      console.log("Profile detected missing role, attempting to refresh...");
-      setHasAttemptedReload(true);
-      toast.info("Your account role couldn't be determined. Refreshing the page...");
-      
-      // Wait a moment to ensure all state is settled
-      const timer = setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isLoggedIn, role, authLoading, hasAttemptedReload]);
+  const handleRefresh = () => {
+    setHasAttemptedReload(true);
+    refreshUserRole();
+    if (refreshData) refreshData();
+    toast.info("Refreshing profile data...");
+  };
 
   // Combined loading state
-  const isLoading = authLoading || profileLoading;
+  const isLoading = (authLoading || profileLoading) && !loadingTimeout;
   
   // If we're logged in but still don't have a role after reload attempt,
-  // let's render the profile anyway with a default role
-  const shouldProceedAnyway = isLoggedIn && role === null && hasAttemptedReload;
+  // or loading takes too long, let's render the profile anyway with a default role
+  const shouldProceedAnyway = (isLoggedIn && (role === null || loadingTimeout));
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -85,12 +78,32 @@ const Profile = () => {
             <p className="text-center text-gray-500 mt-4">Loading your profile...</p>
           </>
         ) : error ? (
-          <ProfileErrorDisplay error={error} />
+          <>
+            <ProfileErrorDisplay error={error} />
+            <div className="flex justify-center mt-4">
+              <Button onClick={handleRefresh} className="flex items-center gap-2">
+                <ReloadIcon className="h-4 w-4" />
+                Refresh Profile
+              </Button>
+            </div>
+          </>
         ) : (
-          <ProfileContent 
-            profileData={profileData} 
-            role={role || 'buyer'} // Fallback to 'buyer' if role is null
-          />
+          <>
+            <ProfileContent 
+              profileData={profileData} 
+              role={role || 'buyer'} // Fallback to 'buyer' if role is null
+            />
+            
+            {role === null && (
+              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-yellow-700 mb-2">Your account role couldn't be determined. Some features may be limited.</p>
+                <Button onClick={handleRefresh} variant="outline" className="flex items-center gap-2">
+                  <ReloadIcon className="h-4 w-4" />
+                  Refresh Role Information
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
       

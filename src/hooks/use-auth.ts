@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
 
@@ -7,6 +7,61 @@ export function useAuth() {
   const [user, setUser] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userRole, setUserRole] = useState<'seller' | 'buyer' | null>(null);
+
+  // Function to fetch user role from profiles table
+  const fetchUserRole = useCallback(async (userId: string) => {
+    try {
+      console.log("Fetching role for user:", userId);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*') // Select all columns to debug
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        console.log('Raw error response:', error.message, error.details, error.hint);
+        return null;
+      } 
+      
+      console.log("Complete profile data:", data);
+      console.log("User role from profile:", data?.role);
+      
+      // Make sure to handle string case insensitively
+      const roleValue = data?.role?.toLowerCase();
+      if (roleValue === 'seller' || roleValue === 'buyer') {
+        return roleValue as 'seller' | 'buyer';
+      }
+      
+      console.warn("Invalid role value detected:", data?.role);
+      return null;
+    } catch (error) {
+      console.error('Error in fetchUserRole:', error);
+      return null;
+    }
+  }, []);
+
+  // Function to refresh user role
+  const refreshRole = useCallback(async () => {
+    if (!user?.id) return;
+    
+    console.log("Refreshing role for user:", user.id);
+    setIsLoadingUser(true);
+    
+    try {
+      const role = await fetchUserRole(user.id);
+      if (role) {
+        console.log("Role refreshed successfully:", role);
+        setUserRole(role);
+      } else {
+        console.warn("Failed to refresh role");
+      }
+    } catch (error) {
+      console.error("Error refreshing role:", error);
+    } finally {
+      setIsLoadingUser(false);
+    }
+  }, [user?.id, fetchUserRole]);
 
   useEffect(() => {
     // Check current auth state
@@ -19,31 +74,10 @@ export function useAuth() {
         if (session?.user) {
           setUser(session.user);
           
-          // Fetch the user's profile to get the role
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*') // Select all columns to debug
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.error('Error fetching user role:', error);
-            console.log('Raw error response:', error.message, error.details, error.hint);
-            
-            // Don't throw here, just log the error and continue
-            // This prevents blocking the auth flow if profile fetch fails
-          } else {
-            console.log("Complete profile data:", data);
-            console.log("User role from profile:", data?.role);
-            
-            // Make sure to handle string case insensitively
-            const roleValue = data?.role?.toLowerCase();
-            if (roleValue === 'seller' || roleValue === 'buyer') {
-              setUserRole(roleValue as 'seller' | 'buyer');
-            } else {
-              console.warn("Invalid role value detected:", data?.role);
-              setUserRole(null);
-            }
+          // Fetch the user's role
+          const role = await fetchUserRole(session.user.id);
+          if (role) {
+            setUserRole(role);
           }
         } else {
           setUser(null);
@@ -66,34 +100,12 @@ export function useAuth() {
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
         
-        // Fetch the user's profile to get the role
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*') // Select all columns to debug
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.error('Error fetching user role on auth state change:', error);
-            console.log('Raw error data:', error.message, error.details, error.hint);
-            // We'll still display the error but not throw it to prevent breaking the auth flow
-            toast.error('Failed to load user profile. Please try logging out and back in.');
-          } else {
-            console.log("Complete profile data on auth change:", data);
-            console.log("User role from profile on auth change:", data?.role);
-            
-            // Make sure to handle string case insensitively
-            const roleValue = data?.role?.toLowerCase();
-            if (roleValue === 'seller' || roleValue === 'buyer') {
-              setUserRole(roleValue as 'seller' | 'buyer');
-            } else {
-              console.warn("Invalid role value detected on auth change:", data?.role);
-              setUserRole(null);
-            }
-          }
-        } catch (fetchError) {
-          console.error('Error in profile fetch during auth state change:', fetchError);
+        // Fetch the user's role
+        const role = await fetchUserRole(session.user.id);
+        if (role) {
+          setUserRole(role);
+        } else {
+          toast.error('Failed to load user profile. Please try logging out and back in.');
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -104,7 +116,7 @@ export function useAuth() {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserRole]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -118,27 +130,9 @@ export function useAuth() {
       
       // After successful login, explicitly fetch and set the role
       if (data.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*') // Select all columns to debug what's actually in the profile
-          .eq('id', data.user.id)
-          .single();
-        
-        if (profileError) {
-          console.error('Error fetching profile after login:', profileError);
-          console.log('Raw profile error:', profileError.message, profileError.details, profileError.hint);
-        } else {
-          console.log("Complete profile data after login:", profileData);
-          console.log("Setting user role after login:", profileData?.role);
-          
-          // Make sure to handle string case insensitively
-          const roleValue = profileData?.role?.toLowerCase();
-          if (roleValue === 'seller' || roleValue === 'buyer') {
-            setUserRole(roleValue as 'seller' | 'buyer');
-          } else {
-            console.warn("Invalid role value detected after login:", profileData?.role);
-            setUserRole(null);
-          }
+        const role = await fetchUserRole(data.user.id);
+        if (role) {
+          setUserRole(role);
         }
       }
       
@@ -267,5 +261,6 @@ export function useAuth() {
     login,
     register,
     logout,
+    refreshRole,
   };
 }

@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { toast } from 'sonner';
 
 interface UserRoleContextType {
   isLoggedIn: boolean;
@@ -10,6 +11,7 @@ interface UserRoleContextType {
   login: (email: string, password: string) => Promise<any>;
   register: (email: string, password: string, role: 'seller' | 'buyer', fullName: string, company?: string) => Promise<any>;
   logout: () => Promise<void>;
+  refreshUserRole: () => void;
 }
 
 const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
@@ -22,7 +24,8 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     role,
     login,
     register,
-    logout
+    logout,
+    refreshRole
   } = useAuth();
 
   const [retryCount, setRetryCount] = useState(0);
@@ -39,15 +42,23 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       isLoading
     });
 
-    // If logged in but no role after initial load, try to refresh once
-    if (isLoggedIn && !role && !isLoading && retryCount < 3) {
-      console.log("User logged in but no role detected. Attempt:", retryCount + 1);
+    // If logged in but no role after initial load, try to refresh the role
+    if (isLoggedIn && !role && !isLoading && retryCount < 3 && !hasAttemptedRefresh) {
+      console.log("User logged in but no role detected. Attempting to refresh role...");
       setRetryCount(prev => prev + 1);
+      setHasAttemptedRefresh(true);
       
-      // Add a small delay before next retry attempt
-      setTimeout(() => {}, 500);
+      // Add a small delay before trying to refresh the role
+      setTimeout(() => {
+        refreshRole();
+      }, 500);
     }
-  }, [role, isLoggedIn, user?.id, isLoading, retryCount, hasAttemptedRefresh]);
+  }, [role, isLoggedIn, user?.id, isLoading, retryCount, hasAttemptedRefresh, refreshRole]);
+
+  const refreshUserRole = () => {
+    console.log("Manual role refresh requested");
+    refreshRole();
+  };
 
   return (
     <UserRoleContext.Provider value={{ 
@@ -57,7 +68,8 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       user,
       login,
       register,
-      logout
+      logout,
+      refreshUserRole
     }}>
       {children}
     </UserRoleContext.Provider>
