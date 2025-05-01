@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import Header from '@/components/Header';
@@ -47,42 +47,42 @@ const Profile = () => {
   }, [isLoggedIn, role, authLoading, profileLoading, error, user?.id, loadingTimeout, directDatabaseRole]);
   
   // Direct fetch of role from database if we're logged in
-  useEffect(() => {
-    const fetchDirectRole = async () => {
-      if (!user?.id) return;
-      
-      try {
-        console.log("Profile page: Directly fetching role from database for user:", user.id);
-        
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error("Error fetching role from database:", error);
-          return;
-        }
-        
-        console.log("Profile page: Direct database role check result:", data?.role);
-        
-        if (data?.role) {
-          const dbRole = String(data.role).toLowerCase();
-          if (dbRole === 'seller' || dbRole === 'buyer') {
-            console.log("Profile page: Setting direct database role to:", dbRole);
-            setDirectDatabaseRole(dbRole as 'seller' | 'buyer');
-          }
-        }
-      } catch (err) {
-        console.error("Exception in direct role fetch:", err);
-      }
-    };
+  const fetchDirectRole = useCallback(async () => {
+    if (!user?.id) return;
     
+    try {
+      console.log("Profile page: Directly fetching role from database for user:", user.id);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching role from database:", error);
+        return;
+      }
+      
+      console.log("Profile page: Direct database role check result:", data?.role);
+      
+      if (data?.role) {
+        const dbRole = String(data.role).toLowerCase();
+        if (dbRole === 'seller' || dbRole === 'buyer') {
+          console.log("Profile page: Setting direct database role to:", dbRole);
+          setDirectDatabaseRole(dbRole as 'seller' | 'buyer');
+        }
+      }
+    } catch (err) {
+      console.error("Exception in direct role fetch:", err);
+    }
+  }, [user?.id]);
+  
+  useEffect(() => {
     if (isLoggedIn && user?.id) {
       fetchDirectRole();
     }
-  }, [isLoggedIn, user?.id]);
+  }, [isLoggedIn, user?.id, fetchDirectRole]);
   
   // If user not logged in, redirect to login
   useEffect(() => {
@@ -92,40 +92,44 @@ const Profile = () => {
     }
   }, [isLoggedIn, navigate, authLoading]);
   
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setHasAttemptedReload(true);
+    
+    // Try to directly fix the role in the database if needed
+    if (user?.id && role) {
+      try {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            role: role,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          console.error("Error updating role:", updateError);
+        } else {
+          console.log("Successfully updated role in database to:", role);
+        }
+      } catch (err) {
+        console.error("Error updating role:", err);
+      }
+    }
+    
     refreshUserRole();
+    
+    // Wait a bit for the role refresh to complete
     setTimeout(() => {
       if (refreshData) {
         refreshData();
       }
+      
       // Force a direct database check after a short delay
       setTimeout(() => {
-        const fetchRoleAgain = async () => {
-          if (!user?.id) return;
-          
-          try {
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', user.id)
-              .single();
-            
-            if (!error && data?.role) {
-              const dbRole = String(data.role).toLowerCase();
-              if (dbRole === 'seller' || dbRole === 'buyer') {
-                setDirectDatabaseRole(dbRole as 'seller' | 'buyer');
-                console.log("After refresh: Set direct database role to:", dbRole);
-              }
-            }
-          } catch (err) {
-            console.error("Error in post-refresh role check:", err);
-          }
-        };
-        
-        fetchRoleAgain();
+        fetchDirectRole();
       }, 500);
     }, 1000);
+    
     toast.info("Refreshing profile data...");
   };
 

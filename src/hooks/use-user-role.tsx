@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import { getUserRole } from '@/utils/roleManager';
+import { getUserRole, updateUserRole } from '@/utils/roleManager';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserRoleContextType {
@@ -65,6 +65,13 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 setRole(dbRole as 'seller' | 'buyer');
               }
             }
+          } else if (authRole) {
+            // If no role in database but we have one from auth, update the database
+            console.log("No role in database but auth has role:", authRole);
+            const success = await updateUserRole(user.id, authRole);
+            if (success) {
+              setRole(authRole);
+            }
           }
         } catch (err) {
           console.error("Exception during direct database check:", err);
@@ -76,7 +83,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     
     // Wait until auth loading is done before checking role
-    if (!isLoading && (user?.id || !user)) {
+    if (!isLoading) {
       fetchAndUpdateRole();
     }
   }, [user?.id, isLoading, authRole, role]);
@@ -114,6 +121,16 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             toast.success(`Your profile has been refreshed: ${dbRole}`);
           } else {
             toast.warning(`Invalid role found: ${dbRole}`);
+          }
+        } else if (authRole) {
+          // If no role in database but we have one from auth, update the database
+          console.log("No role in database but auth has role during refresh:", authRole);
+          const success = await updateUserRole(user.id, authRole);
+          if (success) {
+            setRole(authRole);
+            toast.success(`Your profile has been updated with role: ${authRole}`);
+          } else {
+            toast.error("Failed to update your role");
           }
         } else {
           toast.warning("No role found in your profile");

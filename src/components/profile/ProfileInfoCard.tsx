@@ -22,13 +22,16 @@ interface ProfileInfoCardProps {
 const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProps) => {
   const [directRole, setDirectRole] = useState<'seller' | 'buyer' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch the role directly from the database
   useEffect(() => {
     const fetchDirectRole = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const { data: session } = await supabase.auth.getSession();
+        
         if (session?.session?.user?.id) {
           const userId = session.session.user.id;
           console.log("ProfileInfoCard: Directly fetching role for user:", userId);
@@ -41,7 +44,7 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
 
           if (error) {
             console.error("Error fetching direct role:", error);
-            toast.error("Could not retrieve your account type");
+            setError("Could not retrieve your account type");
             return;
           }
 
@@ -51,12 +54,16 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
             
             if (dbRole === 'seller' || dbRole === 'buyer') {
               setDirectRole(dbRole as 'seller' | 'buyer');
+            } else {
+              setError(`Invalid role found: ${dbRole}`);
             }
+          } else {
+            setError("No role found in your profile");
           }
         }
       } catch (err) {
         console.error("Exception in direct role fetch:", err);
-        toast.error("Error loading your account type");
+        setError("Error loading your account type");
       } finally {
         setIsLoading(false);
       }
@@ -93,6 +100,18 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
             <p className="text-sm font-medium text-gray-500">Account Type</p>
             {isLoading ? (
               <div className="h-5 w-20 bg-gray-200 animate-pulse rounded"></div>
+            ) : error ? (
+              <div className="flex items-center gap-2">
+                <p className="text-amber-600">{error}</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-2 text-xs" 
+                  onClick={() => fetchDirectRole()}
+                >
+                  Retry
+                </Button>
+              </div>
             ) : directRole ? (
               <p className="capitalize font-medium text-brand-600">{directRole}</p>
             ) : (
