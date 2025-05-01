@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 
 const UploadLeads = () => {
   const navigate = useNavigate();
@@ -86,7 +86,7 @@ const UploadLeads = () => {
           If this takes too long, try refreshing the page
         </p>
         <Button variant="outline" onClick={handleRefresh} className="flex items-center gap-2">
-          <ReloadIcon className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
       </div>
@@ -103,7 +103,7 @@ const UploadLeads = () => {
         </p>
         <div className="flex gap-4">
           <Button onClick={handleRefresh} className="flex items-center gap-2">
-            <ReloadIcon className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
           <Button variant="outline" onClick={() => navigate('/my-leads?tab=upload')}>

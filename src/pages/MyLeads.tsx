@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -12,7 +11,7 @@ import { Lead } from '@/types/lead';
 import { fetchLeadsBySeller, createLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { AlertCircle, FileUp, ReloadIcon } from 'lucide-react';
+import { AlertCircle, FileUp, RefreshCw } from 'lucide-react';
 
 const MyLeads = () => {
   const navigate = useNavigate();
@@ -183,7 +182,7 @@ const MyLeads = () => {
               variant="outline" 
               className="flex items-center gap-2 bg-white hover:bg-white"
             >
-              <ReloadIcon className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
           </div>

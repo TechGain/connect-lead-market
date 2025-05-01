@@ -11,7 +11,7 @@ import ProfileContent from '@/components/profile/ProfileContent';
 import { useProfileData } from '@/hooks/use-profile-data';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { RefreshCw } from 'lucide-react';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ const Profile = () => {
             <ProfileErrorDisplay error={error} />
             <div className="flex justify-center mt-4">
               <Button onClick={handleRefresh} className="flex items-center gap-2">
-                <ReloadIcon className="h-4 w-4" />
+                <RefreshCw className="h-4 w-4" />
                 Refresh Profile
               </Button>
             </div>
@@ -98,7 +98,7 @@ const Profile = () => {
               <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
                 <p className="text-yellow-700 mb-2">Your account role couldn't be determined. Some features may be limited.</p>
                 <Button onClick={handleRefresh} variant="outline" className="flex items-center gap-2">
-                  <ReloadIcon className="h-4 w-4" />
+                  <RefreshCw className="h-4 w-4" />
                   Refresh Role Information
                 </Button>
               </div>
