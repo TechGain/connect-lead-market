@@ -149,7 +149,7 @@ export function useAuth() {
         console.log("User created successfully, creating profile:", data.user.id);
         
         // Create a profile for the user with their role
-        const { error: profileError } = await supabase
+        const { error: profileError, data: profileData } = await supabase
           .from('profiles')
           .insert({
             id: data.user.id,
@@ -157,7 +157,9 @@ export function useAuth() {
             role,
             company: company || null,
             rating: role === 'seller' ? 5 : null, // Default rating for sellers
-          });
+          })
+          .select()
+          .single();
         
         if (profileError) {
           console.error("Profile creation error:", profileError);
@@ -170,7 +172,7 @@ export function useAuth() {
           throw profileError;
         }
         
-        console.log("Profile created successfully with role:", role);
+        console.log("Profile created successfully with role:", role, "Profile data:", profileData);
         
         // Explicitly set the role in state after successful registration
         setUserRole(role);
@@ -183,6 +185,7 @@ export function useAuth() {
       }
     } catch (error: any) {
       console.error("Registration error:", error);
+      setIsLoadingUser(false);
       // Provide more specific error messages based on the error
       if (error.message?.includes('email')) {
         toast.error('This email address is already registered');

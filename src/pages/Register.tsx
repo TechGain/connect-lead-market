@@ -108,8 +108,9 @@ const Register = () => {
           } else {
             navigate('/marketplace');
           }
-        }, 100);
+        }, 500); // Increased timeout to ensure state updates
       } else {
+        setIsLoading(false); // Reset loading state on failure
         // If result is null, show a more detailed error
         setRegistrationError("Registration failed. This could be due to an existing account or invalid credentials.");
         toast.error("Registration failed. Please try again.");
@@ -118,8 +119,7 @@ const Register = () => {
       console.error("Registration error caught:", error);
       setRegistrationError(error.message || "An unexpected error occurred");
       toast.error(error.message || "An error occurred during registration");
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Reset loading state on error
     }
   };
 

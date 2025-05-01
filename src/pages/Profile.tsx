@@ -64,6 +64,19 @@ const Profile = () => {
           month: 'long' 
         });
         
+        // Count leads if user is a seller
+        let totalLeads = 0;
+        if (profile?.role === 'seller') {
+          const { count, error: leadsError } = await supabase
+            .from('leads')
+            .select('*', { count: 'exact', head: true })
+            .eq('seller_id', user.id);
+          
+          if (!leadsError) {
+            totalLeads = count || 0;
+          }
+        }
+        
         // Update profile data state
         setProfileData({
           name: profile?.full_name || 'User',
@@ -72,7 +85,7 @@ const Profile = () => {
           rating: profile?.rating || 4.7,
           joinedDate,
           avatar: undefined,
-          totalLeads: 0 // In a real app you'd query for the count
+          totalLeads
         });
       } catch (error) {
         console.error("Failed to load profile data:", error);
@@ -130,7 +143,7 @@ const Profile = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Account Type</p>
-                    <p className="capitalize">{role}</p>
+                    <p className="capitalize">{role || 'Loading...'}</p>
                   </div>
                 </div>
               </CardContent>
