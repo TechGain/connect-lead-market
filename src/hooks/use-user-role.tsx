@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserRoleContextType {
   isLoggedIn: boolean;
@@ -30,6 +31,37 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [retryCount, setRetryCount] = useState(0);
   const [hasAttemptedRefresh, setHasAttemptedRefresh] = useState(false);
+  const [isForceRefreshing, setIsForceRefreshing] = useState(false);
+
+  // Add direct database check for debugging purposes
+  useEffect(() => {
+    async function checkProfileInDatabase() {
+      if (user?.id && !role && !isLoading && !hasAttemptedRefresh) {
+        console.log("UserRoleProvider - Direct database check for user:", user.id);
+        
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, role, full_name')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (error) {
+            console.error("Direct database check error:", error);
+          } else {
+            console.log("Direct database check result:", data);
+            if (!data) {
+              console.warn("No profile found in direct database check");
+            }
+          }
+        } catch (err) {
+          console.error("Exception during direct database check:", err);
+        }
+      }
+    }
+    
+    checkProfileInDatabase();
+  }, [user?.id, role, isLoading, hasAttemptedRefresh]);
 
   // Add more detailed console logs to track role state
   useEffect(() => {
@@ -39,7 +71,8 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       userId: user?.id,
       retryCount,
       hasAttemptedRefresh,
-      isLoading
+      isLoading,
+      isForceRefreshing
     });
 
     // If logged in but no role after initial load, try to refresh the role
@@ -58,6 +91,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const refreshUserRole = () => {
     console.log("Manual role refresh requested");
+    setIsForceRefreshing(true);
     setHasAttemptedRefresh(false); // Reset the flag to allow further attempts
     setRetryCount(0); // Reset retry count
     toast.info("Refreshing your profile...");
@@ -65,13 +99,14 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Force delay to ensure any ongoing processes complete
     setTimeout(() => {
       refreshRole();
-    }, 500);
+      setIsForceRefreshing(false);
+    }, 1000);
   };
 
   return (
     <UserRoleContext.Provider value={{ 
       isLoggedIn, 
-      isLoading,
+      isLoading: isLoading || isForceRefreshing,
       role,
       user,
       login,

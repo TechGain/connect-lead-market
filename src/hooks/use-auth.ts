@@ -8,23 +8,42 @@ export function useAuth() {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userRole, setUserRole] = useState<'seller' | 'buyer' | null>(null);
 
-  // Function to fetch user role from profiles table
+  // Function to fetch user role from profiles table with additional debug logging
   const fetchUserRole = useCallback(async (userId: string) => {
     try {
       console.log("Fetching role for user:", userId);
+      
+      // First, directly check if this user exists in the profiles table at all
+      const { count: profileCount, error: countError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('id', userId);
+        
+      if (countError) {
+        console.error('Error checking profile existence:', countError);
+        return null;
+      }
+      
+      console.log(`Profile existence check: ${profileCount} profile(s) found for user ${userId}`);
+      
+      if (profileCount === 0) {
+        console.log("No profile found at all for user. Will need to create one.");
+        return null;
+      }
+      
+      // Get the role with explicit column selection
       const { data, error } = await supabase
         .from('profiles')
-        .select('role') // Only select the role column
+        .select('role') 
         .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no profile exists
+        .maybeSingle(); 
       
       if (error) {
         console.error('Error fetching user role:', error);
-        console.log('Raw error response:', error.message, error.details, error.hint);
         return null;
       } 
       
-      console.log("Profile data from fetchUserRole:", data);
+      console.log("Profile data retrieved:", data);
       
       // Check if role exists and normalize it
       if (data && data.role) {
@@ -32,12 +51,16 @@ export function useAuth() {
         const roleValue = String(data.role).toLowerCase();
         console.log("Normalized role value:", roleValue);
         
+        // Validate that the role is either 'seller' or 'buyer' only
         if (roleValue === 'seller' || roleValue === 'buyer') {
           return roleValue as 'seller' | 'buyer';
+        } else {
+          console.warn(`Invalid role value detected: "${data.role}". Must be "seller" or "buyer".`);
+          return null;
         }
       }
       
-      console.warn("Invalid or missing role value detected:", data?.role);
+      console.warn("Missing role value detected");
       return null;
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
@@ -45,9 +68,12 @@ export function useAuth() {
     }
   }, []);
 
-  // Function to refresh user role
+  // Function to refresh user role with enhanced error handling
   const refreshRole = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log("Cannot refresh role - no user ID available");
+      return;
+    }
     
     console.log("Refreshing role for user:", user.id);
     setIsLoadingUser(true);
@@ -57,7 +83,7 @@ export function useAuth() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const role = await fetchUserRole(user.id);
-      console.log("Role refreshed result:", role);
+      console.log("Role refresh result:", role);
       
       if (role) {
         console.log("Role refreshed successfully:", role);
@@ -73,29 +99,69 @@ export function useAuth() {
           .maybeSingle();
           
         if (profile) {
-          console.log("Profile exists but role is invalid. Updating profile...");
-          // Update existing profile with default role
-          await supabase
+          console.log("Profile exists but role is invalid or missing. Repairing profile...");
+          
+          // Get role from user metadata if available, otherwise default to buyer
+          let defaultRole = 'buyer';
+          if (user.user_metadata && user.user_metadata.role) {
+            const metadataRole = String(user.user_metadata.role).toLowerCase();
+            if (metadataRole === 'seller' || metadataRole === 'buyer') {
+              defaultRole = metadataRole;
+            }
+          }
+          
+          // Update existing profile with valid role
+          const { error: updateError } = await supabase
             .from('profiles')
-            .update({ role: 'buyer' })
+            .update({ 
+              role: defaultRole,
+              updated_at: new Date().toISOString() 
+            })
             .eq('id', user.id);
-          setUserRole('buyer');
+            
+          if (updateError) {
+            console.error("Error updating profile role:", updateError);
+          } else {
+            console.log("Profile updated with role:", defaultRole);
+            setUserRole(defaultRole as 'seller' | 'buyer');
+          }
         } else {
           console.log("No profile found. Creating new profile...");
-          // Create new profile with default role
-          await supabase
+          
+          // Get name from metadata or use email as fallback
+          const fullName = user.user_metadata?.full_name || 
+                          user.email?.split('@')[0] || 
+                          'User';
+                          
+          // Get role from metadata if available, otherwise default to buyer
+          let defaultRole = 'buyer';
+          if (user.user_metadata && user.user_metadata.role) {
+            const metadataRole = String(user.user_metadata.role).toLowerCase();
+            if (metadataRole === 'seller' || metadataRole === 'buyer') {
+              defaultRole = metadataRole;
+            }
+          }
+          
+          // Create new profile with explicit role
+          const { error: createError } = await supabase
             .from('profiles')
             .insert({ 
               id: user.id, 
-              role: 'buyer',
-              full_name: user.user_metadata?.full_name || 'User',
+              role: defaultRole,
+              full_name: fullName,
               created_at: new Date().toISOString()
             });
-          setUserRole('buyer');
+          
+          if (createError) {
+            console.error("Error creating profile:", createError);
+          } else {
+            console.log("New profile created with role:", defaultRole);
+            setUserRole(defaultRole as 'seller' | 'buyer');
+          }
         }
       }
     } catch (error) {
-      console.error("Error refreshing role:", error);
+      console.error("Error in refreshRole:", error);
     } finally {
       setIsLoadingUser(false);
     }
@@ -112,13 +178,16 @@ export function useAuth() {
         if (session?.user) {
           setUser(session.user);
           
-          // Fetch the user's role
+          // Fetch the user's role with better logging
+          console.log("Fetching initial role for user:", session.user.id);
           const role = await fetchUserRole(session.user.id);
           console.log("Initial role fetch result:", role, "for user:", session.user.id);
+          
           if (role) {
             setUserRole(role);
           } else {
             // Try to create/fix profile if no valid role found
+            console.log("No valid role found during initialization. Attempting to repair profile...");
             await refreshRole();
           }
         } else {
@@ -145,12 +214,13 @@ export function useAuth() {
         // Fetch the user's role
         const role = await fetchUserRole(session.user.id);
         console.log("Auth state change role fetch:", role);
+        
         if (role) {
           setUserRole(role);
         } else {
           // Try to create/fix profile if no valid role found on sign-in
+          console.log("No valid role found after auth state change. Attempting to repair profile...");
           await refreshRole();
-          toast.error('Had to repair your profile. Please refresh the page if you experience any issues.');
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -182,7 +252,14 @@ export function useAuth() {
         } else {
           // Try to create/fix profile if no valid role found on login
           console.log("No valid role found after login. Attempting to repair profile...");
-          await refreshRole();
+          
+          // Set user first so refreshRole can access it
+          setUser(data.user);
+          
+          // Short delay to ensure user is set before refreshing role
+          setTimeout(async () => {
+            await refreshRole();
+          }, 500);
         }
       }
       
@@ -205,7 +282,12 @@ export function useAuth() {
       console.log("Registration starting with:", { email, role, fullName, company });
       setIsLoadingUser(true);
       
-      // Sign up the user
+      // Validate role input before proceeding
+      if (role !== 'seller' && role !== 'buyer') {
+        throw new Error("Invalid role. Must be 'seller' or 'buyer'");
+      }
+      
+      // Sign up the user with role in metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -225,7 +307,7 @@ export function useAuth() {
       if (data.user) {
         console.log("User created successfully, creating profile:", data.user.id);
         
-        // Explicitly store role in lowercase to avoid case-sensitivity issues
+        // Explicitly normalize role to lowercase
         const normalizedRole = role.toLowerCase() as 'seller' | 'buyer';
         console.log("Creating profile with normalized role:", normalizedRole);
         
@@ -264,16 +346,16 @@ export function useAuth() {
             
           console.log("Profile update verification:", verifyProfile);
         } else {
-          // Create new profile with explicit role as text
+          // Create new profile with explicit role
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
               id: data.user.id,
               full_name: fullName,
-              role: normalizedRole, // Explicitly set as text value 'seller' or 'buyer'
+              role: normalizedRole, 
               company: company || null,
               rating: normalizedRole === 'seller' ? 5 : null,
-              created_at: new Date().toISOString() // Explicitly set creation timestamp
+              created_at: new Date().toISOString() 
             });
           
           if (profileError) {
@@ -301,6 +383,9 @@ export function useAuth() {
         setUserRole(normalizedRole);
         setUser(data.user);
         setIsLoadingUser(false);
+        
+        // Add a log to confirm state was set
+        console.log("Registration complete - UserRole state set to:", normalizedRole);
         
         return data;
       } else {

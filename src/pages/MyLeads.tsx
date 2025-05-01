@@ -12,6 +12,7 @@ import { fetchLeadsBySeller, createLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, FileUp, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const MyLeads = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const MyLeads = () => {
   const { isLoggedIn, role, user, refreshUserRole } = useUserRole();
   const [myLeads, setMyLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [roleChecked, setRoleChecked] = useState(false);
   
   // Get tab from URL query parameters
   const queryParams = new URLSearchParams(location.search);
@@ -31,9 +33,45 @@ const MyLeads = () => {
       isLoggedIn, 
       role,
       userId: user?.id,
-      activeTab
+      activeTab,
+      roleChecked
     });
-  }, [isLoggedIn, role, user?.id, activeTab]);
+
+    // Direct database check for debugging role issues
+    const checkProfileDirectly = async () => {
+      if (user?.id && !role) {
+        try {
+          console.log("Performing direct database check for user profile");
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, role, full_name')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (error) {
+            console.error("Error in direct profile check:", error);
+          } else {
+            console.log("Direct profile check result:", data);
+            
+            if (!data) {
+              console.warn("No profile found during direct check");
+              
+              // If we're logged in but have no profile, attempt to create one
+              if (!roleChecked) {
+                console.log("Attempting profile repair from MyLeads component");
+                refreshUserRole();
+                setRoleChecked(true);
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Exception during direct profile check:", err);
+        }
+      }
+    };
+    
+    checkProfileDirectly();
+  }, [isLoggedIn, role, user?.id, activeTab, roleChecked, refreshUserRole]);
   
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
@@ -46,11 +84,16 @@ const MyLeads = () => {
     }
   };
   
-  // Refresh user role and data
+  // Refresh user role and data with more robust handling
   const handleRefresh = () => {
+    setRoleChecked(false); // Reset check to allow another attempt
     refreshUserRole();
-    loadSellerLeads();
-    toast.info("Refreshing data...");
+    
+    // Short delay before reloading leads to give role refresh time to complete
+    setTimeout(() => {
+      loadSellerLeads();
+      toast.info("Refreshing data...");
+    }, 1500);
   };
   
   const loadSellerLeads = async () => {
@@ -80,11 +123,6 @@ const MyLeads = () => {
       toast.error("Only sellers can access this page");
       navigate('/');
       return;
-    }
-    
-    // If role is null but user is logged in, show a warning but allow access
-    if (role === null && isLoggedIn) {
-      toast.warning("We couldn't verify your seller status. Some features may be limited.");
     }
     
     if (user?.id) {
@@ -170,24 +208,24 @@ const MyLeads = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {showRoleWarning && (
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md flex justify-between items-center">
-            <div>
-              <h3 className="font-medium text-yellow-800">Account role not detected</h3>
-              <p className="text-yellow-700 text-sm">Some features may be limited. Please refresh to verify your seller status.</p>
-            </div>
-            <Button 
-              onClick={handleRefresh}
-              variant="outline" 
-              className="flex items-center gap-2 bg-white hover:bg-white"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
+      {(role === null) && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md flex justify-between items-center">
+          <div>
+            <h3 className="font-medium text-yellow-800">Account role not detected</h3>
+            <p className="text-yellow-700 text-sm">Some features may be limited. Please refresh to verify your seller status.</p>
           </div>
-        )}
+          <Button 
+            onClick={handleRefresh}
+            variant="outline" 
+            className="flex items-center gap-2 bg-white hover:bg-white"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
+      )}
       
+      <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">My Leads</h1>

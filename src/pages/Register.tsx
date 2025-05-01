@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const Register = () => {
     }
   }, [isLoggedIn, navigate, role, searchParams]);
 
-  // This function now handles the form submission
+  // This function now handles the form submission with enhanced error handling and logging
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -62,15 +63,16 @@ const Register = () => {
       console.log("Starting registration with role:", selectedRole);
       
       // Make sure the role is explicitly typed and validated
-      const userRole: 'seller' | 'buyer' = selectedRole;
+      const userRole: 'seller' | 'buyer' = 
+        selectedRole === 'seller' ? 'seller' : 'buyer';
       
       // Log to confirm the role is correctly formatted before registration
       console.log("Registration role check:", {
         selectedRole, 
-        type: typeof selectedRole, 
-        normalized: selectedRole.toLowerCase(),
-        isSeller: selectedRole.toLowerCase() === 'seller',
-        isBuyer: selectedRole.toLowerCase() === 'buyer'
+        validatedRole: userRole,
+        type: typeof userRole,
+        isSeller: userRole === 'seller',
+        isBuyer: userRole === 'buyer'
       });
       
       const result = await register(
@@ -82,6 +84,39 @@ const Register = () => {
       );
       
       if (result) {
+        // Verify that the profile was created with the correct role
+        try {
+          const { data: profileCheck, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', result.user.id)
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error("Error verifying profile after registration:", profileError);
+          } else {
+            console.log("Profile check after registration:", profileCheck);
+            
+            if (profileCheck && profileCheck.role !== userRole) {
+              console.warn(`Role mismatch! Expected: ${userRole}, Got: ${profileCheck.role}`);
+              
+              // Attempt to fix the role
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ role: userRole })
+                .eq('id', result.user.id);
+                
+              if (updateError) {
+                console.error("Error fixing profile role:", updateError);
+              } else {
+                console.log("Role fixed successfully");
+              }
+            }
+          }
+        } catch (verifyError) {
+          console.error("Error during profile verification:", verifyError);
+        }
+        
         toast.success(`Registration successful! Welcome ${name}`);
         
         // We need a small delay to ensure the user state is properly updated
