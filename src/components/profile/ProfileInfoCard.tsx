@@ -16,7 +16,7 @@ interface ProfileInfoCardProps {
     avatar: string | undefined;
     totalLeads: number;
   };
-  role: 'seller' | 'buyer'; // This is the role from context, but we'll verify it directly
+  role: 'seller' | 'buyer' | null; // This is the role from context, but we'll verify it directly
 }
 
 const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProps) => {
@@ -27,6 +27,7 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
   useEffect(() => {
     const fetchDirectRole = async () => {
       try {
+        setIsLoading(true);
         const { data: session } = await supabase.auth.getSession();
         if (session?.session?.user?.id) {
           const userId = session.session.user.id;
@@ -40,6 +41,7 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
 
           if (error) {
             console.error("Error fetching direct role:", error);
+            toast.error("Could not retrieve your account type");
             return;
           }
 
@@ -54,6 +56,7 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
         }
       } catch (err) {
         console.error("Exception in direct role fetch:", err);
+        toast.error("Error loading your account type");
       } finally {
         setIsLoading(false);
       }
@@ -61,9 +64,6 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
 
     fetchDirectRole();
   }, []);
-
-  // Use the directly fetched role if available, otherwise fall back to context role
-  const displayRole = directRole || contextRole;
   
   return (
     <Card className="lg:col-span-1">
@@ -72,7 +72,7 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
           name={profileData.name}
           rating={profileData.rating}
           avatar={profileData.avatar}
-          role={displayRole}
+          role={directRole || contextRole}
           totalLeads={profileData.totalLeads}
         />
         <CardDescription className="mt-2">
@@ -93,13 +93,10 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
             <p className="text-sm font-medium text-gray-500">Account Type</p>
             {isLoading ? (
               <div className="h-5 w-20 bg-gray-200 animate-pulse rounded"></div>
+            ) : directRole ? (
+              <p className="capitalize font-medium text-brand-600">{directRole}</p>
             ) : (
-              <p className="capitalize font-medium text-brand-600">
-                {displayRole}
-                {directRole && contextRole && directRole !== contextRole && (
-                  <span className="text-xs text-amber-600 ml-2">(refreshing...)</span>
-                )}
-              </p>
+              <p className="text-amber-600">Could not determine role</p>
             )}
           </div>
         </div>

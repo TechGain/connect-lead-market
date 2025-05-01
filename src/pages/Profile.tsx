@@ -95,11 +95,37 @@ const Profile = () => {
   const handleRefresh = () => {
     setHasAttemptedReload(true);
     refreshUserRole();
-    if (refreshData) {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (refreshData) {
         refreshData();
-      }, 1000);
-    }
+      }
+      // Force a direct database check after a short delay
+      setTimeout(() => {
+        const fetchRoleAgain = async () => {
+          if (!user?.id) return;
+          
+          try {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', user.id)
+              .single();
+            
+            if (!error && data?.role) {
+              const dbRole = String(data.role).toLowerCase();
+              if (dbRole === 'seller' || dbRole === 'buyer') {
+                setDirectDatabaseRole(dbRole as 'seller' | 'buyer');
+                console.log("After refresh: Set direct database role to:", dbRole);
+              }
+            }
+          } catch (err) {
+            console.error("Error in post-refresh role check:", err);
+          }
+        };
+        
+        fetchRoleAgain();
+      }, 500);
+    }, 1000);
     toast.info("Refreshing profile data...");
   };
 
@@ -141,6 +167,19 @@ const Profile = () => {
               profileData={profileData} 
               role={displayRole}
             />
+            
+            {/* Add a dedicated refresh button for debugging */}
+            <div className="flex justify-center mt-6">
+              <Button 
+                onClick={handleRefresh} 
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh Profile Data
+              </Button>
+            </div>
           </>
         )}
       </main>

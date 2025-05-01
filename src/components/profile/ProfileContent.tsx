@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import ProfileInfoCard from './ProfileInfoCard';
 import ProfileSettingsCard from './ProfileSettingsCard';
-import ProfileRoleFixButton from './ProfileRoleFixButton';
 import { toast } from 'sonner';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/components/ui/button';
@@ -25,13 +24,9 @@ interface ProfileContentProps {
 const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps) => {
   // Get refresh function from context
   const { refreshUserRole, user } = useUserRole();
-  const [localRole, setLocalRole] = useState<'seller' | 'buyer' | null>(contextRole);
   const [isFixingRole, setIsFixingRole] = useState(false);
   const [actualDatabaseRole, setActualDatabaseRole] = useState<string | null>(null);
   const [roleNeedsFixing, setRoleNeedsFixing] = useState(false);
-  
-  // Log to help debug role issues
-  console.log("ProfileContent rendered with role:", contextRole);
   
   // Direct fetch of role from database on component mount
   useEffect(() => {
@@ -56,18 +51,8 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
           
           if (data?.role) {
             const dbRole = String(data.role).toLowerCase();
-            if (dbRole === 'seller' || dbRole === 'buyer') {
-              console.log("Setting local role to database value:", dbRole);
-              setLocalRole(dbRole as 'seller' | 'buyer');
-              
-              if (contextRole !== dbRole) {
-                toast.info(`Your role was detected as ${dbRole}. Context will be refreshed.`);
-                refreshUserRole();
-              }
-              
-              // Since we have a role in the database, we don't need fixing
-              setRoleNeedsFixing(false);
-            }
+            // Role exists, we don't need fixing
+            setRoleNeedsFixing(false);
           } else {
             // If no role in database, we need fixing
             setRoleNeedsFixing(true);
@@ -79,7 +64,7 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
     };
     
     fetchDirectRole();
-  }, [user?.id, contextRole, refreshUserRole]);
+  }, [user?.id]);
 
   const handleManualRefresh = async () => {
     if (!user?.id) return;
@@ -90,16 +75,13 @@ const ProfileContent = ({ profileData, role: contextRole }: ProfileContentProps)
     setIsFixingRole(false);
   };
 
-  // Use local role first, fallback to context role, then default to 'buyer'
-  const displayRole = localRole || contextRole || 'buyer';
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <ProfileInfoCard profileData={profileData} role={displayRole as 'seller' | 'buyer'} />
-      <ProfileSettingsCard role={displayRole as 'seller' | 'buyer'} />
+      <ProfileInfoCard profileData={profileData} role={contextRole} />
+      <ProfileSettingsCard role={contextRole as 'seller' | 'buyer'} />
       
       {/* Only show role refresh UI if we have a user ID but no valid role detected */}
-      {(user?.id && !actualDatabaseRole) && (
+      {(user?.id && roleNeedsFixing) && (
         <div className="lg:col-span-3 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>

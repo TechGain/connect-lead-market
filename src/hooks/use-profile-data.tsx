@@ -15,7 +15,7 @@ interface ProfileData {
 }
 
 export const useProfileData = () => {
-  const { isLoggedIn, role, user, isLoading: authLoading } = useUserRole();
+  const { isLoggedIn, user, isLoading: authLoading } = useUserRole();
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     email: '',
@@ -74,7 +74,6 @@ export const useProfileData = () => {
       // Log the exact role information we're getting
       console.log("Role information in use-profile-data:", { 
         profileRole: profile?.role,
-        contextRole: role,
         profileObject: profile 
       });
       
@@ -101,12 +100,11 @@ export const useProfileData = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, role, retryCount]);
+  }, [user, retryCount]);
   
   useEffect(() => {
     console.log("useProfileData effect running - Auth state:", { 
       isLoggedIn, 
-      role, 
       userId: user?.id,
       authLoading,
       retryCount
@@ -144,7 +142,7 @@ export const useProfileData = () => {
         toast.error("Authentication error. Please try logging out and back in.");
       }
     }
-  }, [isLoggedIn, user, role, retryCount, authLoading, fetchProfileData]);
+  }, [isLoggedIn, user, retryCount, authLoading, fetchProfileData]);
 
   const refreshData = useCallback(() => {
     if (user?.id) {
