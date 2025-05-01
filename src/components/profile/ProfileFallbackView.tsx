@@ -2,7 +2,16 @@
 import React from 'react';
 import ProfileHeader from './ProfileHeader';
 import ProfileContent from './ProfileContent';
-import { ProfileData } from '@/hooks/use-simple-profile';
+
+interface ProfileData {
+  name: string;
+  email: string;
+  company: string;
+  role: 'seller' | 'buyer';
+  rating: number;
+  joinedDate: string;
+  totalLeads: number;
+}
 
 interface ProfileFallbackViewProps {
   profileData: ProfileData;
@@ -19,6 +28,9 @@ const ProfileFallbackView = ({
   error,
   isOffline = false
 }: ProfileFallbackViewProps) => {
+  // Ensure the role is properly typed
+  const safeRole = profileData.role === 'seller' ? 'seller' : 'buyer';
+  
   return (
     <>
       <ProfileHeader error={error} isOffline={isOffline} />
@@ -27,6 +39,7 @@ const ProfileFallbackView = ({
         userData={userData}
         refreshProfile={onRetry}
         isOffline={isOffline}
+        role={safeRole}
       />
     </>
   );

@@ -26,24 +26,22 @@ const Profile = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     
-    // Initial check
-    if (!navigator.onLine && !isOffline) {
+    // Initial check on load
+    if (!navigator.onLine) {
       setIsOffline(true);
       toast.warning("You appear to be offline. Using limited functionality.");
+    }
+    
+    // Check for connection error param in URL
+    const params = new URLSearchParams(location.search);
+    if (params.get('connection_error') === 'true') {
+      toast.error("Connection issues were detected. Using offline mode.");
     }
     
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
-  
-  // Check if we were redirected with connection error param
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('connection_error') === 'true') {
-      toast.error("Connection issues were detected. Using offline mode.");
-    }
   }, [location]);
 
   return (

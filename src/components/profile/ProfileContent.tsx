@@ -3,16 +3,30 @@ import React from 'react';
 import ProfileInfoCard from './ProfileInfoCard';
 import ProfileSettingsCard from './ProfileSettingsCard';
 import { toast } from 'sonner';
-import { ProfileData } from '@/hooks/use-simple-profile';
+
+interface ProfileData {
+  name: string;
+  email: string;
+  company: string;
+  rating: number;
+  joinedDate: string;
+  totalLeads: number;
+}
 
 interface ProfileContentProps {
   profileData: ProfileData;
   userData?: any;
   refreshProfile: () => void;
   isOffline?: boolean;
+  role: 'seller' | 'buyer';
 }
 
-const ProfileContent = ({ profileData, refreshProfile, isOffline = false }: ProfileContentProps) => {
+const ProfileContent = ({ 
+  profileData, 
+  refreshProfile, 
+  isOffline = false,
+  role
+}: ProfileContentProps) => {
   // Handle refresh with visual feedback
   const handleRefresh = () => {
     if (isOffline) {
@@ -31,12 +45,12 @@ const ProfileContent = ({ profileData, refreshProfile, isOffline = false }: Prof
           ...profileData,
           avatar: undefined // No avatar support yet
         }} 
-        role={profileData.role}
+        role={role}
         onRefresh={handleRefresh}
         isOffline={isOffline}
       />
       <ProfileSettingsCard 
-        role={profileData.role} 
+        role={role} 
         disabled={isOffline}
       />
     </div>
