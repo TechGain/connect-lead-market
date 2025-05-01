@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { UserRoleProvider } from "./hooks/use-user-role";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { UserRoleProvider, useUserRole } from "./hooks/use-user-role";
 import { HelmetProvider } from 'react-helmet-async';
 
 // Pages
@@ -30,6 +30,21 @@ const queryClient = new QueryClient({
   }
 });
 
+// Buyer Route Guard
+const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isLoggedIn, role } = useUserRole();
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (role !== 'buyer') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
@@ -42,7 +57,14 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/marketplace" element={<Marketplace />} />
+              <Route 
+                path="/marketplace" 
+                element={
+                  <BuyerRoute>
+                    <Marketplace />
+                  </BuyerRoute>
+                } 
+              />
               <Route path="/my-leads" element={<MyLeads />} />
               <Route path="/purchases" element={<Purchases />} />
               <Route path="/profile" element={<Profile />} />

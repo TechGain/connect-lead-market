@@ -23,6 +23,19 @@ const Marketplace = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    // Check if user is logged in and is a buyer
+    if (!isLoggedIn) {
+      toast.error("Please log in to access the marketplace");
+      navigate('/login');
+      return;
+    }
+
+    if (role !== 'buyer') {
+      toast.error("Only buyers can access the marketplace");
+      navigate('/');
+      return;
+    }
+    
     const loadLeads = async () => {
       setIsLoading(true);
       try {
@@ -40,7 +53,7 @@ const Marketplace = () => {
     };
     
     loadLeads();
-  }, []);
+  }, [isLoggedIn, role, navigate]);
   
   const handleFilterChange = (filters: any) => {
     let filtered = [...leads];
@@ -121,94 +134,106 @@ const Marketplace = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Lead Marketplace</h1>
-          <p className="text-gray-600">
-            Browse available leads from verified sellers
-          </p>
-        </div>
-        
-        <LeadFilters onFilterChange={handleFilterChange} />
-        
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <p>Loading leads...</p>
+      {role === 'buyer' ? (
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">Lead Marketplace</h1>
+            <p className="text-gray-600">
+              Browse available leads from verified sellers
+            </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredLeads.length > 0 ? (
-              filteredLeads.map(lead => (
-                <LeadCard
-                  key={lead.id}
-                  lead={lead}
-                  onPurchase={handlePurchaseLead}
-                />
-              ))
-            ) : (
-              <div className="col-span-3 py-12 text-center">
-                <h3 className="text-xl font-semibold mb-2">No leads match your filters</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your search criteria</p>
-                <Button 
-                  onClick={() => handleFilterChange({
-                    search: '',
-                    type: '',
-                    location: '',
-                    minPrice: 0,
-                    maxPrice: 500,
-                    minRating: 0,
-                  })}
-                  variant="outline"
-                >
-                  Reset Filters
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-        
-        <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Confirm Lead Purchase</DialogTitle>
-              <DialogDescription>
-                You're about to purchase this lead. Once confirmed, you'll get full access to the contact information.
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedLead && (
-              <div className="py-4">
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="font-medium text-lg">{selectedLead.type}</h3>
-                    <p className="text-gray-500">{selectedLead.location}</p>
-                  </div>
-                  
-                  <p className="text-gray-700">{selectedLead.description}</p>
-                  
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-600">Lead Price:</span>
-                      <span className="font-semibold">{formatCurrency(selectedLead.price)}</span>
+          
+          <LeadFilters onFilterChange={handleFilterChange} />
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <p>Loading leads...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredLeads.length > 0 ? (
+                filteredLeads.map(lead => (
+                  <LeadCard
+                    key={lead.id}
+                    lead={lead}
+                    onPurchase={handlePurchaseLead}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 py-12 text-center">
+                  <h3 className="text-xl font-semibold mb-2">No leads match your filters</h3>
+                  <p className="text-gray-600 mb-4">Try adjusting your search criteria</p>
+                  <Button 
+                    onClick={() => handleFilterChange({
+                      search: '',
+                      type: '',
+                      location: '',
+                      minPrice: 0,
+                      maxPrice: 500,
+                      minRating: 0,
+                    })}
+                    variant="outline"
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Confirm Lead Purchase</DialogTitle>
+                <DialogDescription>
+                  You're about to purchase this lead. Once confirmed, you'll get full access to the contact information.
+                </DialogDescription>
+              </DialogHeader>
+              
+              {selectedLead && (
+                <div className="py-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-medium text-lg">{selectedLead.type}</h3>
+                      <p className="text-gray-500">{selectedLead.location}</p>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Quality Rating:</span>
-                      <span>{selectedLead.qualityRating} / 5</span>
+                    
+                    <p className="text-gray-700">{selectedLead.description}</p>
+                    
+                    <div className="bg-gray-50 p-4 rounded-md">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-gray-600">Lead Price:</span>
+                        <span className="font-semibold">{formatCurrency(selectedLead.price)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Quality Rating:</span>
+                        <span>{selectedLead.qualityRating} / 5</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>Cancel</Button>
-              <Button onClick={confirmPurchase}>
-                Purchase for {selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </main>
+              )}
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>Cancel</Button>
+                <Button onClick={confirmPurchase}>
+                  Purchase for {selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </main>
+      ) : (
+        <div className="flex-1 container mx-auto px-4 py-16 text-center">
+          <h1 className="text-3xl font-bold mb-4">Access Restricted</h1>
+          <p className="text-gray-600 mb-6">
+            The marketplace is only available to buyers. Please switch to a buyer account to access this page.
+          </p>
+          <Button onClick={() => navigate('/')}>
+            Return to Home
+          </Button>
+        </div>
+      )}
       
       <Footer />
     </div>

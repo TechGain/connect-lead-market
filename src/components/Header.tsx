@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -56,11 +57,13 @@ const Header = () => {
           Home
         </Link>
       </NavigationMenuItem>
-      <NavigationMenuItem>
-        <Link to="/marketplace" className={navigationMenuTriggerStyle()}>
-          Marketplace
-        </Link>
-      </NavigationMenuItem>
+      {role === 'buyer' && (
+        <NavigationMenuItem>
+          <Link to="/marketplace" className={navigationMenuTriggerStyle()}>
+            Marketplace
+          </Link>
+        </NavigationMenuItem>
+      )}
       {role === 'seller' && <NavigationMenuItem>
           <Link to="/my-leads" className={navigationMenuTriggerStyle()}>
             My Leads
@@ -80,11 +83,13 @@ const Header = () => {
           Home
         </Link>
       </SheetClose>
-      <SheetClose asChild>
-        <Link to="/marketplace" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
-          Marketplace
-        </Link>
-      </SheetClose>
+      {role === 'buyer' && (
+        <SheetClose asChild>
+          <Link to="/marketplace" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+            Marketplace
+          </Link>
+        </SheetClose>
+      )}
       {role === 'seller' && <SheetClose asChild>
           <Link to="/my-leads" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             My Leads
