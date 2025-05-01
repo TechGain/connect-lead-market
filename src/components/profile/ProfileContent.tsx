@@ -19,19 +19,25 @@ interface ProfileContentProps {
 }
 
 const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileContentProps) => {
-  // Make sure we have valid data - provide defaults as needed
+  // Make sure we have valid data with strict fallback values
   const safeProfileData = {
     name: profileData?.name || 'User',
     email: profileData?.email || 'No email available',
     company: profileData?.company || 'Not specified',
     role: profileData?.role || 'buyer',
-    rating: profileData?.rating || 4.5,
+    rating: Number(profileData?.rating || 4.5),
     joinedDate: profileData?.joinedDate || 'Unknown',
-    totalLeads: profileData?.totalLeads || 0
+    totalLeads: Number(profileData?.totalLeads || 0)
   };
   
   // Convert role string to expected type, with safe default
-  const normalizedRole = safeProfileData.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer';
+  const normalizedRole = (safeProfileData.role?.toLowerCase() === 'seller') ? 'seller' : 'buyer';
+  
+  // Handle refresh with visual feedback
+  const handleRefresh = () => {
+    refreshProfile();
+    toast.info("Refreshing profile data...");
+  };
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -41,10 +47,7 @@ const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileConten
           avatar: undefined // No avatar support yet
         }} 
         role={normalizedRole}
-        onRefresh={() => {
-          refreshProfile();
-          toast.info("Refreshing profile data...");
-        }}
+        onRefresh={handleRefresh}
       />
       <ProfileSettingsCard role={normalizedRole} />
     </div>

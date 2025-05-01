@@ -19,12 +19,12 @@ interface ProfileInfoCardProps {
 }
 
 const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps) => {
-  // Make sure we have valid data with defaults
+  // Make sure we have valid data with strict defaults
   const safeData = {
     name: profileData?.name || 'User',
     email: profileData?.email || 'No email provided',
     company: profileData?.company || 'Not specified',
-    rating: profileData?.rating || 4.5,
+    rating: typeof profileData?.rating === 'number' ? profileData.rating : 4.5,
     joinedDate: profileData?.joinedDate || 'Unknown',
     avatar: profileData?.avatar,
     totalLeads: typeof profileData?.totalLeads === 'number' ? profileData.totalLeads : 0
@@ -48,7 +48,7 @@ const ProfileInfoCard = ({ profileData, role, onRefresh }: ProfileInfoCardProps)
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Email</p>
-            <p>{safeData.email}</p>
+            <p className="break-words">{safeData.email}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Company</p>
