@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,12 +10,11 @@ import { toast } from "sonner";
 import { Lead } from '@/types/lead';
 import { fetchLeads, purchaseLead } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase';
+import { useUserRole } from '@/hooks/use-user-role';
 
 const Marketplace = () => {
   const navigate = useNavigate();
-  const { user, isLoggedIn, role } = useAuth();
+  const { user, isLoggedIn, role } = useUserRole();
   
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);

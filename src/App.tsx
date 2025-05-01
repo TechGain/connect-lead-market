@@ -24,8 +24,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <UserRoleProvider>
-        <Router>
+      <Router>
+        <UserRoleProvider>
           <Toaster />
           <Sonner />
           <Routes>
@@ -41,8 +41,8 @@ const App = () => (
             <Route path="/upload-leads" element={<UploadLeads />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Router>
-      </UserRoleProvider>
+        </UserRoleProvider>
+      </Router>
     </TooltipProvider>
   </QueryClientProvider>
 );

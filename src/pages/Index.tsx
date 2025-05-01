@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,11 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
 
 const Index = () => {
-  const {
-    isLoggedIn
-  } = useUserRole();
+  const { isLoggedIn } = useUserRole();
   
-  return <div className="flex flex-col min-h-screen">
+  return (
+    <div className="flex flex-col min-h-screen">
       <Header />
       
       <main className="flex-1">
@@ -33,7 +33,7 @@ const Index = () => {
                     </Button>
                   </Link>
                   <Link to="/about">
-                    <Button variant="outline" className="bg-white/10 font-normal text-[#00ceff] text-[00a4cc]">
+                    <Button variant="outline" className="bg-white/10 font-normal">
                       Learn More
                     </Button>
                   </Link>
@@ -74,9 +74,9 @@ const Index = () => {
                   <div className="h-16 w-16 rounded-full bg-brand-100 flex items-center justify-center mb-4">
                     <span className="text-brand-600 text-2xl font-bold">2</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{isLoggedIn && !isLoggedIn ? "Upload or Browse Leads" : "Browse or Upload Leads"}</h3>
+                  <h3 className="text-xl font-bold mb-2">Browse or Upload Leads</h3>
                   <p className="text-gray-600">
-                    {isLoggedIn && !isLoggedIn ? "Sellers upload quality leads, buyers browse the marketplace" : "Find qualified leads or list your leads for sale on our marketplace"}
+                    Find qualified leads or list your leads for sale on our marketplace
                   </p>
                 </CardContent>
               </Card>
@@ -162,7 +162,8 @@ const Index = () => {
       </main>
       
       <Footer />
-    </div>;
+    </div>
+  );
 };
 
 export default Index;
