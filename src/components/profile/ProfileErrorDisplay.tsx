@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface ProfileErrorDisplayProps {
   error: string;
+  onRetry?: () => void;
 }
 
-const ProfileErrorDisplay = ({ error }: ProfileErrorDisplayProps) => {
+const ProfileErrorDisplay = ({ error, onRetry }: ProfileErrorDisplayProps) => {
   const navigate = useNavigate();
   
   const isAuthError = error?.toLowerCase().includes('auth') || 
@@ -22,10 +23,10 @@ const ProfileErrorDisplay = ({ error }: ProfileErrorDisplayProps) => {
       {isAuthError ? (
         <div className="space-x-4">
           <Button onClick={() => navigate('/login')}>Go to Login</Button>
-          <Button variant="outline" onClick={() => window.location.reload()}>Refresh Page</Button>
+          <Button variant="outline" onClick={onRetry}>Try Again</Button>
         </div>
       ) : (
-        <Button onClick={() => window.location.reload()}>Try Again</Button>
+        <Button onClick={onRetry}>Try Again</Button>
       )}
     </div>
   );
