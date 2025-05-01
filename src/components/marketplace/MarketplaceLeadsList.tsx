@@ -2,6 +2,7 @@
 import React from 'react';
 import { Lead } from '@/types/lead';
 import LeadCard from '@/components/LeadCard';
+import { Loader2 } from 'lucide-react';
 
 interface MarketplaceLeadsListProps {
   leads: Lead[];
@@ -19,6 +20,7 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" />
         <p>Loading leads...</p>
       </div>
     );

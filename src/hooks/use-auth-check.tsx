@@ -15,26 +15,29 @@ export const useAuthCheck = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        if (!authLoading) {
-          console.log('Auth loading completed, checking auth status:', { isLoggedIn, role });
-          setAuthChecked(true);
-          
-          if (!isLoggedIn) {
-            console.log('User not logged in, redirecting to login');
-            toast.error("Please log in to access the marketplace");
-            navigate('/login');
-            return;
-          }
-
-          if (role !== 'buyer') {
-            console.log('Access denied: User role is', role);
-            setAuthError(`Only buyers can access the marketplace. Your role: ${role || 'not set'}`);
-            return;
-          }
-          
-          // Clear any previous auth errors if we got here successfully
-          setAuthError(null);
+        if (authLoading) {
+          console.log('Auth still loading, waiting...');
+          return;
         }
+        
+        console.log('Auth loading completed, checking auth status:', { isLoggedIn, role });
+        setAuthChecked(true);
+        
+        if (!isLoggedIn) {
+          console.log('User not logged in, redirecting to login');
+          toast.error("Please log in to access the marketplace");
+          navigate('/login');
+          return;
+        }
+
+        if (role !== 'buyer') {
+          console.log('Access denied: User role is', role);
+          setAuthError(`Only buyers can access the marketplace. Your role: ${role || 'not set'}`);
+          return;
+        }
+        
+        // Clear any previous auth errors if we got here successfully
+        setAuthError(null);
       } catch (error) {
         console.error('Error in auth checking:', error);
         setAuthError('Error verifying your account. Please try refreshing the page.');

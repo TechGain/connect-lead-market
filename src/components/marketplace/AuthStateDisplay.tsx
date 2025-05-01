@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 interface AuthStateDisplayProps {
   isLoading: boolean;
@@ -22,6 +23,7 @@ const AuthStateDisplay: React.FC<AuthStateDisplayProps> = ({
     return (
       <div className="flex-1 container mx-auto px-4 flex items-center justify-center py-12">
         <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="mb-2 text-lg">Checking your account...</p>
           <p className="text-sm text-gray-500">Please wait while we verify your credentials</p>
         </div>

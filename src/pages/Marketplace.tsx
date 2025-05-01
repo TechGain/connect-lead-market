@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LeadFilters from '@/components/LeadFilters';
@@ -23,10 +23,20 @@ const Marketplace = () => {
     authError
   } = useAuthCheck();
   
+  useEffect(() => {
+    console.log('Marketplace render - Auth state:', {
+      authLoading,
+      authChecked,
+      authError,
+      isLoggedIn,
+      role
+    });
+  }, [authLoading, authChecked, authError, isLoggedIn, role]);
+  
   // Leads management with filtering
   const {
     filteredLeads,
-    isLoading,
+    isLoading: leadsLoading,
     handleFilterChange,
     resetFilters
   } = useMarketplaceLeads(authChecked, authError, isLoggedIn, role);
@@ -70,7 +80,7 @@ const Marketplace = () => {
             
             <MarketplaceLeadsList 
               leads={filteredLeads}
-              isLoading={isLoading}
+              isLoading={leadsLoading}
               onPurchase={handlePurchaseLead}
               onResetFilters={resetFilters}
             />

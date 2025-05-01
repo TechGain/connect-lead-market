@@ -12,19 +12,45 @@ export const useMarketplaceLeads = (authChecked: boolean, authError: string | nu
   // Load leads once auth check is complete and user is authorized
   useEffect(() => {
     const loadLeads = async () => {
-      if (!authChecked) return; // Don't attempt to load until auth is checked
-      if (authError) return; // Don't attempt to load if there's an auth error
-      if (!isLoggedIn || role !== 'buyer') return; // Don't attempt to load if user isn't authorized
+      console.log('useMarketplaceLeads: checking conditions to load leads', { 
+        authChecked, 
+        authError, 
+        isLoggedIn, 
+        role 
+      });
+      
+      if (!authChecked) {
+        console.log('useMarketplaceLeads: auth not checked yet, waiting...');
+        return; // Don't attempt to load until auth is checked
+      }
+      
+      if (authError) {
+        console.log('useMarketplaceLeads: auth error present, skipping load', { authError });
+        setIsLoading(false); // Stop loading if there's an auth error
+        return;
+      }
+      
+      if (!isLoggedIn) {
+        console.log('useMarketplaceLeads: user not logged in, skipping load');
+        setIsLoading(false); // Stop loading if user isn't logged in
+        return;
+      }
+      
+      if (role !== 'buyer') {
+        console.log('useMarketplaceLeads: user not a buyer, skipping load', { role });
+        setIsLoading(false); // Stop loading if user isn't a buyer
+        return;
+      }
       
       setIsLoading(true);
       try {
-        console.log('Loading marketplace leads...');
+        console.log('useMarketplaceLeads: loading marketplace leads...');
         const leadsData = await fetchLeads();
         // Only show available leads (not sold)
         const availableLeads = leadsData.filter(lead => lead.status !== 'sold');
+        console.log('useMarketplaceLeads: loaded leads:', availableLeads.length);
         setLeads(availableLeads);
         setFilteredLeads(availableLeads);
-        console.log('Loaded leads:', availableLeads.length);
       } catch (error) {
         console.error('Error loading marketplace leads:', error);
         toast.error('Failed to load marketplace leads');
