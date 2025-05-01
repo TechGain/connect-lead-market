@@ -24,6 +24,7 @@ const Profile = () => {
     totalLeads: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     console.log("Profile page - Current auth state:", { isLoggedIn, role, userId: user?.id });
@@ -37,6 +38,7 @@ const Profile = () => {
     // Fetch real profile data
     const fetchProfileData = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         console.log("Fetching profile data for user:", user?.id);
         
@@ -77,6 +79,13 @@ const Profile = () => {
             totalLeads = count || 0;
           }
         }
+
+        // Let's log the exact role information we're getting
+        console.log("Role from profile:", { 
+          profileRole: profile?.role,
+          contextRole: role,
+          profileObject: profile 
+        });
         
         // Update profile data state
         setProfileData({
@@ -88,8 +97,9 @@ const Profile = () => {
           avatar: undefined,
           totalLeads
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to load profile data:", error);
+        setError(error.message || "Failed to load profile data");
         toast.error("Failed to load profile data");
       } finally {
         setIsLoading(false);
@@ -100,6 +110,7 @@ const Profile = () => {
       fetchProfileData();
     } else {
       setIsLoading(false);
+      setError("No user ID available");
     }
   }, [isLoggedIn, navigate, user, role]);
   
@@ -113,6 +124,16 @@ const Profile = () => {
           <p className="text-gray-600">
             Manage your account information and settings
           </p>
+          
+          {/* Debug info - only visible in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+              <p>User ID: {user?.id || 'Not logged in'}</p>
+              <p>Role from context: {role || 'None'}</p>
+              <p>Logged in: {isLoggedIn ? 'Yes' : 'No'}</p>
+              {error && <p className="text-red-500">Error: {error}</p>}
+            </div>
+          )}
         </div>
         
         {isLoading ? (
@@ -143,6 +164,12 @@ const Profile = () => {
                 <Skeleton className="h-20 w-full" />
               </CardContent>
             </Card>
+          </div>
+        ) : error ? (
+          <div className="p-6 border rounded-lg bg-red-50 text-center">
+            <h3 className="text-xl font-medium text-red-700 mb-2">Error Loading Profile</h3>
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

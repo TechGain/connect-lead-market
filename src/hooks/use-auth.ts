@@ -28,6 +28,7 @@ export function useAuth() {
           
           if (error) {
             console.error('Error fetching user role:', error);
+            console.log('Raw error response:', error.message, error.details, error.hint);
             throw error;
           }
           
@@ -64,6 +65,7 @@ export function useAuth() {
           
           if (error) {
             console.error('Error fetching user role on auth state change:', error);
+            console.log('Raw error data:', error.message, error.details, error.hint);
             // We'll still display the error but not throw it to prevent breaking the auth flow
             toast.error('Failed to load user profile. Please try logging out and back in.');
           } else {
@@ -98,13 +100,15 @@ export function useAuth() {
       if (data.user) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('*') // Select all columns to debug what's actually in the profile
           .eq('id', data.user.id)
           .single();
         
         if (profileError) {
           console.error('Error fetching profile after login:', profileError);
+          console.log('Raw profile error:', profileError.message, profileError.details, profileError.hint);
         } else {
+          console.log("Complete profile data after login:", profileData);
           console.log("Setting user role after login:", profileData?.role);
           setUserRole(profileData?.role as 'seller' | 'buyer' | null);
         }
