@@ -5,10 +5,12 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
+
 const Index = () => {
   const {
     isLoggedIn
   } = useUserRole();
+  
   return <div className="flex flex-col min-h-screen">
       <Header />
       
@@ -162,4 +164,5 @@ const Index = () => {
       <Footer />
     </div>;
 };
+
 export default Index;

@@ -15,6 +15,7 @@ import MyLeads from "./pages/MyLeads";
 import Purchases from "./pages/Purchases";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/purchases" element={<Purchases />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/about" element={<About />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
