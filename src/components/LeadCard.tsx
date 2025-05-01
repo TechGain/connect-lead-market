@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { StarRating } from '@/components/StarRating';
+import StarRating from '@/components/StarRating'; // Fixed import
 import { formatCurrency } from '@/lib/utils';
 import { Lead } from '@/types/lead';
 import { MapPin } from 'lucide-react';
@@ -12,9 +12,10 @@ interface LeadCardProps {
   lead: Lead;
   onPurchase?: (lead: Lead) => void;
   showFullDetails?: boolean;
+  isPurchased?: boolean; // Added missing property
 }
 
-const LeadCard = ({ lead, onPurchase, showFullDetails = false }: LeadCardProps) => {
+const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
   return (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
@@ -64,7 +65,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false }: LeadCardProps) 
       
       <CardFooter className="pt-2 border-t flex justify-between items-center">
         <div className="flex items-center">
-          <StarRating rating={lead.qualityRating} showValue />
+          <StarRating rating={lead.qualityRating || 0} showValue />
         </div>
         
         <div className="flex items-center">

@@ -11,8 +11,9 @@ export interface Lead {
   qualityRating?: number;
   status: 'new' | 'pending' | 'sold';
   sellerId: string;
-  buyerId?: string;
+  buyerId?: string | null;
   createdAt: string;
-  purchasedAt?: string;
+  purchasedAt?: string | null;
   appointmentTime?: string; // Add this field for appointment times
+  address: string; // Add the address property that was missing
 }
