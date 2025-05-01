@@ -16,9 +16,10 @@ interface ProfileContentProps {
   };
   userData: any;
   refreshProfile: () => void;
+  isOffline?: boolean;
 }
 
-const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileContentProps) => {
+const ProfileContent = ({ profileData, userData, refreshProfile, isOffline = false }: ProfileContentProps) => {
   // Make sure we have valid data with strict fallback values
   const safeProfileData = {
     name: profileData?.name || 'User',
@@ -35,13 +36,18 @@ const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileConten
   
   // Handle refresh with visual feedback
   const handleRefresh = () => {
+    if (isOffline) {
+      toast.warning("You're currently offline. Please check your connection first.");
+      return;
+    }
+    
     refreshProfile();
     toast.info("Refreshing profile data...");
   };
   
-  // Auto-retry once if using limited data
+  // Auto-retry once if using limited data and not offline
   useEffect(() => {
-    if (profileData && !profileData.company && profileData.name) {
+    if (!isOffline && profileData && !profileData.company && profileData.name) {
       // We have some data but it might be incomplete - quietly try to refresh once
       const timer = setTimeout(() => {
         console.log("ProfileContent: Detected limited data, auto-refreshing...");
@@ -50,7 +56,7 @@ const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileConten
       
       return () => clearTimeout(timer);
     }
-  }, [profileData, refreshProfile]);
+  }, [profileData, refreshProfile, isOffline]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -61,8 +67,12 @@ const ProfileContent = ({ profileData, userData, refreshProfile }: ProfileConten
         }} 
         role={normalizedRole}
         onRefresh={handleRefresh}
+        isOffline={isOffline}
       />
-      <ProfileSettingsCard role={normalizedRole} />
+      <ProfileSettingsCard 
+        role={normalizedRole} 
+        disabled={isOffline}
+      />
     </div>
   );
 };

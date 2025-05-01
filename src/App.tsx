@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { UserRoleProvider } from "./hooks/use-user-role";
+import { HelmetProvider } from 'react-helmet-async';
 
 // Pages
 import Index from "./pages/Index";
@@ -19,31 +20,41 @@ import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import UploadLeads from "./pages/UploadLeads";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 30000
+    }
+  }
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Router>
-      <TooltipProvider>
-        <UserRoleProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/my-leads" element={<MyLeads />} />
-            <Route path="/purchases" element={<Purchases />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/upload-leads" element={<UploadLeads />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </UserRoleProvider>
-      </TooltipProvider>
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <TooltipProvider>
+          <UserRoleProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/my-leads" element={<MyLeads />} />
+              <Route path="/purchases" element={<Purchases />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/upload-leads" element={<UploadLeads />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </UserRoleProvider>
+        </TooltipProvider>
+      </Router>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 

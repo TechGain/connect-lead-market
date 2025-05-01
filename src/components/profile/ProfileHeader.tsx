@@ -6,13 +6,15 @@ import { RefreshCw, WifiOff } from 'lucide-react';
 
 interface ProfileHeaderProps {
   error: string | null;
+  isOffline?: boolean;
 }
 
-const ProfileHeader = ({ error }: ProfileHeaderProps) => {
+const ProfileHeader = ({ error, isOffline = false }: ProfileHeaderProps) => {
   const { isLoggedIn, role, user, refreshUserRole } = useUserRole();
   
-  // Detect connection issues from error message
-  const hasConnectionIssue = error?.toLowerCase().includes('connection') || 
+  // Detect connection issues from error message or offline status
+  const hasConnectionIssue = isOffline || 
+                            error?.toLowerCase().includes('connection') || 
                             error?.toLowerCase().includes('timeout') ||
                             error?.toLowerCase().includes('limited');
   
@@ -20,18 +22,26 @@ const ProfileHeader = ({ error }: ProfileHeaderProps) => {
     <div className="mb-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold mb-2">My Profile</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            My Profile
+            {isOffline && (
+              <span className="ml-2 text-sm bg-yellow-100 text-yellow-800 py-1 px-2 rounded-full">
+                Offline Mode
+              </span>
+            )}
+          </h1>
           <p className="text-gray-600">
             Manage your account information and settings
             {hasConnectionIssue && (
               <span className="ml-2 inline-flex items-center text-yellow-600 text-sm">
-                <WifiOff className="h-3 w-3 mr-1" /> Limited connectivity
+                <WifiOff className="h-3 w-3 mr-1" /> 
+                {isOffline ? "Offline mode active" : "Limited connectivity"}
               </span>
             )}
           </p>
         </div>
         
-        {isLoggedIn && (
+        {isLoggedIn && !isOffline && (
           <Button 
             variant="outline" 
             size="sm" 
@@ -50,6 +60,7 @@ const ProfileHeader = ({ error }: ProfileHeaderProps) => {
           <p>User ID: {user?.id || 'Not logged in'}</p>
           <p>Role from context: {role || 'None'}</p>
           <p>Logged in: {isLoggedIn ? 'Yes' : 'No'}</p>
+          <p>Offline mode: {isOffline ? 'Yes' : 'No'}</p>
           {error && <p className="text-red-500">Error: {error}</p>}
         </div>
       )}

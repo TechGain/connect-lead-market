@@ -8,16 +8,24 @@ interface ProfileFallbackViewProps {
   userData: any;
   onRetry: () => void;
   error: string | null;
+  isOffline?: boolean;
 }
 
-const ProfileFallbackView = ({ profileData, userData, onRetry, error }: ProfileFallbackViewProps) => {
+const ProfileFallbackView = ({ 
+  profileData, 
+  userData, 
+  onRetry, 
+  error,
+  isOffline = false
+}: ProfileFallbackViewProps) => {
   return (
     <>
-      <ProfileHeader error={error} />
+      <ProfileHeader error={error} isOffline={isOffline} />
       <ProfileContent
         profileData={profileData}
         userData={userData}
         refreshProfile={onRetry}
+        isOffline={isOffline}
       />
     </>
   );
