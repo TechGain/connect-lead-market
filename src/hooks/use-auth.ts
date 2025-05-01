@@ -174,12 +174,11 @@ export function useAuth() {
         
         // Explicitly set the role in state after successful registration
         setUserRole(role);
+        return data;
       } else {
         console.error("No user data returned after signup");
         throw new Error("Registration failed - no user data returned");
       }
-      
-      return data;
     } catch (error: any) {
       console.error("Registration error:", error);
       // Provide more specific error messages based on the error
