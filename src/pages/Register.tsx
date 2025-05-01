@@ -47,9 +47,12 @@ const Register = () => {
     setIsLoading(true);
     
     try {
+      // Add console logs for debugging
+      console.log("About to register with:", { email, role, fullName, companyName });
+      
       // Call the register function with proper parameters
-      console.log("Attempting to register with:", { email, password, role, fullName, companyName });
       const result = await register(email, password, role, fullName, companyName);
+      console.log("Registration result:", result);
       
       if (result) {
         toast.success(`Successfully registered as a ${role}`);

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client'; // Use the client from integrations folder
 import { toast } from 'sonner';
 
 export function useAuth() {
@@ -46,6 +46,7 @@ export function useAuth() {
     
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
         

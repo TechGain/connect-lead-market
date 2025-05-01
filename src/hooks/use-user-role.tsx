@@ -25,6 +25,9 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     logout
   } = useAuth();
 
+  // Add console log to track context initialization
+  console.log("UserRoleProvider initialized with:", { isLoggedIn, role, userId: user?.id });
+
   return (
     <UserRoleContext.Provider value={{ 
       isLoggedIn, 
