@@ -26,8 +26,12 @@ export function useAuth() {
             .eq('id', session.user.id)
             .single();
           
-          if (error) throw error;
+          if (error) {
+            console.error('Error fetching user role:', error);
+            throw error;
+          }
           
+          console.log("User role from profile:", data?.role);
           setUserRole(data?.role as 'seller' | 'buyer' | null);
         } else {
           setUser(null);
@@ -51,13 +55,24 @@ export function useAuth() {
         setUser(session.user);
         
         // Fetch the user's profile to get the role
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        setUserRole(data?.role as 'seller' | 'buyer' | null);
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching user role on auth state change:', error);
+            // We'll still display the error but not throw it to prevent breaking the auth flow
+            toast.error('Failed to load user profile. Please try logging out and back in.');
+          } else {
+            console.log("User role from profile on auth change:", data?.role);
+            setUserRole(data?.role as 'seller' | 'buyer' | null);
+          }
+        } catch (fetchError) {
+          console.error('Error in profile fetch during auth state change:', fetchError);
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUserRole(null);
@@ -78,6 +93,22 @@ export function useAuth() {
       });
       
       if (error) throw error;
+      
+      // After successful login, explicitly fetch and set the role
+      if (data.user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error('Error fetching profile after login:', profileError);
+        } else {
+          console.log("Setting user role after login:", profileData?.role);
+          setUserRole(profileData?.role as 'seller' | 'buyer' | null);
+        }
+      }
       
       return data;
     } catch (error: any) {
@@ -140,6 +171,9 @@ export function useAuth() {
         }
         
         console.log("Profile created successfully with role:", role);
+        
+        // Explicitly set the role in state after successful registration
+        setUserRole(role);
       } else {
         console.error("No user data returned after signup");
         throw new Error("Registration failed - no user data returned");

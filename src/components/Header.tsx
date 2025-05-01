@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
@@ -10,19 +10,44 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
+import { toast } from 'sonner';
 
 const Header = () => {
   const navigate = useNavigate();
   const {
     role,
     isLoggedIn,
-    logout
+    logout,
+    user
   } = useUserRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Add an effect to log the current role for debugging
+  useEffect(() => {
+    console.log("Header component - Current auth state:", { 
+      isLoggedIn, 
+      role, 
+      userId: user?.id 
+    });
+  }, [isLoggedIn, role, user]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleSellerAction = () => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    
+    if (role === 'seller') {
+      navigate('/my-leads');
+    } else {
+      toast.info("You need a seller account to upload leads. Please register as a seller.");
+      navigate('/register?role=seller');
+    }
   };
 
   const renderNavItems = () => <>
@@ -121,7 +146,7 @@ const Header = () => {
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium">My Account</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          {role} Account
+                          {role || 'User'} Account
                         </p>
                       </div>
                     </DropdownMenuLabel>
@@ -129,6 +154,16 @@ const Header = () => {
                     <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
                       Profile
                     </DropdownMenuItem>
+                    {role === 'seller' && (
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/my-leads')}>
+                        My Leads
+                      </DropdownMenuItem>
+                    )}
+                    {role === 'buyer' && (
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/purchases')}>
+                        My Purchases
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/dashboard')}>
                       Dashboard
                     </DropdownMenuItem>

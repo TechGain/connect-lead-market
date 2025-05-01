@@ -16,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register, isLoggedIn } = useUserRole();
+  const { register, isLoggedIn, role } = useUserRole();
   const [searchParams] = useSearchParams();
   
   const [firstName, setFirstName] = useState('');
@@ -25,15 +25,18 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [role, setRole] = useState<'buyer' | 'seller'>(
+  const [selectedRole, setSelectedRole] = useState<'buyer' | 'seller'>(
     (searchParams.get('role') as 'buyer' | 'seller') || 'buyer'
   );
   const [isLoading, setIsLoading] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
 
-  // If user is already logged in, redirect them
+  // If user is already logged in, redirect them based on their role
   useEffect(() => {
-    if (isLoggedIn) {
+    console.log("Register page - Current auth state:", { isLoggedIn, role });
+    
+    if (isLoggedIn && role) {
+      console.log(`User is logged in as ${role}, redirecting...`);
       const redirectPath = role === 'seller' ? '/my-leads' : '/marketplace';
       navigate(redirectPath);
     }
@@ -84,21 +87,21 @@ const Register = () => {
       // Add detailed console logs for debugging
       console.log("Registration form submitted with:", { 
         email, 
-        role, 
+        role: selectedRole, 
         fullName, 
         companyName,
         passwordLength: password.length 
       });
       
       // Call the register function with proper parameters
-      const result = await register(email, password, role, fullName, companyName);
+      const result = await register(email, password, selectedRole, fullName, companyName);
       console.log("Registration result:", result);
       
       if (result) {
-        toast.success(`Successfully registered as a ${role}`);
+        toast.success(`Successfully registered as a ${selectedRole}`);
         
         // Navigate to the appropriate page based on role
-        if (role === 'seller') {
+        if (selectedRole === 'seller') {
           navigate('/my-leads');
         } else {
           navigate('/marketplace');
@@ -127,7 +130,7 @@ const Register = () => {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
               <CardDescription className="text-center">
-                Sign up for a {role === 'buyer' ? 'contractor' : 'lead seller'} account
+                Sign up for a {selectedRole === 'buyer' ? 'contractor' : 'lead seller'} account
               </CardDescription>
             </CardHeader>
             
@@ -145,8 +148,8 @@ const Register = () => {
                   <Label htmlFor="role">I am a:</Label>
                   <RadioGroup 
                     id="role" 
-                    value={role} 
-                    onValueChange={(value: 'buyer' | 'seller') => setRole(value)}
+                    value={selectedRole} 
+                    onValueChange={(value: 'buyer' | 'seller') => setSelectedRole(value)}
                     className="flex gap-6"
                   >
                     <div className="flex items-center space-x-2">
@@ -188,7 +191,7 @@ const Register = () => {
                   <Label htmlFor="company">Company Name</Label>
                   <Input
                     id="company"
-                    placeholder={role === 'buyer' ? "Your Contracting Business" : "Your Lead Generation Company"}
+                    placeholder={selectedRole === 'buyer' ? "Your Contracting Business" : "Your Lead Generation Company"}
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                   />

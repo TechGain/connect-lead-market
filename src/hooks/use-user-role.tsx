@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 interface UserRoleContextType {
@@ -25,8 +25,14 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     logout
   } = useAuth();
 
-  // Add console log to track context initialization
-  console.log("UserRoleProvider initialized with:", { isLoggedIn, role, userId: user?.id });
+  // Add more detailed console logs to track role state
+  useEffect(() => {
+    console.log("UserRoleProvider role updated:", { 
+      role, 
+      isLoggedIn, 
+      userId: user?.id 
+    });
+  }, [role, isLoggedIn, user?.id]);
 
   return (
     <UserRoleContext.Provider value={{ 
