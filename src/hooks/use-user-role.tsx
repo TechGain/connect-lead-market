@@ -146,17 +146,19 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [authRole, role, isLoggedIn, user?.id, isLoading, isForceRefreshing]);
 
+  const value = {
+    isLoggedIn, 
+    isLoading: isLoading || isForceRefreshing,
+    role,
+    user,
+    login,
+    register,
+    logout,
+    refreshUserRole
+  };
+
   return (
-    <UserRoleContext.Provider value={{ 
-      isLoggedIn, 
-      isLoading: isLoading || isForceRefreshing,
-      role,
-      user,
-      login,
-      register,
-      logout,
-      refreshUserRole
-    }}>
+    <UserRoleContext.Provider value={value}>
       {children}
     </UserRoleContext.Provider>
   );
