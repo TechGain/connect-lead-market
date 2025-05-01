@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import Header from '@/components/Header';
@@ -10,86 +10,22 @@ import ProfileErrorDisplay from '@/components/profile/ProfileErrorDisplay';
 import ProfileContent from '@/components/profile/ProfileContent';
 import { useProfileData } from '@/hooks/use-profile-data';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, role, isLoading: authLoading, user, refreshUserRole } = useUserRole();
+  const { isLoggedIn, role, isLoading: authLoading } = useUserRole();
   const { profileData, isLoading: profileLoading, error, refreshData } = useProfileData();
-  const [hasAttemptedReload, setHasAttemptedReload] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [directDatabaseRole, setDirectDatabaseRole] = useState<'seller' | 'buyer' | null>(null);
   
-  // Log detailed debug information
+  // Debug log for tracking auth state
   useEffect(() => {
     console.log("Profile page render - Auth state:", { 
       isLoggedIn, 
       role, 
       authLoading,
-      profileDataLoading: profileLoading,
-      hasError: !!error,
-      errorMessage: error,
-      userId: user?.id,
-      directDatabaseRole
+      profileLoading,
+      hasError: !!error
     });
-    
-    // Force a timeout to proceed even if authentication is taking too long
-    const timer = setTimeout(() => {
-      if ((authLoading || profileLoading) && !loadingTimeout) {
-        console.log("Loading is taking too long, marking timeout");
-        setLoadingTimeout(true);
-      }
-    }, 8000); // Extended timeout to 8 seconds
-    
-    return () => clearTimeout(timer);
-  }, [isLoggedIn, role, authLoading, profileLoading, error, user?.id, loadingTimeout, directDatabaseRole]);
-  
-  // Direct fetch of role from database if we're logged in
-  const fetchDirectRole = useCallback(async () => {
-    if (!user?.id) return;
-    
-    try {
-      console.log("Profile page: Directly fetching role from database for user:", user.id);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error("Error fetching role from database:", error);
-        console.error("Error details:", error.message, error.code, error.details);
-        return;
-      }
-      
-      console.log("Profile page: Direct database role check result:", data?.role);
-      
-      if (data?.role) {
-        const dbRole = String(data.role).toLowerCase();
-        console.log("Profile page: Role type and value:", typeof dbRole, dbRole);
-        
-        if (dbRole === 'seller' || dbRole === 'buyer') {
-          console.log("Profile page: Setting direct database role to:", dbRole);
-          setDirectDatabaseRole(dbRole as 'seller' | 'buyer');
-        } else {
-          console.error("Profile page: Invalid role value:", dbRole);
-        }
-      } else {
-        console.error("Profile page: No role data found in profile");
-      }
-    } catch (err) {
-      console.error("Exception in direct role fetch:", err);
-    }
-  }, [user?.id]);
-  
-  useEffect(() => {
-    if (isLoggedIn && user?.id) {
-      fetchDirectRole();
-    }
-  }, [isLoggedIn, user?.id, fetchDirectRole]);
+  }, [isLoggedIn, role, authLoading, profileLoading, error]);
   
   // If user not logged in, redirect to login
   useEffect(() => {
@@ -99,81 +35,8 @@ const Profile = () => {
     }
   }, [isLoggedIn, navigate, authLoading]);
   
-  const handleRefresh = async () => {
-    setHasAttemptedReload(true);
-    
-    // Try to directly fix the role in the database if needed
-    if (user?.id && directDatabaseRole) {
-      try {
-        console.log("Manually updating role in database to:", directDatabaseRole);
-        
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            role: directDatabaseRole,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error("Error updating role:", updateError);
-          console.error("Error details:", updateError.message, updateError.code, updateError.details);
-        } else {
-          console.log("Successfully updated role in database to:", directDatabaseRole);
-        }
-      } catch (err) {
-        console.error("Error updating role:", err);
-      }
-    } else if (user?.id && role) {
-      try {
-        console.log("Falling back to context role for database update:", role);
-        
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            role: role,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error("Error updating role:", updateError);
-        } else {
-          console.log("Successfully updated role in database to:", role);
-        }
-      } catch (err) {
-        console.error("Error updating role:", err);
-      }
-    }
-    
-    // Refresh user role via context
-    refreshUserRole();
-    
-    // Wait a bit for the role refresh to complete
-    setTimeout(() => {
-      // Refresh profile data
-      if (refreshData) {
-        refreshData();
-      }
-      
-      // Force a direct database check after a short delay
-      setTimeout(() => {
-        fetchDirectRole();
-      }, 500);
-    }, 1000);
-    
-    toast.info("Refreshing profile data...");
-  };
-
   // Combined loading state
-  const isLoading = (authLoading || profileLoading) && !loadingTimeout;
-  
-  // If we're logged in but still don't have a role after reload attempt,
-  // or loading takes too long, let's render the profile anyway with a default role
-  const shouldProceedAnyway = (isLoggedIn && (role === null || loadingTimeout));
-  
-  // Use direct database role if available, otherwise fall back to context role
-  const displayRole = directDatabaseRole || role;
+  const isLoading = authLoading || profileLoading;
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -182,41 +45,18 @@ const Profile = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <ProfileHeader error={error} />
         
-        {isLoading && !shouldProceedAnyway ? (
+        {isLoading ? (
           <>
             <ProfileSkeleton />
             <p className="text-center text-gray-500 mt-4">Loading your profile...</p>
           </>
         ) : error ? (
-          <>
-            <ProfileErrorDisplay error={error} />
-            <div className="flex justify-center mt-4">
-              <Button onClick={handleRefresh} className="flex items-center gap-2">
-                <RefreshCw className="h-4 w-4" />
-                Refresh Profile
-              </Button>
-            </div>
-          </>
+          <ProfileErrorDisplay error={error} />
         ) : (
-          <>
-            <ProfileContent 
-              profileData={profileData} 
-              role={displayRole}
-            />
-            
-            {/* Add a dedicated refresh button for debugging */}
-            <div className="flex justify-center mt-6">
-              <Button 
-                onClick={handleRefresh} 
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Refresh Profile Data
-              </Button>
-            </div>
-          </>
+          <ProfileContent 
+            profileData={profileData} 
+            role={role}
+          />
         )}
       </main>
       

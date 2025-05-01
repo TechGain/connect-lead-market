@@ -1,6 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,7 +14,6 @@ interface ProfileData {
 }
 
 export const useProfileData = () => {
-  const { isLoggedIn, user, isLoading: authLoading } = useUserRole();
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     email: '',
@@ -27,27 +25,37 @@ export const useProfileData = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   
+  // Simplified direct fetch function
   const fetchProfileData = useCallback(async () => {
-    if (!user?.id) return;
-    
-    setIsLoading(true);
-    setError(null);
     try {
-      console.log("useProfileData: Fetching profile data for user:", user.id);
+      setIsLoading(true);
+      setError(null);
       
-      // Get profile data from Supabase
-      const { data: profile, error } = await supabase
+      console.log("useProfileData: Fetching profile data directly");
+      
+      // Get current session
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData?.session?.user) {
+        setError("Not authenticated");
+        return;
+      }
+      
+      const user = sessionData.session.user;
+      console.log("useProfileData: Session user found:", user.id);
+      
+      // Get profile from profiles table
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
       
-      if (error) {
-        console.error("useProfileData: Error fetching profile:", error);
-        console.error("useProfileData: Error details:", error.message, error.code, error.details);
-        throw error;
+      if (profileError) {
+        console.error("useProfileData: Error fetching profile:", profileError);
+        setError("Failed to load profile data");
+        return;
       }
       
       console.log("useProfileData: Profile data retrieved:", profile);
@@ -71,13 +79,6 @@ export const useProfileData = () => {
           totalLeads = count;
         }
       }
-
-      // Log the exact role information we're getting
-      console.log("useProfileData: Role information:", { 
-        profileRole: profile?.role,
-        roleType: typeof profile?.role,
-        profileObject: profile 
-      });
       
       // Update profile data state
       setProfileData({
@@ -89,68 +90,26 @@ export const useProfileData = () => {
         avatar: undefined,
         totalLeads
       });
-    } catch (error: any) {
-      console.error("Failed to load profile data:", error);
-      setError(error.message || "Failed to load profile data");
       
-      // If we've tried a few times and still can't get the data, show a more helpful message
-      if (retryCount > 2) {
-        toast.error("There seems to be an issue with your profile. Please try logging out and back in.");
-      } else {
-        toast.error("Failed to load profile data");
-      }
+      console.log("useProfileData: Profile data set successfully");
+    } catch (err) {
+      console.error("useProfileData: Exception in profile data fetch:", err);
+      setError("An error occurred while loading your profile");
+      toast.error("Failed to load profile data");
     } finally {
       setIsLoading(false);
     }
-  }, [user, retryCount]);
+  }, []);
   
+  // Fetch profile data on component mount
   useEffect(() => {
-    console.log("useProfileData effect running - Auth state:", { 
-      isLoggedIn, 
-      userId: user?.id,
-      authLoading,
-      retryCount
-    });
-    
-    // Don't try to fetch data while auth is still loading
-    if (authLoading) {
-      console.log("Auth still loading, waiting before fetching profile data");
-      return;
-    }
-    
-    if (!isLoggedIn) {
-      console.error("User not logged in, can't fetch profile");
-      setError("Not authenticated");
-      setIsLoading(false);
-      return;
-    }
-    
-    // Fetch real profile data
-    if (user?.id) {
-      fetchProfileData();
-    } else {
-      // If no user ID, but we're logged in according to the context
-      // This is a strange state, so we should retry a few times
-      setIsLoading(false);
-      if (isLoggedIn && !user?.id && retryCount < 3) {
-        console.log("User is logged in but no user ID available, retrying soon...");
-        const timer = setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-        }, 1000); // Wait 1 second before retrying
-        
-        return () => clearTimeout(timer);
-      } else if (isLoggedIn && !user?.id) {
-        setError("No user ID available. Please try logging out and back in.");
-        toast.error("Authentication error. Please try logging out and back in.");
-      }
-    }
-  }, [isLoggedIn, user, retryCount, authLoading, fetchProfileData]);
+    fetchProfileData();
+  }, [fetchProfileData]);
 
+  // Public method for manual refresh
   const refreshData = useCallback(() => {
-    if (user?.id) {
-      fetchProfileData();
-    }
-  }, [user?.id, fetchProfileData]);
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   return { profileData, isLoading, error, refreshData };
 };

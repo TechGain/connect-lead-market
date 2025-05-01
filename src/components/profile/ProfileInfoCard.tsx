@@ -23,64 +23,84 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
   const [directRole, setDirectRole] = useState<'seller' | 'buyer' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profileInfo, setProfileInfo] = useState({
+    name: '',
+    email: '',
+    company: '',
+  });
 
-  // Fetch the role directly from the database
-  const fetchDirectRoleFromDb = async () => {
+  // Fetch complete profile data directly from Supabase
+  const fetchProfileData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const { data: session } = await supabase.auth.getSession();
       
-      if (session?.session?.user?.id) {
-        const userId = session.session.user.id;
-        console.log("ProfileInfoCard: Directly fetching role for user:", userId);
-
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', userId)
-          .single();
-
-        if (error) {
-          console.error("Error fetching direct role:", error);
-          setError("Could not retrieve your account type");
-          return;
-        }
-
-        if (data && data.role) {
-          const dbRole = data.role.toLowerCase();
-          console.log("ProfileInfoCard: Direct database role:", dbRole);
+      // Get current session
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData?.session?.user?.id) {
+        setError("Not authenticated");
+        return;
+      }
+      
+      const userId = sessionData.session.user.id;
+      const userEmail = sessionData.session.user.email || '';
+      console.log("ProfileInfoCard: Fetching complete profile data for user:", userId);
+      
+      // Get user profile from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        setError("Could not fetch your profile");
+        return;
+      }
+      
+      console.log("ProfileInfoCard: Profile data fetched successfully:", profileData);
+      
+      if (profileData) {
+        // Update role state if role is valid
+        if (profileData.role) {
+          const dbRole = profileData.role.toLowerCase();
+          console.log("ProfileInfoCard: Role from database:", dbRole);
           
           if (dbRole === 'seller' || dbRole === 'buyer') {
             setDirectRole(dbRole as 'seller' | 'buyer');
-          } else {
-            setError(`Invalid role found: ${dbRole}`);
           }
-        } else {
-          setError("No role found in your profile");
         }
+        
+        // Update profile info state
+        setProfileInfo({
+          name: profileData.full_name || 'User',
+          email: userEmail,
+          company: profileData.company || 'Not specified',
+        });
       }
     } catch (err) {
-      console.error("Exception in direct role fetch:", err);
-      setError("Error loading your account type");
+      console.error("Exception in profile data fetch:", err);
+      setError("Error loading your profile");
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Call the function on component mount
+  
+  // Fetch profile data on mount
   useEffect(() => {
-    fetchDirectRoleFromDb();
+    fetchProfileData();
   }, []);
   
   return (
     <Card className="lg:col-span-1">
       <CardHeader className="flex flex-col items-center text-center">
         <ProfileBadge
-          name={profileData.name}
+          name={profileInfo.name || profileData.name}
           rating={profileData.rating}
           avatar={profileData.avatar}
-          role={directRole || contextRole}
+          role={directRole || contextRole || 'buyer'}
           totalLeads={profileData.totalLeads}
         />
         <CardDescription className="mt-2">
@@ -91,11 +111,11 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Email</p>
-            <p>{profileData.email}</p>
+            <p>{profileInfo.email || profileData.email}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Company</p>
-            <p>{profileData.company || 'Not specified'}</p>
+            <p>{profileInfo.company || profileData.company || 'Not specified'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Account Type</p>
@@ -108,7 +128,7 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
                   variant="ghost" 
                   size="sm" 
                   className="h-6 px-2 text-xs" 
-                  onClick={() => fetchDirectRoleFromDb()}
+                  onClick={() => fetchProfileData()}
                 >
                   Retry
                 </Button>
@@ -122,8 +142,11 @@ const ProfileInfoCard = ({ profileData, role: contextRole }: ProfileInfoCardProp
         </div>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Button variant="outline" onClick={() => toast.info("Edit profile functionality coming soon")}>
-          Edit Profile
+        <Button variant="outline" onClick={() => {
+          fetchProfileData();
+          toast.info("Refreshing profile data...");
+        }}>
+          Refresh Profile
         </Button>
       </CardFooter>
     </Card>
