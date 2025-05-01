@@ -70,6 +70,7 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login with:", { email });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -79,6 +80,7 @@ export function useAuth() {
       
       return data;
     } catch (error: any) {
+      console.error("Login error:", error);
       toast.error(error.message || 'Failed to sign in');
       return null;
     }
@@ -92,6 +94,7 @@ export function useAuth() {
     company?: string
   ) => {
     try {
+      console.log("Registration starting with:", { email, role, fullName, company });
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -103,9 +106,13 @@ export function useAuth() {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
+      }
       
       if (data.user) {
+        console.log("User created successfully, creating profile:", data.user.id);
         // Create a profile for the user with their role
         const { error: profileError } = await supabase.from('profiles').insert({
           id: data.user.id,
@@ -115,11 +122,17 @@ export function useAuth() {
           rating: role === 'seller' ? 5 : null, // Default rating for sellers
         });
         
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          throw profileError;
+        }
+        
+        console.log("Profile created successfully");
       }
       
       return data;
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast.error(error.message || 'Failed to create account');
       return null;
     }

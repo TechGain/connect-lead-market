@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ const Register = () => {
   const [role, setRole] = useState<'buyer' | 'seller'>(
     (searchParams.get('role') as 'buyer' | 'seller') || 'buyer'
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,18 +44,30 @@ const Register = () => {
     // Combine first name and last name for full name
     const fullName = `${firstName} ${lastName}`;
     
-    // Call the register function with proper parameters
-    const result = await register(email, password, role, fullName, companyName);
+    setIsLoading(true);
     
-    if (result) {
-      toast.success(`Successfully registered as a ${role}`);
+    try {
+      // Call the register function with proper parameters
+      console.log("Attempting to register with:", { email, password, role, fullName, companyName });
+      const result = await register(email, password, role, fullName, companyName);
       
-      // Navigate to the appropriate page based on role
-      if (role === 'seller') {
-        navigate('/my-leads');
+      if (result) {
+        toast.success(`Successfully registered as a ${role}`);
+        
+        // Navigate to the appropriate page based on role
+        if (role === 'seller') {
+          navigate('/my-leads');
+        } else {
+          navigate('/marketplace');
+        }
       } else {
-        navigate('/marketplace');
+        toast.error("Registration failed. Please try again.");
       }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "An error occurred during registration");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -164,8 +178,12 @@ const Register = () => {
               </CardContent>
               
               <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full">
-                  Create Account
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
                 <div className="text-center text-sm">
                   Already have an account?{' '}
