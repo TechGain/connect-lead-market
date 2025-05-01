@@ -174,6 +174,8 @@ export function useAuth() {
         
         // Explicitly set the role in state after successful registration
         setUserRole(role);
+        setUser(data.user);
+        
         return data;
       } else {
         console.error("No user data returned after signup");

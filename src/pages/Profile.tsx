@@ -25,6 +25,8 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    console.log("Profile page - Current auth state:", { isLoggedIn, role, userId: user?.id });
+    
     if (!isLoggedIn) {
       toast.error("You must be logged in to view your profile");
       navigate('/login');
@@ -83,7 +85,7 @@ const Profile = () => {
     if (user?.id) {
       fetchProfileData();
     }
-  }, [isLoggedIn, navigate, user]);
+  }, [isLoggedIn, navigate, user, role]);
   
   return (
     <div className="flex flex-col min-h-screen">

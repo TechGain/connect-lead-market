@@ -16,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register, isLoggedIn, role } = useUserRole();
+  const { register, isLoggedIn, role, user } = useUserRole();
   const [searchParams] = useSearchParams();
   
   const [firstName, setFirstName] = useState('');
@@ -33,14 +33,14 @@ const Register = () => {
 
   // If user is already logged in, redirect them based on their role
   useEffect(() => {
-    console.log("Register page - Current auth state:", { isLoggedIn, role });
+    console.log("Register page - Current auth state:", { isLoggedIn, role, userId: user?.id });
     
     if (isLoggedIn && role) {
       console.log(`User is logged in as ${role}, redirecting...`);
       const redirectPath = role === 'seller' ? '/my-leads' : '/marketplace';
       navigate(redirectPath);
     }
-  }, [isLoggedIn, navigate, role]);
+  }, [isLoggedIn, navigate, role, user]);
 
   const validateForm = () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
@@ -100,12 +100,15 @@ const Register = () => {
       if (result) {
         toast.success(`Successfully registered as a ${selectedRole}`);
         
-        // Navigate to the appropriate page based on role
-        if (selectedRole === 'seller') {
-          navigate('/my-leads');
-        } else {
-          navigate('/marketplace');
-        }
+        // Add a small delay to ensure state is updated before redirection
+        setTimeout(() => {
+          // Navigate to the appropriate page based on role
+          if (selectedRole === 'seller') {
+            navigate('/my-leads');
+          } else {
+            navigate('/marketplace');
+          }
+        }, 100);
       } else {
         // If result is null, show a more detailed error
         setRegistrationError("Registration failed. This could be due to an existing account or invalid credentials.");
