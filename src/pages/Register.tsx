@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import { useUserRole } from '@/hooks/use-user-role';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { login } = useUserRole();
+  const { register } = useUserRole();
   const [searchParams] = useSearchParams();
   
   const [firstName, setFirstName] = useState('');
@@ -27,7 +26,7 @@ const Register = () => {
     (searchParams.get('role') as 'buyer' | 'seller') || 'buyer'
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
@@ -40,27 +39,21 @@ const Register = () => {
       return;
     }
     
-    // In a real app, we would make an API call to register the user
-    console.log({
-      firstName,
-      lastName,
-      email,
-      password,
-      companyName,
-      role
-    });
+    // Combine first name and last name for full name
+    const fullName = `${firstName} ${lastName}`;
     
-    // Simulating successful registration
-    toast.success(`Successfully registered as a ${role}`);
+    // Call the register function with proper parameters
+    const result = await register(email, password, role, fullName, companyName);
     
-    // Log the user in
-    login(role);
-    
-    // Navigate to the appropriate page based on role
-    if (role === 'seller') {
-      navigate('/my-leads');
-    } else {
-      navigate('/marketplace');
+    if (result) {
+      toast.success(`Successfully registered as a ${role}`);
+      
+      // Navigate to the appropriate page based on role
+      if (role === 'seller') {
+        navigate('/my-leads');
+      } else {
+        navigate('/marketplace');
+      }
     }
   };
 

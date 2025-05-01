@@ -17,9 +17,8 @@ const Login = () => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'buyer' | 'seller'>('buyer');
-
-  const handleSubmit = (e: React.FormEvent) => {
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -27,18 +26,11 @@ const Login = () => {
       return;
     }
     
-    // For demo purposes, we'll simply log the user in without actual authentication
-    // In a real app, this would make an API call to authenticate the user
+    // Call the login function with both email and password
+    const result = await login(email, password);
     
-    // Log the user in with the selected role
-    login(role);
-    
-    toast.success(`Successfully logged in as a ${role}`);
-    
-    // Navigate based on role
-    if (role === 'seller') {
-      navigate('/my-leads');
-    } else {
+    if (result) {
+      toast.success(`Successfully logged in`);
       navigate('/marketplace');
     }
   };
@@ -85,28 +77,6 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Login As:</Label>
-                  <div className="flex gap-4">
-                    <Button 
-                      type="button"
-                      variant={role === 'buyer' ? 'default' : 'outline'}
-                      onClick={() => setRole('buyer')}
-                      className="flex-1"
-                    >
-                      Contractor (Buyer)
-                    </Button>
-                    <Button 
-                      type="button"
-                      variant={role === 'seller' ? 'default' : 'outline'}
-                      onClick={() => setRole('seller')}
-                      className="flex-1"
-                    >
-                      Lead Seller
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
               
