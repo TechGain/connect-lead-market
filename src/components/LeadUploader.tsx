@@ -23,8 +23,9 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
   const [contactPhone, setContactPhone] = useState('');
   const [price, setPrice] = useState('');
   const [quality, setQuality] = useState(3);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!leadType || !location || !description || !contactName || !contactEmail || !price) {
@@ -32,33 +33,40 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
       return;
     }
     
-    const newLead: Omit<Lead, 'id'> = {
-      type: leadType,
-      location,
-      description,
-      contactName,
-      contactEmail,
-      contactPhone,
-      price: Number(price),
-      qualityRating: quality,
-      status: 'new' as const, // Explicitly type this as a literal type
-      sellerId: 'current-seller-id', // In a real app, this would come from auth context
-      createdAt: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
     
-    onLeadSubmit(newLead);
-    
-    // Reset form
-    setLeadType('');
-    setLocation('');
-    setDescription('');
-    setContactName('');
-    setContactEmail('');
-    setContactPhone('');
-    setPrice('');
-    setQuality(3);
-    
-    toast.success("Lead submitted successfully!");
+    try {
+      const newLead: Omit<Lead, 'id'> = {
+        type: leadType,
+        location,
+        description,
+        contactName,
+        contactEmail,
+        contactPhone,
+        price: Number(price),
+        qualityRating: quality,
+        status: 'new',
+        sellerId: 'current-seller-id', // This will be replaced by the actual seller ID in MyLeads
+        createdAt: new Date().toISOString(),
+      };
+      
+      await onLeadSubmit(newLead);
+      
+      // Reset form
+      setLeadType('');
+      setLocation('');
+      setDescription('');
+      setContactName('');
+      setContactEmail('');
+      setContactPhone('');
+      setPrice('');
+      setQuality(3);
+    } catch (error) {
+      console.error('Error submitting lead:', error);
+      toast.error('Failed to upload lead');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -174,7 +182,13 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
         </CardContent>
         
         <CardFooter>
-          <Button type="submit" className="w-full">Upload Lead</Button>
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Uploading...' : 'Upload Lead'}
+          </Button>
         </CardFooter>
       </form>
     </Card>

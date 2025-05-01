@@ -9,37 +9,73 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
-import { mockLeads } from '@/lib/mock-data';
-import { generateId } from '@/lib/utils';
+import { fetchLeadsBySeller, createLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useNavigate } from 'react-router-dom';
 
 const MyLeads = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, role } = useUserRole();
+  const { isLoggedIn, role, user } = useUserRole();
   const [myLeads, setMyLeads] = useState<Lead[]>([]);
   const [activeTab, setActiveTab] = useState('active');
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (!isLoggedIn || role !== 'seller') {
+    if (!isLoggedIn) {
       toast.error("You must be logged in as a seller to view this page");
       navigate('/login');
       return;
     }
     
-    // In a real app, we would fetch the seller's leads from an API
-    const sellerLeads = mockLeads.filter(lead => lead.sellerId === 'seller-1');
-    setMyLeads(sellerLeads);
-  }, [isLoggedIn, role, navigate]);
-  
-  const handleLeadSubmit = (leadData: Omit<Lead, 'id'>) => {
-    const newLead = {
-      ...leadData,
-      id: generateId()
+    if (role !== 'seller') {
+      toast.error("Only sellers can access this page");
+      navigate('/');
+      return;
+    }
+    
+    const loadSellerLeads = async () => {
+      setIsLoading(true);
+      try {
+        if (user?.id) {
+          const leads = await fetchLeadsBySeller(user.id);
+          setMyLeads(leads);
+        }
+      } catch (error) {
+        console.error('Error loading seller leads:', error);
+        toast.error('Failed to load your leads');
+      } finally {
+        setIsLoading(false);
+      }
     };
     
-    setMyLeads([newLead, ...myLeads]);
-    setActiveTab('active');
+    if (user?.id) {
+      loadSellerLeads();
+    }
+  }, [isLoggedIn, role, navigate, user?.id]);
+  
+  const handleLeadSubmit = async (leadData: Omit<Lead, 'id'>) => {
+    try {
+      if (!user?.id) {
+        toast.error("You must be logged in to upload leads");
+        return;
+      }
+      
+      const leadWithSellerId = {
+        ...leadData,
+        sellerId: user.id,
+      };
+      
+      const newLead = await createLead(leadWithSellerId);
+      
+      if (newLead) {
+        setMyLeads([newLead, ...myLeads]);
+        setActiveTab('active');
+        toast.success("Lead uploaded successfully!");
+      }
+    } catch (error) {
+      console.error('Error uploading lead:', error);
+      toast.error('Failed to upload lead');
+    }
   };
   
   const getFilteredLeads = () => {
@@ -94,7 +130,11 @@ const MyLeads = () => {
           </TabsList>
           
           <TabsContent value="active">
-            {filteredLeads.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p>Loading your leads...</p>
+              </div>
+            ) : filteredLeads.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredLeads.map(lead => (
                   <LeadCard
@@ -114,7 +154,11 @@ const MyLeads = () => {
           </TabsContent>
           
           <TabsContent value="sold">
-            {filteredLeads.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p>Loading your leads...</p>
+              </div>
+            ) : filteredLeads.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredLeads.map(lead => (
                   <LeadCard

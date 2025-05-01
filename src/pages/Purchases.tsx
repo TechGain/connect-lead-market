@@ -9,55 +9,77 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
-import { mockLeads } from '@/lib/mock-data';
+import { fetchLeadsByBuyer, rateLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useNavigate } from 'react-router-dom';
 
 const Purchases = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, role } = useUserRole();
+  const { isLoggedIn, role, user } = useUserRole();
   
   const [purchasedLeads, setPurchasedLeads] = useState<Lead[]>([]);
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (!isLoggedIn || role !== 'buyer') {
+    if (!isLoggedIn) {
       toast.error("You must be logged in as a buyer to view this page");
       navigate('/login');
       return;
     }
     
-    // In a real app, we would fetch the buyer's purchased leads from an API
-    const buyerLeads = mockLeads.filter(
-      lead => lead.status === 'sold' && lead.buyerId === 'buyer-1'
-    );
-    setPurchasedLeads(buyerLeads);
-  }, [isLoggedIn, role, navigate]);
+    if (role !== 'buyer') {
+      toast.error("Only buyers can access this page");
+      navigate('/');
+      return;
+    }
+    
+    const loadPurchasedLeads = async () => {
+      setIsLoading(true);
+      try {
+        if (user?.id) {
+          const leads = await fetchLeadsByBuyer(user.id);
+          setPurchasedLeads(leads);
+        }
+      } catch (error) {
+        console.error('Error loading purchased leads:', error);
+        toast.error('Failed to load your purchased leads');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (user?.id) {
+      loadPurchasedLeads();
+    }
+  }, [isLoggedIn, role, navigate, user?.id]);
   
   const handleRateLead = (lead: Lead) => {
     setSelectedLead(lead);
     setRatingDialogOpen(true);
   };
   
-  const submitRating = () => {
-    if (!selectedLead) return;
+  const submitRating = async () => {
+    if (!selectedLead || !user?.id) return;
     
-    toast.success('Thank you for your feedback!');
-    setRatingDialogOpen(false);
-    
-    // In a real app, we would make an API call to save the rating
-    console.log({
-      leadId: selectedLead.id,
-      rating,
-      review
-    });
-    
-    // Reset form
-    setRating(5);
-    setReview('');
+    try {
+      const success = await rateLead(selectedLead.id, user.id, rating, review);
+      
+      if (success) {
+        toast.success('Thank you for your feedback!');
+        setRatingDialogOpen(false);
+        
+        // Reset form
+        setRating(5);
+        setReview('');
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      toast.error('Failed to submit rating');
+    }
   };
 
   return (
@@ -72,7 +94,11 @@ const Purchases = () => {
           </p>
         </div>
         
-        {purchasedLeads.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <p>Loading your purchases...</p>
+          </div>
+        ) : purchasedLeads.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {purchasedLeads.map(lead => (
               <div key={lead.id} className="relative">

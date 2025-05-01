@@ -1,34 +1,40 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface UserRoleContextType {
-  role: 'seller' | 'buyer' | null;
   isLoggedIn: boolean;
-  login: (role: 'seller' | 'buyer') => void;
-  logout: () => void;
+  isLoading: boolean;
+  role: 'seller' | 'buyer' | null;
+  user: any;
+  login: (email: string, password: string) => Promise<any>;
+  register: (email: string, password: string, role: 'seller' | 'buyer', fullName: string, company?: string) => Promise<any>;
+  logout: () => Promise<void>;
 }
 
 const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
 
-export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
-  // In a real app, we would check localStorage or a session cookie on initial load
-  const [role, setRole] = useState<'seller' | 'buyer' | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const login = (selectedRole: 'seller' | 'buyer') => {
-    setRole(selectedRole);
-    setIsLoggedIn(true);
-    // In a real app, we would store this in localStorage or a cookie
-  };
-
-  const logout = () => {
-    setRole(null);
-    setIsLoggedIn(false);
-    // In a real app, we would clear localStorage or cookies
-  };
+export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { 
+    user,
+    isLoggedIn, 
+    isLoadingUser: isLoading, 
+    role,
+    login,
+    register,
+    logout
+  } = useAuth();
 
   return (
-    <UserRoleContext.Provider value={{ role, isLoggedIn, login, logout }}>
+    <UserRoleContext.Provider value={{ 
+      isLoggedIn, 
+      isLoading,
+      role,
+      user,
+      login,
+      register,
+      logout
+    }}>
       {children}
     </UserRoleContext.Provider>
   );
@@ -36,8 +42,10 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
 
 export const useUserRole = () => {
   const context = useContext(UserRoleContext);
+  
   if (context === undefined) {
     throw new Error('useUserRole must be used within a UserRoleProvider');
   }
+  
   return context;
 };
