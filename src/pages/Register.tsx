@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ const Register = () => {
     }
   }, [isLoggedIn, navigate, role, searchParams]);
 
+  // This function now handles the form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -103,89 +105,95 @@ const Register = () => {
               Choose your account type and enter your details below.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="flex flex-row items-center justify-between space-x-2">
-              <Label>Account Type</Label>
-              <RadioGroup defaultValue={selectedRole} className="flex" onValueChange={(value) => setSelectedRole(value as 'seller' | 'buyer')}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="buyer" id="buyer" />
-                  <Label htmlFor="buyer">Buyer</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="seller" id="seller" />
-                  <Label htmlFor="seller">Seller</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                placeholder="John Doe"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="name@example.com"
-                type="email"
-                autoCapitalize="none"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                placeholder="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                id="confirm-password"
-                placeholder="Confirm Password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-            {selectedRole === 'seller' && (
+          <form onSubmit={handleSubmit}>
+            <CardContent className="grid gap-4">
+              <div className="flex flex-row items-center justify-between space-x-2">
+                <Label>Account Type</Label>
+                <RadioGroup defaultValue={selectedRole} className="flex" onValueChange={(value) => setSelectedRole(value as 'seller' | 'buyer')}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="buyer" id="buyer" />
+                    <Label htmlFor="buyer">Buyer</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="seller" id="seller" />
+                    <Label htmlFor="seller">Seller</Label>
+                  </div>
+                </RadioGroup>
+              </div>
               <div className="grid gap-2">
-                <Label htmlFor="company-name">Company Name</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <Input
-                  id="company-name"
-                  placeholder="Company Name"
+                  id="name"
+                  placeholder="John Doe"
                   type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
-            )}
-            {registrationError && (
-              <p className="text-red-500 text-sm">{registrationError}</p>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col gap-2">
-            <Button disabled={isLoading} onClick={handleSubmit} className={cn("w-full", isLoading ? "cursor-not-allowed" : "")}>
-              {isLoading ? "Creating account..." : "Create account"}
-            </Button>
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-brand-600 hover:underline">
-                Log in
-              </Link>
-            </p>
-          </CardFooter>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  placeholder="name@example.com"
+                  type="email"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  placeholder="Password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  placeholder="Confirm Password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+              {selectedRole === 'seller' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="company-name">Company Name</Label>
+                  <Input
+                    id="company-name"
+                    placeholder="Company Name"
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                  />
+                </div>
+              )}
+              {registrationError && (
+                <p className="text-red-500 text-sm">{registrationError}</p>
+              )}
+            </CardContent>
+            <CardFooter className="flex flex-col gap-2">
+              <Button 
+                type="submit" 
+                disabled={isLoading} 
+                className={cn("w-full", isLoading ? "cursor-not-allowed" : "")}
+              >
+                {isLoading ? "Creating account..." : "Create account"}
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link to="/login" className="text-brand-600 hover:underline">
+                  Log in
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
         </Card>
       </div>
     </div>
