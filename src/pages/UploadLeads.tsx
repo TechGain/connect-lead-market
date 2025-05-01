@@ -1,19 +1,21 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 
 const UploadLeads = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, role, isLoading } = useUserRole();
+  const { isLoggedIn, role, isLoading, user } = useUserRole();
+  const [hasChecked, setHasChecked] = useState(false);
   
   useEffect(() => {
     // Log the current authentication state for debugging
     console.log("UploadLeads component - Current auth state:", { 
       isLoggedIn, 
       role,
-      isLoading
+      isLoading,
+      userId: user?.id
     });
     
     // Wait until authentication is finished loading
@@ -21,6 +23,8 @@ const UploadLeads = () => {
       console.log("Auth is still loading, waiting...");
       return;
     }
+    
+    setHasChecked(true);
     
     // Check if user is logged in and is a seller
     if (!isLoggedIn) {
@@ -31,7 +35,7 @@ const UploadLeads = () => {
     }
     
     if (role !== 'seller') {
-      console.log("User is not a seller, redirecting to home");
+      console.log("User is not a seller, redirecting to home", { actualRole: role });
       toast.error("Only sellers can upload leads");
       navigate('/');
       return;
@@ -40,9 +44,18 @@ const UploadLeads = () => {
     // Redirect to my-leads with upload tab active
     console.log("User is a seller, redirecting to upload tab");
     navigate('/my-leads?tab=upload');
-  }, [isLoggedIn, role, navigate, isLoading]);
+  }, [isLoggedIn, role, navigate, isLoading, user?.id]);
   
-  // This component doesn't render anything as it's just for redirection
+  // This component now shows a loading state while checking auth
+  if (isLoading || !hasChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Checking permissions...</p>
+      </div>
+    );
+  }
+  
+  // This component doesn't render anything else as it's just for redirection
   return null;
 };
 

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 interface UserRoleContextType {
@@ -25,14 +25,29 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     logout
   } = useAuth();
 
+  const [retryCount, setRetryCount] = useState(0);
+
   // Add more detailed console logs to track role state
   useEffect(() => {
     console.log("UserRoleProvider role updated:", { 
       role, 
       isLoggedIn, 
-      userId: user?.id 
+      userId: user?.id,
+      retryCount
     });
-  }, [role, isLoggedIn, user?.id]);
+
+    // If logged in but no role after initial load, try to refresh once
+    if (isLoggedIn && !role && !isLoading && retryCount < 2) {
+      console.log("User logged in but no role detected. Attempting refresh...");
+      setRetryCount(prev => prev + 1);
+      
+      // Add a small delay before trying again to ensure everything is loaded
+      setTimeout(() => {
+        console.log("Refreshing user data after delay");
+        window.location.reload();
+      }, 1500);
+    }
+  }, [role, isLoggedIn, user?.id, isLoading, retryCount]);
 
   return (
     <UserRoleContext.Provider value={{ 
