@@ -13,6 +13,8 @@ import Register from "./pages/Register";
 import Marketplace from "./pages/Marketplace";
 import MyLeads from "./pages/MyLeads";
 import Purchases from "./pages/Purchases";
+import Profile from "./pages/Profile";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +33,8 @@ const App = () => (
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/my-leads" element={<MyLeads />} />
             <Route path="/purchases" element={<Purchases />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
