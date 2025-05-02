@@ -4,42 +4,23 @@ import { toast } from "sonner";
 import { Lead } from '@/types/lead';
 import { fetchLeads } from '@/lib/mock-data';
 
-export const useMarketplaceLeads = (authChecked: boolean, authError: string | null, isLoggedIn: boolean, role: string | null) => {
+export const useMarketplaceLeads = (isLoggedIn: boolean, role: string | null) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Load leads once auth check is complete and user is authorized
+  // Load leads once user is logged in and has the right role
   useEffect(() => {
     const loadLeads = async () => {
       console.log('useMarketplaceLeads: checking conditions to load leads', { 
-        authChecked, 
-        authError, 
         isLoggedIn, 
         role 
       });
       
-      if (!authChecked) {
-        console.log('useMarketplaceLeads: auth not checked yet, waiting...');
-        return; // Don't attempt to load until auth is checked
-      }
-      
-      if (authError) {
-        console.log('useMarketplaceLeads: auth error present, skipping load', { authError });
-        setIsLoading(false); // Stop loading if there's an auth error
-        return;
-      }
-      
-      if (!isLoggedIn) {
-        console.log('useMarketplaceLeads: user not logged in, skipping load');
-        setIsLoading(false); // Stop loading if user isn't logged in
-        return;
-      }
-      
-      if (role !== 'buyer') {
-        console.log('useMarketplaceLeads: user not a buyer, skipping load', { role });
-        setIsLoading(false); // Stop loading if user isn't a buyer
-        return;
+      if (!isLoggedIn && role !== 'buyer') {
+        console.log('useMarketplaceLeads: user not logged in or not a buyer, loading placeholder data');
+        // Load placeholder data anyway for better UX
+        setIsLoading(true);
       }
       
       setIsLoading(true);
@@ -60,7 +41,7 @@ export const useMarketplaceLeads = (authChecked: boolean, authError: string | nu
     };
     
     loadLeads();
-  }, [authChecked, authError, isLoggedIn, role]);
+  }, [isLoggedIn, role]);
 
   const handleFilterChange = (filters: any) => {
     let filtered = [...leads];

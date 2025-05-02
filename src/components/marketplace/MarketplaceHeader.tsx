@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 interface MarketplaceHeaderProps {
   title: string;
@@ -10,10 +10,6 @@ const MarketplaceHeader: React.FC<MarketplaceHeaderProps> = ({
   title, 
   description 
 }) => {
-  useEffect(() => {
-    console.log('MarketplaceHeader rendered with:', { title, description });
-  }, [title, description]);
-
   return (
     <div className="mb-6">
       <h1 className="text-3xl font-bold mb-2">{title}</h1>
