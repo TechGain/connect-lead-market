@@ -85,7 +85,7 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="roofing">Roofing</SelectItem>
                 <SelectItem value="plumbing">Plumbing</SelectItem>
                 <SelectItem value="electrical">Electrical</SelectItem>
@@ -102,7 +102,7 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
+                <SelectItem value="all">All Locations</SelectItem>
                 <SelectItem value="new york">New York</SelectItem>
                 <SelectItem value="los angeles">Los Angeles</SelectItem>
                 <SelectItem value="chicago">Chicago</SelectItem>

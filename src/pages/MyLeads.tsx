@@ -1,325 +1,193 @@
 import React, { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import LeadCard from '@/components/LeadCard';
-import LeadUploader from '@/components/LeadUploader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { toast } from "sonner";
-import { Lead } from '@/types/lead';
-import { fetchLeadsBySeller, createLead } from '@/lib/mock-data';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { AlertCircle, FileUp, RefreshCw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import LeadUploader from '@/components/LeadUploader';
+import LeadTable from '@/components/LeadTable';
+import { Lead } from '@/types/lead';
+import { fetchLeadsBySeller } from '@/lib/mock-data';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 
 const MyLeads = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isLoggedIn, role, user, refreshUserRole } = useUserRole();
-  const [myLeads, setMyLeads] = useState<Lead[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [roleChecked, setRoleChecked] = useState(false);
+  const [searchParams] = useSearchParams();
+  const { isLoggedIn, role, isLoading, user, refreshUserRole } = useUserRole();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'leads');
+  const [hasChecked, setHasChecked] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   
-  // Get tab from URL query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const tabFromUrl = queryParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabFromUrl === 'upload' ? 'upload' : 'active');
-  
-  // Debug log to track role and login state
   useEffect(() => {
+    // Log the current authentication state for debugging
     console.log("MyLeads component - Current auth state:", { 
       isLoggedIn, 
       role,
+      isLoading,
       userId: user?.id,
-      activeTab,
-      roleChecked
+      hasChecked,
+      loadingTimeout
     });
-
-    // Direct database check for debugging role issues
-    const checkProfileDirectly = async () => {
-      if (user?.id && !role) {
-        try {
-          console.log("Performing direct database check for user profile");
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id, role, full_name')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (error) {
-            console.error("Error in direct profile check:", error);
-          } else {
-            console.log("Direct profile check result:", data);
-            
-            if (!data) {
-              console.warn("No profile found during direct check");
-              
-              // If we're logged in but have no profile, attempt to create one
-              if (!roleChecked) {
-                console.log("Attempting profile repair from MyLeads component");
-                refreshUserRole();
-                setRoleChecked(true);
-              }
-            }
-          }
-        } catch (err) {
-          console.error("Exception during direct profile check:", err);
-        }
-      }
-    };
     
-    checkProfileDirectly();
-  }, [isLoggedIn, role, user?.id, activeTab, roleChecked, refreshUserRole]);
-  
-  // Update URL when tab changes
-  const handleTabChange = (value: string) => {
-    console.log("Changing tab to:", value);
-    setActiveTab(value);
-    if (value === 'upload') {
-      navigate('/my-leads?tab=upload', { replace: true });
-    } else {
-      navigate('/my-leads', { replace: true });
-    }
-  };
-  
-  // Refresh user role and data with more robust handling
-  const handleRefresh = () => {
-    setRoleChecked(false); // Reset check to allow another attempt
-    refreshUserRole();
-    
-    // Short delay before reloading leads to give role refresh time to complete
-    setTimeout(() => {
-      loadSellerLeads();
-      toast.info("Refreshing data...");
-    }, 1500);
-  };
-  
-  const loadSellerLeads = async () => {
-    setIsLoading(true);
-    try {
-      if (user?.id) {
-        const leads = await fetchLeadsBySeller(user.id);
-        setMyLeads(leads);
+    // Force check to complete after a reasonable timeout to prevent infinite loading
+    const timer = setTimeout(() => {
+      if (!hasChecked || isLoading) {
+        console.log("Auth check timed out, proceeding with available info");
+        setHasChecked(true);
+        setLoadingTimeout(true);
       }
-    } catch (error) {
-      console.error('Error loading seller leads:', error);
-      toast.error('Failed to load your leads');
-    } finally {
-      setIsLoading(false);
+    }, 3000); // 3 seconds timeout
+    
+    // Wait until authentication is finished loading or timeout occurs
+    if (isLoading && !loadingTimeout) {
+      console.log("Auth is still loading, waiting...");
+      return () => clearTimeout(timer);
     }
-  };
-  
-  useEffect(() => {
+    
+    setHasChecked(true);
+    clearTimeout(timer);
+    
+    // Check if user is logged in
     if (!isLoggedIn) {
-      toast.error("You must be logged in as a seller to view this page");
+      console.log("User is not logged in, redirecting to login");
+      toast.error("Please log in to view your leads");
       navigate('/login');
       return;
     }
     
-    // Allow access if logged in, even if role is null (with warning)
-    if (role !== 'seller' && role !== null) {
-      toast.error("Only sellers can access this page");
+    // Check if user has a role
+    if (role === null) {
+      console.log("User role is null, showing fallback UI");
+      toast.error("Unable to determine your role. Please try again.");
+      return;
+    }
+    
+    // Check if user is a seller or buyer
+    if (role !== 'seller' && role !== 'buyer') {
+      console.log("User is not a seller or buyer, redirecting to home", { actualRole: role });
+      toast.error(`Only sellers and buyers can view this page. Your current role is: ${role}`);
       navigate('/');
       return;
     }
     
-    if (user?.id) {
-      loadSellerLeads();
-    }
-  }, [isLoggedIn, role, navigate, user?.id]);
-  
-  const handleLeadSubmit = async (leadData: Omit<Lead, 'id'>) => {
-    try {
-      if (!user?.id) {
-        toast.error("You must be logged in to upload leads");
-        return;
-      }
-      
-      const leadWithSellerId = {
-        ...leadData,
-        sellerId: user.id,
+    // Load leads if user is a seller
+    if (role === 'seller' && user?.id) {
+      const loadLeads = async () => {
+        try {
+          console.log("Loading leads for seller:", user.id);
+          const sellerLeads = await fetchLeadsBySeller(user.id);
+          setLeads(sellerLeads);
+        } catch (error) {
+          console.error("Error loading leads:", error);
+          toast.error("Failed to load leads. Please try again.");
+        }
       };
-      
-      const newLead = await createLead(leadWithSellerId);
-      
-      if (newLead) {
-        setMyLeads([newLead, ...myLeads]);
-        setActiveTab('active');
-        navigate('/my-leads', { replace: true });
-        toast.success("Lead uploaded successfully!");
-      }
-    } catch (error) {
-      console.error('Error uploading lead:', error);
-      toast.error('Failed to upload lead');
+      loadLeads();
     }
+  }, [isLoggedIn, role, navigate, user?.id, isLoading, hasChecked, loadingTimeout]);
+  
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/my-leads?tab=${value}`);
   };
   
-  const getFilteredLeads = () => {
-    switch (activeTab) {
-      case 'active':
-        return myLeads.filter(lead => lead.status === 'new' || lead.status === 'pending');
-      case 'sold':
-        return myLeads.filter(lead => lead.status === 'sold');
-      case 'upload':
-        return [];
-      default:
-        return myLeads;
-    }
+  const handleRefresh = () => {
+    refreshUserRole();
+    toast.info("Refreshing user role...");
+    setLoadingTimeout(false);
+    setHasChecked(false);
   };
   
-  const handlePurchase = () => {
-    // This is just a placeholder since sellers shouldn't purchase their own leads
-    toast.error("You can't purchase your own leads");
-  };
+  const renderLeadsTab = () => (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">My Leads</h1>
+      {role === 'seller' ? (
+        <LeadTable leads={leads} />
+      ) : (
+        <p>Only sellers can view their leads here.</p>
+      )}
+    </div>
+  );
   
-  const filteredLeads = getFilteredLeads();
-  const activeLeadsCount = myLeads.filter(lead => lead.status === 'new' || lead.status === 'pending').length;
-  const soldLeadsCount = myLeads.filter(lead => lead.status === 'sold').length;
-
-  // If not logged in, show a clear message
-  if (!isLoggedIn) {
+  const renderUploadTab = () => (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">Upload New Lead</h1>
+      <LeadUploader />
+    </div>
+  );
+  
+  // Show a loading state with a timeout message
+  if (isLoading && !loadingTimeout) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="text-center p-8 rounded-lg border border-gray-200 shadow-sm max-w-md w-full">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
-            <p className="text-gray-600 mb-6">
-              You must be logged in as a seller to access this page.
-            </p>
-            <div className="space-x-4">
-              <Button onClick={() => navigate('/login')}>Log In</Button>
-              <Button variant="outline" onClick={() => navigate('/')}>Go Home</Button>
-            </div>
-          </div>
-        </main>
-        <Footer />
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="mb-2">Checking permissions...</p>
+        <p className="text-sm text-gray-500 mb-4">
+          If this takes too long, try refreshing the page
+        </p>
+        <Button variant="outline" onClick={handleRefresh} className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
       </div>
     );
   }
-
-  // If role is null but user is logged in, show a warning banner
-  const showRoleWarning = role === null && isLoggedIn;
-
-  return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      
-      {(role === null) && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md flex justify-between items-center">
-          <div>
-            <h3 className="font-medium text-yellow-800">Account role not detected</h3>
-            <p className="text-yellow-700 text-sm">Some features may be limited. Please refresh to verify your seller status.</p>
-          </div>
-          <Button 
-            onClick={handleRefresh}
-            variant="outline" 
-            className="flex items-center gap-2 bg-white hover:bg-white"
-          >
+  
+  // If loading has timed out but we're logged in, show a UI that allows manual refresh
+  if (loadingTimeout && isLoggedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="text-lg font-medium mb-2">Permission Check Timed Out</p>
+        <p className="text-sm text-gray-500 mb-6 max-w-md text-center">
+          We couldn't determine your account role. You can try manually refreshing or continue to My Leads.
+        </p>
+        <div className="flex gap-4">
+          <Button onClick={handleRefresh} className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
-        </div>
-      )}
-      
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">My Leads</h1>
-            <p className="text-gray-600">
-              Manage your leads and track their status
-            </p>
-          </div>
-          
-          {/* Quick access button for uploading new leads */}
-          <Button 
-            onClick={() => handleTabChange('upload')}
-            className="mt-4 md:mt-0 bg-brand-500 hover:bg-brand-600"
-          >
-            <FileUp className="mr-2 h-4 w-4" />
-            Upload New Lead
+          <Button variant="outline" onClick={() => navigate('/my-leads?tab=leads')}>
+            Continue Anyway
           </Button>
         </div>
-        
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="active" className="relative">
-              Active Leads
-              {activeLeadsCount > 0 && (
-                <Badge className="ml-2 bg-brand-500">{activeLeadsCount}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="sold" className="relative">
-              Sold Leads
-              {soldLeadsCount > 0 && (
-                <Badge className="ml-2 bg-green-500">{soldLeadsCount}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="upload" className="relative">
-              Upload New Lead
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="active">
-            {isLoading ? (
-              <div className="text-center py-12">
-                <p>Loading your leads...</p>
-              </div>
-            ) : filteredLeads.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredLeads.map(lead => (
-                  <LeadCard
-                    key={lead.id}
-                    lead={lead}
-                    onPurchase={handlePurchase}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-xl font-semibold mb-2">No Active Leads</h3>
-                <p className="text-gray-600 mb-4">You don't have any active leads right now</p>
-                <Button onClick={() => handleTabChange('upload')}>Upload New Lead</Button>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="sold">
-            {isLoading ? (
-              <div className="text-center py-12">
-                <p>Loading your leads...</p>
-              </div>
-            ) : filteredLeads.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredLeads.map(lead => (
-                  <LeadCard
-                    key={lead.id}
-                    lead={lead}
-                    onPurchase={handlePurchase}
-                    isPurchased={true}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-xl font-semibold mb-2">No Sold Leads</h3>
-                <p className="text-gray-600 mb-4">You haven't sold any leads yet</p>
-                <Button onClick={() => handleTabChange('upload')}>Upload New Lead</Button>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="upload">
-            <LeadUploader onLeadSubmit={handleLeadSubmit} />
-          </TabsContent>
-        </Tabs>
-      </main>
-      
-      <Footer />
-    </div>
+      </div>
+    );
+  }
+  
+  // If role is null after timeout, show an error message
+  if (role === null && hasChecked) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
+        <p className="text-lg font-medium mb-2">Unable to Determine Role</p>
+        <p className="text-sm text-gray-500 mb-6 max-w-md text-center">
+          We were unable to determine your role. Please try logging out and logging back in. If the issue persists, contact support.
+        </p>
+        <Button onClick={handleRefresh} className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
+    );
+  }
+  
+  return (
+    <Tabs value={activeTab} onValueChange={handleTabChange}>
+      <TabsList>
+        {role === 'seller' && (
+          <TabsTrigger value="leads">My Leads</TabsTrigger>
+        )}
+        {role === 'seller' && (
+          <TabsTrigger value="upload">Upload Lead</TabsTrigger>
+        )}
+      </TabsList>
+      <TabsContent value="leads">
+        {renderLeadsTab()}
+      </TabsContent>
+      <TabsContent value="upload">
+        {renderUploadTab()}
+      </TabsContent>
+    </Tabs>
   );
 };
 

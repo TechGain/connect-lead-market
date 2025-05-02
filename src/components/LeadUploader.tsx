@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +15,6 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { useLeadUpload } from '@/hooks/use-lead-upload';
-
-interface LeadUploaderProps {
-  onLeadSubmit: (lead: Omit<Lead, 'id'>) => void;
-}
 
 const LeadUploader = () => {
   const [leadType, setLeadType] = useState('');

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Lead } from '@/types/lead';
+import { Lead, mapAppLeadToDbLead } from '@/types/lead';
 
 export const useLeadUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -20,19 +20,11 @@ export const useLeadUpload = () => {
         throw new Error('You must be logged in to upload a lead');
       }
       
-      // Prepare the lead data for Supabase (mapping to database schema)
-      const leadData = {
-        type: lead.type,
-        location: lead.location,
-        description: lead.description,
-        price: lead.price,
-        quality_rating: lead.qualityRating,
-        seller_id: user.id,
-        status: 'new',
-        contact_name: lead.contactName,
-        contact_email: lead.contactEmail,
-        contact_phone: lead.contactPhone || null
-      };
+      // Prepare the lead data for Supabase (using our helper function)
+      const leadData = mapAppLeadToDbLead({
+        ...lead,
+        sellerId: user.id
+      });
       
       // Insert the lead into the database
       const { data, error } = await supabase
