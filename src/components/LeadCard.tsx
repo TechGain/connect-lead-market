@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, User } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 interface LeadCardProps {
   lead: Lead;
@@ -16,38 +16,16 @@ interface LeadCardProps {
 }
 
 const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
-  // Function to get first name from full name
-  const getFirstName = (fullName: string) => {
-    if (!fullName) return '';
-    return fullName.split(' ')[0];
-  };
-
   return (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-medium text-lg">{lead.type}</h3>
-            {showFullDetails ? (
-              <div className="flex items-center text-gray-500 mt-1">
-                <MapPin className="h-4 w-4 mr-1" />
-                <span>{lead.location}</span>
-              </div>
-            ) : (
-              <div className="flex items-center text-gray-500 mt-1">
-                {lead.contactName && (
-                  <div className="flex items-center mr-3">
-                    <User className="h-4 w-4 mr-1" />
-                    <span>{getFirstName(lead.contactName)}</span>
-                  </div>
-                )}
-                <div>
-                  <Badge variant="outline" className="text-xs">
-                    ZIP: {lead.zipCode || 'N/A'}
-                  </Badge>
-                </div>
-              </div>
-            )}
+            <div className="flex items-center text-gray-500 mt-1">
+              <MapPin className="h-4 w-4 mr-1" />
+              <span>{lead.location}</span>
+            </div>
           </div>
           <Badge variant={lead.status === 'new' ? 'default' : 'secondary'}>
             {lead.status === 'new' ? 'Available' : 'Sold'}
@@ -61,7 +39,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
             <>
               <p className="text-gray-700">{lead.description}</p>
               
-              {(isPurchased || lead.status === 'sold') && (
+              {lead.status === 'sold' && (
                 <div className="border-t border-gray-100 pt-3">
                   <h4 className="font-medium mb-2">Contact Information</h4>
                   <div className="space-y-1 text-sm">
@@ -69,7 +47,6 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
                     <p><span className="font-medium">Phone:</span> {lead.contactPhone}</p>
                     <p><span className="font-medium">Email:</span> {lead.contactEmail}</p>
                     <p><span className="font-medium">Address:</span> {lead.address}</p>
-                    <p><span className="font-medium">ZIP Code:</span> {lead.zipCode}</p>
                     {lead.appointmentTime && (
                       <p>
                         <span className="font-medium">Appointment:</span> {new Date(lead.appointmentTime).toLocaleString()}
@@ -80,10 +57,8 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
               )}
             </>
           ) : (
-            // Limited view - only show lead type, no description
-            <div className="text-gray-700">
-              <p className="text-sm italic">Purchase to view full lead details</p>
-            </div>
+            // Limited view - only show description and no contact info
+            <p className="text-gray-700 line-clamp-3">{lead.description}</p>
           )}
         </div>
       </CardContent>

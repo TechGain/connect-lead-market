@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Lead } from '@/types/lead';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -152,9 +153,6 @@ const LeadTable = ({ leads }: LeadTableProps) => {
                 >
                   Location {renderSortIcon('location')}
                 </TableHead>
-                <TableHead>
-                  Zip Code
-                </TableHead>
                 <TableHead 
                   className="cursor-pointer"
                   onClick={() => sortLeads('price')}
@@ -186,7 +184,6 @@ const LeadTable = ({ leads }: LeadTableProps) => {
                 <TableRow key={lead.id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">{formatLeadType(lead.type)}</TableCell>
                   <TableCell>{lead.location}</TableCell>
-                  <TableCell>{lead.zipCode || 'N/A'}</TableCell>
                   <TableCell>${lead.price.toFixed(2)}</TableCell>
                   <TableCell>
                     {Array.from({ length: 5 }).map((_, i) => (
