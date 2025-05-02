@@ -6,22 +6,70 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://bfmxxuarnqmxqqnpxqjf.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXh4dWFybnFteHFxbnB4cWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTc4ODMsImV4cCI6MjA2MTY5Mzg4M30.MAQZ7I3pshciBJANhlPThK6XBxGemIPgflsMDz3OB_4";
 
+// Create a custom storage provider that uses localStorage and sessionStorage
+const customStorage = {
+  getItem: (key: string) => {
+    const persistType = localStorage.getItem('supabase.auth.token.type');
+    
+    // Use localStorage for 'local' persistence type (default for logged in users)
+    // Use sessionStorage for 'session' persistence type
+    const storage = persistType === 'session' ? sessionStorage : localStorage;
+    const value = storage.getItem(key);
+    
+    try {
+      return value && JSON.parse(value);
+    } catch (error) {
+      return value;
+    }
+  },
+  setItem: (key: string, value: any) => {
+    const persistType = localStorage.getItem('supabase.auth.token.type') || 'local';
+    const storage = persistType === 'session' ? sessionStorage : localStorage;
+    
+    if (typeof value === 'object') {
+      storage.setItem(key, JSON.stringify(value));
+    } else {
+      storage.setItem(key, value);
+    }
+  },
+  removeItem: (key: string) => {
+    // Remove from both storages to ensure it's completely removed
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  }
+};
+
+// Export a function to clear auth data completely for logout
+export const clearAuthData = () => {
+  const authKeys = [
+    'supabase.auth.token',
+    'supabase.auth.refreshToken',
+    'supabase.auth.token.type',
+    'supabase.auth.expires_at',
+    'supabase.auth.provider_token'
+  ];
+  
+  authKeys.forEach(key => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create client with sessions disabled for development purposes
+// Create client with properly configured auth persistence
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: false, // Disable session persistence for development
+      persistSession: true, // Enable session persistence
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storage: customStorage
     },
     global: {
-      // Remove the custom header that's causing CORS issues
-      // Increase default fetch timeout
       fetch: (url, options) => {
         return fetch(url, { 
           ...options, 
