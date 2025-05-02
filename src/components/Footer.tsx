@@ -84,7 +84,7 @@ const Footer = () => {
         
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} LeadMarket. All rights reserved.
+            &copy; {new Date().getFullYear()} By Kozar. All rights reserved.
           </p>
           <div className="mt-4 md:mt-0 flex space-x-4">
             <Link to="#" className="text-gray-500 hover:text-brand-600">
