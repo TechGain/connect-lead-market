@@ -9,31 +9,19 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create client with proper session persistence for production use
+// Create client with sessions disabled for development purposes
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: true, // Enable session persistence
+      persistSession: false, // Disable session persistence for development
       autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storage: {
-        // Use both local and session storage for better persistence
-        getItem: (key) => {
-          return localStorage.getItem(key) || sessionStorage.getItem(key);
-        },
-        setItem: (key, value) => {
-          localStorage.setItem(key, value);
-          sessionStorage.setItem(key, value);
-        },
-        removeItem: (key) => {
-          localStorage.removeItem(key);
-          sessionStorage.removeItem(key);
-        }
-      }
+      detectSessionInUrl: true
     },
     global: {
+      // Remove the custom header that's causing CORS issues
+      // Increase default fetch timeout
       fetch: (url, options) => {
         return fetch(url, { 
           ...options, 
@@ -43,36 +31,6 @@ export const supabase = createClient<Database>(
     }
   }
 );
-
-// Clear auth data properly on logout
-export const clearAuthData = async () => {
-  try {
-    // First sign out from Supabase
-    await supabase.auth.signOut();
-    
-    // Then clear localStorage and sessionStorage
-    const authKeys = ['supabase.auth.token', 'cachedUser'];
-    
-    // Clear profile-related items
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('profile_') || authKeys.includes(key)) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    Object.keys(sessionStorage).forEach(key => {
-      if (key.startsWith('profile_') || authKeys.includes(key)) {
-        sessionStorage.removeItem(key);
-      }
-    });
-    
-    console.log('Auth data cleared successfully');
-    return true;
-  } catch (error) {
-    console.error('Error clearing auth data:', error);
-    return false;
-  }
-};
 
 // Add helper functions to safely handle data retrieval
 export const getDataOrNull = <T>(response: { data: T | null, error: any }): T | null => {
