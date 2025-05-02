@@ -24,35 +24,18 @@ serve(async (req) => {
   try {
     logStep("Function started");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      logStep("STRIPE_SECRET_KEY not set");
-      throw new Error("STRIPE_SECRET_KEY is not set. Please configure the environment variable.");
-    }
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     // Get the request body
-    let requestData;
-    try {
-      requestData = await req.json();
-      logStep("Request body parsed", requestData);
-    } catch (e) {
-      logStep("Error parsing request body", e);
-      throw new Error("Invalid request body format");
-    }
-    
+    const requestData = await req.json();
     const { leadId } = requestData;
-    if (!leadId) {
-      logStep("Lead ID missing");
-      throw new Error("Lead ID is required");
-    }
+    if (!leadId) throw new Error("Lead ID is required");
 
     logStep("Processing lead checkout", { leadId });
 
     // Get auth header for user authentication
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      logStep("Authorization header missing");
-      throw new Error("No authorization header provided. Please ensure you are logged in.");
-    }
+    if (!authHeader) throw new Error("No authorization header provided");
     
     // Initialize Supabase client with service role key for bypassing RLS
     const supabaseAdmin = createClient(
@@ -69,36 +52,31 @@ serve(async (req) => {
 
     // Authenticate the user
     const token = authHeader.replace("Bearer ", "");
-    logStep("Authenticating user with token", { tokenLength: token.length });
-    
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) {
-      logStep("Authentication error", userError);
-      throw new Error(`Authentication error: ${userError.message}`);
-    }
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
     
     const user = userData.user;
-    if (!user?.id) {
-      logStep("User not authenticated", { userData });
-      throw new Error("User not authenticated");
-    }
+    if (!user?.id) throw new Error("User not authenticated");
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // For now, we're using mock data for testing since we don't have a real database setup
-    // In a production environment, this would fetch from a real leads table
-    const mockLeadData = {
-      id: leadId,
-      type: "Home Renovation",
-      location: "Los Angeles, CA",
-      price: 49.99,
-      status: "new",
-      description: "Client looking for complete kitchen renovation",
-      qualityRating: 4
-    };
+    // Fetch lead data
+    const { data: lead, error: leadError } = await supabaseAdmin
+      .from("leads")
+      .select("*")
+      .eq("id", leadId)
+      .single();
 
-    const lead = mockLeadData;
-    logStep("Lead fetched", lead);
+    if (leadError || !lead) {
+      throw new Error(`Failed to fetch lead: ${leadError?.message || "Lead not found"}`);
+    }
+
+    // Ensure the lead is available for purchase
+    if (lead.status !== 'new') {
+      throw new Error("This lead is not available for purchase");
+    }
+
+    logStep("Lead fetched successfully", { leadId: lead.id, price: lead.price, type: lead.type });
 
     // Initialize Stripe with the secret key
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });

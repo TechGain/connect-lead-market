@@ -5,14 +5,11 @@ import { RefreshCw, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useUserRole } from '@/hooks/use-user-role';
-import { Database } from '@/integrations/supabase/types';
 
 interface ProfileRoleFixButtonProps {
   userId: string;
   desiredRole: 'seller' | 'buyer';
 }
-
-type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 
 const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps) => {
   const [isFixing, setIsFixing] = useState(false);
@@ -38,7 +35,7 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
         }
         
         // If user already has any role, don't show the button
-        if (data && data.role) {
+        if (data?.role) {
           setShouldShow(false);
           if (data.role === desiredRole) {
             setIsFixed(true);
@@ -73,7 +70,7 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
       }
 
       // If profile exists and role is already set, we can't change it due to trigger restrictions
-      if (existingProfile && existingProfile.role) {
+      if (existingProfile?.role) {
         if (existingProfile.role === desiredRole) {
           console.log(`User already has role: ${desiredRole}`);
           setIsFixed(true);
@@ -82,20 +79,17 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
           console.warn(`Cannot change role from ${existingProfile.role} to ${desiredRole} due to database restrictions`);
           toast.error(`Your role is already set to ${existingProfile.role} and cannot be changed.`);
         }
-        setIsFixing(false);
         return;
       }
       
       // If no profile exists, create one
-      const profileData: ProfileInsert = {
-        id: userId,
-        role: desiredRole,
-        full_name: 'User' // Providing a default value for required fields
-      };
-      
       const { error } = await supabase
         .from('profiles')
-        .insert(profileData);
+        .insert({
+          id: userId,
+          role: desiredRole,
+          full_name: 'User' // Providing a default value for required fields
+        });
       
       if (error) {
         console.error("Error fixing role:", error);
@@ -114,7 +108,7 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
       
       if (verifyError) {
         console.error("Error verifying role update:", verifyError);
-      } else if (verifyData && verifyData.role === desiredRole) {
+      } else if (verifyData?.role === desiredRole) {
         console.log("Role update verified successfully:", verifyData.role);
         setIsFixed(true);
         toast.success(`Your account is now set as a ${desiredRole}!`);

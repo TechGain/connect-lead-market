@@ -1,9 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Database } from '@/integrations/supabase/types';
-
-type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 
 /**
  * Directly ensures that a profile exists with the correct role for a given user
@@ -17,7 +14,7 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
       .from('profiles')
       .select('id, role, full_name')
       .eq('id', userId)
-      .maybeSingle();
+      .single();
     
     if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
       console.error('Error fetching profile:', fetchError);
@@ -36,14 +33,12 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
       
       // If role is invalid and we have a provided role, update it
       if (role) {
-        const updateData = {
-          role,
-          updated_at: new Date().toISOString()
-        };
-        
         const { error: updateError } = await supabase
           .from('profiles')
-          .update(updateData)
+          .update({ 
+            role,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', userId);
         
         if (updateError) {
@@ -60,16 +55,14 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
     
     // Profile doesn't exist, create it with mandatory fields
     const defaultRole = role || 'buyer';
-    
-    const profileData: ProfileInsert = {
-      id: userId,
-      role: defaultRole,
-      full_name: fullName || 'User',
-    };
-    
     const { error: createError } = await supabase
       .from('profiles')
-      .insert(profileData);
+      .insert({
+        id: userId,
+        role: defaultRole,
+        full_name: fullName || 'User',
+        created_at: new Date().toISOString()
+      });
     
     if (createError) {
       console.error('Error creating profile:', createError);
@@ -145,14 +138,12 @@ export async function updateUserRole(userId: string, role: 'seller' | 'buyer'): 
     
     if (existingProfile) {
       // Update existing profile
-      const updateData = { 
-        role,
-        updated_at: new Date().toISOString()
-      };
-      
       const { error: updateError } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({ 
+          role,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', userId);
       
       if (updateError) {
@@ -164,15 +155,14 @@ export async function updateUserRole(userId: string, role: 'seller' | 'buyer'): 
       return true;
     } else {
       // Create new profile if it doesn't exist
-      const profileData: ProfileInsert = {
-        id: userId,
-        role,
-        full_name: 'User', // Default name, should be updated later
-      };
-      
       const { error: createError } = await supabase
         .from('profiles')
-        .insert(profileData);
+        .insert({
+          id: userId,
+          role,
+          full_name: 'User', // Default name, should be updated later
+          created_at: new Date().toISOString()
+        });
       
       if (createError) {
         console.error('Error creating profile:', createError);

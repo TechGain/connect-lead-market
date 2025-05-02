@@ -83,11 +83,11 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
       
       // Format data in a simple way
       const formattedProfile = {
-        name: data?.full_name || user?.user_metadata?.full_name || 'User',
+        name: data.full_name || user?.user_metadata?.full_name || 'User',
         email: user.email || '',
-        company: data?.company || 'Not specified',
-        role: ((data?.role?.toLowerCase() === 'seller') ? 'seller' : 'buyer'),
-        rating: data?.rating || 4.7,
+        company: data.company || 'Not specified',
+        role: (data.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer'),
+        rating: data.rating || 4.7,
         joinedDate: new Date(user.created_at || Date.now()).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long'
