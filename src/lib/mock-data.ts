@@ -46,7 +46,7 @@ export const purchaseLead = async (leadId: string, buyerId: string): Promise<Lea
   return mockLeads[leadIndex];
 };
 
-// Update createLead function to handle appointmentTime
+// Update createLead function to handle zipCode
 export const createLead = async (lead: Omit<Lead, 'id'>): Promise<Lead> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));

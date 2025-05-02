@@ -56,6 +56,9 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
                     {lead.address && (
                       <p><span className="font-medium">Address:</span> {lead.address}</p>
                     )}
+                    {lead.zipCode && (
+                      <p><span className="font-medium">ZIP Code:</span> {lead.zipCode}</p>
+                    )}
                     {lead.appointmentTime && (
                       <p>
                         <span className="font-medium">Appointment:</span> {lead.appointmentTime}

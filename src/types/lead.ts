@@ -1,4 +1,3 @@
-
 export interface Lead {
   id: string;
   type: string;
@@ -16,8 +15,8 @@ export interface Lead {
   contactPhone: string;
   appointmentTime?: string;
   address?: string;
-  zipCode?: string; // Added zipCode field
-  firstName?: string; // Added firstName field
+  zipCode?: string; 
+  firstName?: string; 
 }
 
 // Helper function to convert from database format to our app format
@@ -25,10 +24,10 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
   // Extract the first name from the contact_name field
   const firstName = dbLead.contact_name?.split(' ')[0] || '';
   
-  // Extract zip code from location or use a default empty string
-  // Assuming the zip code might be the last 5 digits in the location
-  let zipCode = '';
-  if (dbLead.location) {
+  // Get the zip code directly from the database field if available
+  // Otherwise try to extract it from the location field as a fallback
+  let zipCode = dbLead.zip_code || '';
+  if (!zipCode && dbLead.location) {
     const zipMatch = dbLead.location.match(/\b\d{5}\b/g);
     zipCode = zipMatch ? zipMatch[0] : '';
   }
@@ -50,7 +49,7 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     contactPhone: dbLead.contact_phone || '',
     // These fields don't exist in DB schema but are used in the app
     appointmentTime: '',
-    address: dbLead.address || '', // Use address from database
+    address: dbLead.address || '', 
     // New derived fields
     zipCode: zipCode,
     firstName: firstName
@@ -70,6 +69,7 @@ export const mapAppLeadToDbLead = (appLead: Omit<Lead, 'id'>): any => {
     contact_name: appLead.contactName,
     contact_email: appLead.contactEmail,
     contact_phone: appLead.contactPhone,
-    address: appLead.address // Include address in DB mapping
+    address: appLead.address,
+    zip_code: appLead.zipCode // Add zip code to database mapping
   };
 };

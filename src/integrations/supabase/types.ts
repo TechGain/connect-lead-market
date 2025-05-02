@@ -61,6 +61,7 @@ export type Database = {
           seller_id: string
           status: string
           type: string
+          zip_code: string | null
         }
         Insert: {
           address?: string | null
@@ -78,6 +79,7 @@ export type Database = {
           seller_id: string
           status?: string
           type: string
+          zip_code?: string | null
         }
         Update: {
           address?: string | null
@@ -95,6 +97,7 @@ export type Database = {
           seller_id?: string
           status?: string
           type?: string
+          zip_code?: string | null
         }
         Relationships: []
       }

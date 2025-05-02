@@ -27,7 +27,8 @@ const LeadUploader = () => {
   const [quality, setQuality] = useState(3);
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
-  const [address, setAddress] = useState(''); // Add address state
+  const [address, setAddress] = useState('');
+  const [zipCode, setZipCode] = useState(''); // Add zip code state
   
   const { uploadLead, isUploading } = useLeadUpload();
 
@@ -43,7 +44,8 @@ const LeadUploader = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!leadType || !location || !description || !contactName || !contactEmail || !price || !appointmentDate || !appointmentTimeSlot || !address) {
+    if (!leadType || !location || !description || !contactName || !contactEmail || !price || 
+        !appointmentDate || !appointmentTimeSlot || !address || !zipCode) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -64,6 +66,7 @@ const LeadUploader = () => {
         createdAt: new Date().toISOString(),
         appointmentTime: appointmentInfo,
         address,
+        zipCode, // Include zip code when creating a lead
       };
       
       const success = await uploadLead(newLead);
@@ -81,6 +84,7 @@ const LeadUploader = () => {
         setAppointmentDate(undefined);
         setAppointmentTimeSlot('');
         setAddress('');
+        setZipCode(''); // Reset zip code
       }
     } catch (error) {
       console.error('Error submitting lead:', error);
@@ -150,16 +154,33 @@ const LeadUploader = () => {
             />
           </div>
           
-          {/* Add address input field */}
-          <div className="space-y-2">
-            <Label htmlFor="address">Property Address *</Label>
-            <Input
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="123 Main St, City, State"
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Property Address field */}
+            <div className="space-y-2">
+              <Label htmlFor="address">Property Address *</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="123 Main St, City, State"
+                required
+              />
+            </div>
+            
+            {/* Add ZIP Code field */}
+            <div className="space-y-2">
+              <Label htmlFor="zipCode">ZIP Code *</Label>
+              <Input
+                id="zipCode"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                placeholder="12345"
+                required
+                maxLength={10}
+                pattern="[0-9]{5}(-[0-9]{4})?"
+                title="Enter a valid ZIP code (e.g., 12345 or 12345-6789)"
+              />
+            </div>
           </div>
           
           {/* Appointment date and time section */}
