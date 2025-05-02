@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,12 +5,11 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
-
 const Index = () => {
-  const { isLoggedIn } = useUserRole();
-  
-  return (
-    <div className="flex flex-col min-h-screen">
+  const {
+    isLoggedIn
+  } = useUserRole();
+  return <div className="flex flex-col min-h-screen">
       <Header />
       
       <main className="flex-1">
@@ -100,7 +98,7 @@ const Index = () => {
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-2">Why Choose LeadMarket</h2>
+              <h2 className="text-3xl font-bold mb-2">StayConnect</h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
                 Our platform offers powerful features for both lead sellers and contractors.
               </p>
@@ -162,8 +160,6 @@ const Index = () => {
       </main>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
