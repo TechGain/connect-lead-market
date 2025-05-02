@@ -46,6 +46,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          address: string | null
           buyer_id: string | null
           contact_email: string | null
           contact_name: string | null
@@ -62,6 +63,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          address?: string | null
           buyer_id?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -78,6 +80,7 @@ export type Database = {
           type: string
         }
         Update: {
+          address?: string | null
           buyer_id?: string | null
           contact_email?: string | null
           contact_name?: string | null

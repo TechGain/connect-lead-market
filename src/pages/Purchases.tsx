@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -116,42 +115,42 @@ const Purchases = () => {
     }
   }, [isLoggedIn, role, authChecked, navigate, hasCheckoutParams, leadId, location.pathname, location.search]);
   
-  useEffect(() => {
-    const loadPurchasedLeads = async () => {
-      if (!isLoggedIn || role !== 'buyer' || !user?.id) {
-        console.log('[PURCHASE PAGE] Cannot load leads, not logged in as buyer');
-        return;
+  const loadPurchasedLeads = async () => {
+    if (!isLoggedIn || role !== 'buyer' || !user?.id) {
+      console.log('[PURCHASE PAGE] Cannot load leads, not logged in as buyer');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      console.log("[PURCHASE PAGE] Loading purchased leads for user:", user.id);
+      
+      // Fetch leads from Supabase where the current user is the buyer
+      const { data: leadsData, error } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('buyer_id', user.id)
+        .eq('status', 'sold')
+        .order('purchased_at', { ascending: false });
+        
+      if (error) {
+        throw error;
       }
       
-      setIsLoading(true);
-      try {
-        console.log("[PURCHASE PAGE] Loading purchased leads for user:", user.id);
-        
-        // Fetch leads from Supabase where the current user is the buyer
-        const { data: leadsData, error } = await supabase
-          .from('leads')
-          .select('*')
-          .eq('buyer_id', user.id)
-          .eq('status', 'sold')
-          .order('purchased_at', { ascending: false });
-          
-        if (error) {
-          throw error;
-        }
-        
-        // Map database leads to app format
-        const purchased = leadsData.map(mapDbLeadToAppLead);
-        console.log("[PURCHASE PAGE] Fetched purchased leads:", purchased.length);
-        
-        setPurchasedLeads(purchased);
-      } catch (error) {
-        console.error('[PURCHASE PAGE] Error loading purchased leads:', error);
-        toast.error('Failed to load your purchased leads');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
+      // Map database leads to app format
+      const purchased = leadsData.map(mapDbLeadToAppLead);
+      console.log("[PURCHASE PAGE] Fetched purchased leads:", purchased.length);
+      
+      setPurchasedLeads(purchased);
+    } catch (error) {
+      console.error('[PURCHASE PAGE] Error loading purchased leads:', error);
+      toast.error('Failed to load your purchased leads');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     if (authChecked && isLoggedIn && role === 'buyer' && user?.id) {
       loadPurchasedLeads();
     }

@@ -53,10 +53,12 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
                     <p><span className="font-medium">Name:</span> {lead.contactName}</p>
                     <p><span className="font-medium">Phone:</span> {lead.contactPhone}</p>
                     <p><span className="font-medium">Email:</span> {lead.contactEmail}</p>
-                    <p><span className="font-medium">Address:</span> {lead.address}</p>
+                    {lead.address && (
+                      <p><span className="font-medium">Address:</span> {lead.address}</p>
+                    )}
                     {lead.appointmentTime && (
                       <p>
-                        <span className="font-medium">Appointment:</span> {new Date(lead.appointmentTime).toLocaleString()}
+                        <span className="font-medium">Appointment:</span> {lead.appointmentTime}
                       </p>
                     )}
                   </div>

@@ -50,7 +50,7 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     contactPhone: dbLead.contact_phone || '',
     // These fields don't exist in DB schema but are used in the app
     appointmentTime: '',
-    address: '',
+    address: dbLead.address || '', // Use address from database
     // New derived fields
     zipCode: zipCode,
     firstName: firstName
@@ -69,6 +69,7 @@ export const mapAppLeadToDbLead = (appLead: Omit<Lead, 'id'>): any => {
     seller_id: appLead.sellerId,
     contact_name: appLead.contactName,
     contact_email: appLead.contactEmail,
-    contact_phone: appLead.contactPhone
+    contact_phone: appLead.contactPhone,
+    address: appLead.address // Include address in DB mapping
   };
 };
