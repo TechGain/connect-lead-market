@@ -54,14 +54,16 @@ export function useAuth() {
             
             // Try to create profile with metadata role
             try {
+              // Define profile data according to the expected schema type
+              const profileData = {
+                id: user.id,
+                full_name: user.user_metadata?.full_name || 'User',
+                role: metadataRole as 'seller' | 'buyer'
+              };
+              
               const { error: createError } = await supabase
                 .from('profiles')
-                .upsert({
-                  id: user.id,
-                  role: metadataRole,
-                  full_name: user.user_metadata?.full_name || 'User',
-                  created_at: new Date().toISOString()
-                }, { onConflict: 'id' });
+                .upsert(profileData);
                 
               if (createError) {
                 console.error("Error creating profile from metadata:", createError);
@@ -228,15 +230,17 @@ export function useAuth() {
         try {
           console.log("Creating profile for new user with role:", role);
           
+          // Define profile data according to the expected schema type
+          const profileData = {
+            id: data.user.id,
+            full_name: fullName,
+            role: role,
+            company: company || null
+          };
+          
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert({
-              id: data.user.id,
-              role: role,
-              full_name: fullName,
-              company: company || null,
-              created_at: new Date().toISOString()
-            });
+            .insert(profileData);
             
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);

@@ -79,6 +79,7 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
           console.warn(`Cannot change role from ${existingProfile.role} to ${desiredRole} due to database restrictions`);
           toast.error(`Your role is already set to ${existingProfile.role} and cannot be changed.`);
         }
+        setIsFixing(false);
         return;
       }
       
@@ -94,6 +95,7 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
       if (error) {
         console.error("Error fixing role:", error);
         toast.error("Failed to update your role. Please try again.");
+        setIsFixing(false);
         return;
       }
       
