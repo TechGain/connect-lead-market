@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { UserRoleProvider, useUserRole } from "./hooks/use-user-role";
 import { HelmetProvider } from 'react-helmet-async';
+import { useEffect } from 'react';
 
 // Pages
 import Index from "./pages/Index";
