@@ -41,8 +41,15 @@ export const useLeadCheckout = (user: any) => {
       console.log("[CHECKOUT] Lead ID:", selectedLead.id);
       console.log("[CHECKOUT] User ID:", user.id);
       console.log("[CHECKOUT] User email:", user.email);
-      console.log("[CHECKOUT] Authentication status:", !!supabase.auth.getSession());
       
+      // Check if user has valid session
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("No active session found. Please log in again.");
+      }
+      console.log("[CHECKOUT] Authentication status:", !!sessionData.session);
+      
+      // Attempt to invoke the edge function with improved error handling
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
         body: { 
           leadId: selectedLead.id 
@@ -84,13 +91,14 @@ export const useLeadCheckout = (user: any) => {
       setCheckoutError(errorMessage);
       
       // Show different messages based on error type
-      if (errorMessage.includes('authentication') || errorMessage.includes('auth')) {
+      if (errorMessage.includes('authentication') || errorMessage.includes('auth') || 
+          errorMessage.includes('session') || errorMessage.includes('login')) {
         toast.error('Authentication error. Please try logging out and back in.');
-      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        console.error('[CHECKOUT] Authentication issue. User may need to re-authenticate.');
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || 
+                errorMessage.includes('send') || errorMessage.includes('connect')) {
         toast.error('Network error. Please check your connection and try again.');
-      } else if (errorMessage.includes('Failed to send')) {
-        toast.error('Could not connect to payment service. Please try again later.');
-        console.error('[CHECKOUT] Edge function connectivity issue. Make sure the Edge Function is deployed and accessible.');
+        console.error('[CHECKOUT] Network connectivity issue. Edge function may be unreachable.');
       } else {
         toast.error('Failed to initiate checkout: ' + errorMessage);
       }

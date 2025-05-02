@@ -1,7 +1,7 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from "std/http/server.ts";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -16,6 +16,8 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  logStep("Function called", { method: req.method, url: req.url });
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     logStep("Handling OPTIONS request");
@@ -25,20 +27,41 @@ serve(async (req) => {
   try {
     logStep("Function started");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      const error = "STRIPE_SECRET_KEY is not set";
+      logStep("ERROR: " + error);
+      throw new Error(error);
+    }
     logStep("Stripe key verified");
 
     // Get the request body
-    const requestData = await req.json();
+    let requestData;
+    try {
+      requestData = await req.json();
+      logStep("Request data parsed", requestData);
+    } catch (e) {
+      const error = "Failed to parse request body: " + e.message;
+      logStep("ERROR: " + error);
+      throw new Error(error);
+    }
+    
     const { leadId } = requestData;
-    if (!leadId) throw new Error("Lead ID is required");
+    if (!leadId) {
+      const error = "Lead ID is required";
+      logStep("ERROR: " + error);
+      throw new Error(error);
+    }
 
     logStep("Processing lead checkout", { leadId });
 
     // Get auth header for user authentication
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found", { authHeader: authHeader.substring(0, 20) + "..." });
+    if (!authHeader) {
+      const error = "No authorization header provided";
+      logStep("ERROR: " + error);
+      throw new Error(error);
+    }
+    logStep("Authorization header found", { headerLength: authHeader.length });
     
     // Initialize Supabase client with service role key for bypassing RLS
     const supabaseAdmin = createClient(
@@ -57,37 +80,63 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     logStep("Authenticating with token", { tokenLength: token.length });
     
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) {
-      logStep("Authentication error", { error: userError });
-      throw new Error(`Authentication error: ${userError.message}`);
+    let userData;
+    try {
+      const { data, error } = await supabaseClient.auth.getUser(token);
+      if (error) {
+        logStep("Authentication error", { error });
+        throw new Error(`Authentication error: ${error.message}`);
+      }
+      userData = data;
+      logStep("Authentication successful", { userId: userData?.user?.id });
+    } catch (e) {
+      const error = "Failed to authenticate user: " + e.message;
+      logStep("ERROR: " + error);
+      throw new Error(error);
     }
     
     const user = userData.user;
     if (!user?.id) {
-      logStep("No user found");
-      throw new Error("User not authenticated");
+      const error = "User not authenticated";
+      logStep("ERROR: " + error);
+      throw new Error(error);
     }
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Fetch lead data
     logStep("Fetching lead data", { leadId });
-    const { data: lead, error: leadError } = await supabaseAdmin
-      .from("leads")
-      .select("*")
-      .eq("id", leadId)
-      .single();
+    let lead;
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("leads")
+        .select("*")
+        .eq("id", leadId)
+        .single();
 
-    if (leadError || !lead) {
-      logStep("Lead fetch error", { error: leadError });
-      throw new Error(`Failed to fetch lead: ${leadError?.message || "Lead not found"}`);
+      if (error) {
+        logStep("Lead fetch error", { error });
+        throw new Error(`Failed to fetch lead: ${error.message}`);
+      }
+      lead = data;
+      logStep("Lead fetch successful", { leadId: lead?.id });
+    } catch (e) {
+      const error = "Failed to fetch lead: " + e.message;
+      logStep("ERROR: " + error);
+      throw new Error(error);
+    }
+
+    if (!lead) {
+      const error = "Lead not found";
+      logStep("ERROR: " + error);
+      throw new Error(error);
     }
 
     // Ensure the lead is available for purchase
     if (lead.status !== 'new') {
-      logStep("Lead not available", { status: lead.status });
-      throw new Error("This lead is not available for purchase");
+      const error = `Lead is not available for purchase (status: ${lead.status})`;
+      logStep("ERROR: " + error);
+      throw new Error(error);
     }
 
     logStep("Lead fetched successfully", { leadId: lead.id, price: lead.price, type: lead.type });
@@ -98,32 +147,38 @@ serve(async (req) => {
     
     // Create a Stripe Checkout session for one-time payment
     logStep("Creating Stripe checkout session");
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: `${lead.type} Lead in ${lead.location}`,
-              description: `Purchase access to contact information for this ${lead.type} lead`,
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: `${lead.type} Lead in ${lead.location}`,
+                description: `Purchase access to contact information for this ${lead.type} lead`,
+              },
+              unit_amount: Math.round(Number(lead.price) * 100), // Convert dollars to cents
             },
-            unit_amount: Math.round(Number(lead.price) * 100), // Convert dollars to cents
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        mode: "payment",
+        success_url: `${req.headers.get("origin") || "https://lead-marketplace-platform.com"}/purchases?success=true&lead_id=${lead.id}`,
+        cancel_url: `${req.headers.get("origin") || "https://lead-marketplace-platform.com"}/marketplace?canceled=true`,
+        client_reference_id: lead.id, // Store lead ID for reference
+        metadata: {
+          leadId: lead.id,
+          buyerId: user.id,
         },
-      ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/purchases?success=true&lead_id=${lead.id}`,
-      cancel_url: `${req.headers.get("origin")}/marketplace?canceled=true`,
-      client_reference_id: lead.id, // Store lead ID for reference
-      metadata: {
-        leadId: lead.id,
-        buyerId: user.id,
-      },
-    });
-
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+      });
+      logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    } catch (e) {
+      const error = "Failed to create Stripe checkout session: " + e.message;
+      logStep("ERROR: " + error);
+      throw new Error(error);
+    }
 
     // Return the checkout URL to the client
     return new Response(
