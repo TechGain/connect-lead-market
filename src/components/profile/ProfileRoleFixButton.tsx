@@ -12,6 +12,8 @@ interface ProfileRoleFixButtonProps {
   desiredRole: 'seller' | 'buyer';
 }
 
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+
 const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps) => {
   const [isFixing, setIsFixing] = useState(false);
   const [isFixed, setIsFixed] = useState(false);
@@ -80,17 +82,20 @@ const ProfileRoleFixButton = ({ userId, desiredRole }: ProfileRoleFixButtonProps
           console.warn(`Cannot change role from ${existingProfile.role} to ${desiredRole} due to database restrictions`);
           toast.error(`Your role is already set to ${existingProfile.role} and cannot be changed.`);
         }
+        setIsFixing(false);
         return;
       }
       
       // If no profile exists, create one
+      const profileData: ProfileInsert = {
+        id: userId,
+        role: desiredRole,
+        full_name: 'User' // Providing a default value for required fields
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .insert({
-          id: userId,
-          role: desiredRole,
-          full_name: 'User' // Providing a default value for required fields
-        } as Database['public']['Tables']['profiles']['Insert']);
+        .insert(profileData);
       
       if (error) {
         console.error("Error fixing role:", error);

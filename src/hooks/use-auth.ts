@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { getUserRole } from '@/utils/roleManager';
 import { Database } from '@/integrations/supabase/types';
 
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
@@ -55,7 +57,7 @@ export function useAuth() {
             
             // Try to create profile with metadata role
             try {
-              const profileData: Database['public']['Tables']['profiles']['Insert'] = {
+              const profileData: ProfileInsert = {
                 id: user.id,
                 role: metadataRole as 'seller' | 'buyer',
                 full_name: user.user_metadata?.full_name || 'User',
@@ -230,7 +232,7 @@ export function useAuth() {
         try {
           console.log("Creating profile for new user with role:", role);
           
-          const profileData: Database['public']['Tables']['profiles']['Insert'] = {
+          const profileData: ProfileInsert = {
             id: data.user.id,
             role: role,
             full_name: fullName,

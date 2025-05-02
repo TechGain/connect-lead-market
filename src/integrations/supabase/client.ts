@@ -15,7 +15,7 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: false, // Disable session persistence for development
+      persistSession: true, // Enable persistence for production
       autoRefreshToken: true,
       detectSessionInUrl: true
     },
