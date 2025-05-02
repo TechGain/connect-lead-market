@@ -1,6 +1,6 @@
 
 import { serve } from "std/http/server.ts";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "supabase";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 
 // CORS headers for browser requests
