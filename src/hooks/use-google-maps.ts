@@ -9,25 +9,39 @@ export function useGoogleMaps() {
 
   useEffect(() => {
     // Wait for API key to load
-    if (isKeyLoading || !apiKey) return;
+    if (isKeyLoading) {
+      console.log('Waiting for Google Maps API key to load');
+      return;
+    }
 
     // If there was an error getting the API key, set the error
     if (keyError) {
+      console.error('Error getting Google Maps API key:', keyError);
       setLoadError(keyError);
+      return;
+    }
+    
+    // If no API key was found, set an error
+    if (!apiKey) {
+      console.error('No Google Maps API key available');
+      setLoadError(new Error('Google Maps API key not available'));
       return;
     }
 
     // Skip if the script is already loaded
     if (window.google && window.google.maps) {
+      console.log('Google Maps API already loaded');
       setIsLoaded(true);
       return;
     }
 
     // Skip if the script is already being loaded
     if (document.querySelector('script#google-maps-script')) {
+      console.log('Google Maps API script is already being loaded');
       return;
     }
 
+    console.log('Loading Google Maps API with key:', apiKey.substring(0, 5) + '...');
     const script = document.createElement('script');
     script.id = 'google-maps-script';
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;

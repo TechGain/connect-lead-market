@@ -12,6 +12,15 @@ export function useGoogleMapsKey() {
       try {
         setIsLoading(true);
         
+        // First, check if we have the API key in environment variables
+        if (import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+          console.log('Using Google Maps API key from environment variables');
+          setApiKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+          return;
+        }
+        
+        // If not, try to fetch from Supabase Edge Function
+        console.log('Fetching Google Maps API key from Supabase Edge Function');
         const { data, error } = await supabase.functions.invoke('get-google-maps-api-key');
         
         if (error) {

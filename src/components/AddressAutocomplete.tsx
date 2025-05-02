@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from '@/components/ui/label';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, MapPin } from 'lucide-react';
 import { useGoogleMaps } from '@/hooks/use-google-maps';
 
 interface AddressAutocompleteProps {
@@ -24,12 +24,15 @@ export const AddressAutocomplete = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autocompleteInitialized, setAutocompleteInitialized] = useState(false);
 
   // Initialize the autocomplete once the Google Maps API is loaded
   useEffect(() => {
     if (!isLoaded || !inputRef.current) return;
-
+    
     try {
+      console.log('Initializing Google Places Autocomplete');
+      
       // Create the autocomplete object
       autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
         types: ['address'],
@@ -64,6 +67,9 @@ export const AddressAutocomplete = ({
         
         setError(null);
       });
+      
+      setAutocompleteInitialized(true);
+      console.log('Google Places Autocomplete initialized successfully');
     } catch (err) {
       console.error('Error initializing Google Maps Autocomplete:', err);
       setError('Failed to initialize address autocomplete');
@@ -77,20 +83,27 @@ export const AddressAutocomplete = ({
     };
   }, [isLoaded, onChange, onZipCodeFound]);
 
+  const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>Property Address {required && '*'}</Label>
-      <div>
+      <div className="relative">
         <Input
           id={id}
           ref={inputRef}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleManualChange}
           placeholder="Start typing address..."
           required={required}
           aria-invalid={!!error || !!loadError}
-          disabled={false} // Always enable input regardless of API loading status
+          disabled={false}
+          className="pl-9"
         />
+        <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+        
         {(error || loadError) && (
           <div className="flex items-center text-sm text-red-500 mt-1">
             <AlertCircle className="h-4 w-4 mr-1" />
@@ -99,16 +112,25 @@ export const AddressAutocomplete = ({
             </span>
           </div>
         )}
-        {isLoaded && !error && (
+        
+        {isLoaded && autocompleteInitialized && !error && (
           <p className="text-xs text-muted-foreground mt-1">
             Start typing to see address suggestions
           </p>
         )}
+        
+        {isLoaded && !autocompleteInitialized && !error && !loadError && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Loading address autocomplete...
+          </p>
+        )}
+        
         {!isLoaded && !loadError && (
           <p className="text-xs text-muted-foreground mt-1">
             Loading address autocomplete...
           </p>
         )}
+        
         {loadError && (
           <p className="text-xs text-muted-foreground mt-1">
             Autocomplete unavailable. Please enter address manually.
