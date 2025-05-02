@@ -94,7 +94,7 @@ export const AddressAutocomplete = ({
           placeholder="Start typing address..."
           required={required}
           aria-invalid={!!error || !!loadError}
-          disabled={false} // Never disable the input to ensure users can always type
+          disabled={false} // Ensure the input is never disabled
           className="pl-10"
         />
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

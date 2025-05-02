@@ -5,7 +5,7 @@ import { useGoogleMapsKey } from './use-google-maps-key';
 export function useGoogleMaps() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<Error | null>(null);
-  const { apiKey, isLoading: isKeyLoading, error: keyError } = useGoogleMapsKey();
+  const { apiKey, isLoading: isKeyLoading, error: keyError, source } = useGoogleMapsKey();
 
   useEffect(() => {
     // Wait for API key to load, but don't block UI
@@ -36,19 +36,24 @@ export function useGoogleMaps() {
     }
 
     // Skip if the script is already being loaded
-    if (document.querySelector('script#google-maps-script')) {
+    const existingScript = document.querySelector('script#google-maps-script');
+    if (existingScript) {
       console.log('Google Maps API script is already being loaded');
       return;
     }
 
+    console.log(`Loading Google Maps API with key from ${source}...`);
+    
+    // Create and append the script
     const script = document.createElement('script');
     script.id = 'google-maps-script';
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.defer = true;
     
-    script.onload = () => {
-      console.log('Google Maps API loaded successfully');
+    // Add event listeners for debugging
+    script.addEventListener('load', () => {
+      console.log('Google Maps API script loaded successfully');
       if (window.google && window.google.maps && window.google.maps.places) {
         console.log('Places API is available');
         setIsLoaded(true);
@@ -56,12 +61,12 @@ export function useGoogleMaps() {
         console.error('Places library not available. Make sure it\'s enabled in your Google Cloud Console');
         setLoadError(new Error('Google Maps Places library not available'));
       }
-    };
+    });
 
-    script.onerror = (error) => {
-      console.error('Error loading Google Maps API:', error);
+    script.addEventListener('error', (event) => {
+      console.error('Error loading Google Maps API script:', event);
       setLoadError(new Error('Failed to load Google Maps API'));
-    };
+    });
 
     console.log('Adding Google Maps script to document head');
     document.head.appendChild(script);
@@ -72,7 +77,7 @@ export function useGoogleMaps() {
         document.head.removeChild(script);
       }
     };
-  }, [apiKey, isKeyLoading, keyError]);
+  }, [apiKey, isKeyLoading, keyError, source]);
 
   return { isLoaded, loadError };
 }
