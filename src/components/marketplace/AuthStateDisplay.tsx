@@ -21,7 +21,7 @@ const AuthStateDisplay: React.FC<AuthStateDisplayProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex-1 container mx-auto px-4 flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="mb-2 text-lg">Checking your account...</p>
@@ -33,7 +33,7 @@ const AuthStateDisplay: React.FC<AuthStateDisplayProps> = ({
 
   if (authError) {
     return (
-      <div className="flex-1 container mx-auto px-4 py-16 text-center">
+      <div className="py-16 text-center">
         <h1 className="text-3xl font-bold mb-4">Authentication Error</h1>
         <p className="text-gray-600 mb-6">{authError}</p>
         <div className="space-x-4">
@@ -48,12 +48,26 @@ const AuthStateDisplay: React.FC<AuthStateDisplayProps> = ({
     );
   }
 
-  if (!isLoggedIn || role !== 'buyer') {
+  if (!isLoggedIn) {
     return (
-      <div className="flex-1 container mx-auto px-4 py-16 text-center">
+      <div className="py-16 text-center">
         <h1 className="text-3xl font-bold mb-4">Access Restricted</h1>
         <p className="text-gray-600 mb-6">
-          The marketplace is only available to buyers. Please switch to a buyer account to access this page.
+          Please log in to access the marketplace.
+        </p>
+        <Button onClick={() => navigate('/login')}>
+          Log In
+        </Button>
+      </div>
+    );
+  }
+
+  if (role !== 'buyer') {
+    return (
+      <div className="py-16 text-center">
+        <h1 className="text-3xl font-bold mb-4">Access Restricted</h1>
+        <p className="text-gray-600 mb-6">
+          The marketplace is only available to buyers. Your current role: {role || 'not set'}
         </p>
         <Button onClick={() => navigate('/')}>
           Return to Home

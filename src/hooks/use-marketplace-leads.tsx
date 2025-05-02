@@ -1,26 +1,21 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
 import { fetchLeads } from '@/lib/mock-data';
 
-export const useMarketplaceLeads = (isLoggedIn: boolean, role: string | null) => {
+export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Load leads once user is logged in and has the right role
+  // Load leads when shouldLoad is true (auth is successful or force show enabled)
   useEffect(() => {
     const loadLeads = async () => {
-      console.log('useMarketplaceLeads: checking conditions to load leads', { 
-        isLoggedIn, 
-        role 
-      });
+      console.log('useMarketplaceLeads: checking if leads should be loaded', { shouldLoad });
       
-      if (!isLoggedIn && role !== 'buyer') {
-        console.log('useMarketplaceLeads: user not logged in or not a buyer, loading placeholder data');
-        // Load placeholder data anyway for better UX
-        setIsLoading(true);
+      if (!shouldLoad) {
+        console.log('useMarketplaceLeads: not loading leads yet, waiting for auth or force show');
+        return;
       }
       
       setIsLoading(true);
@@ -41,7 +36,7 @@ export const useMarketplaceLeads = (isLoggedIn: boolean, role: string | null) =>
     };
     
     loadLeads();
-  }, [isLoggedIn, role]);
+  }, [shouldLoad]);
 
   const handleFilterChange = (filters: any) => {
     let filtered = [...leads];
