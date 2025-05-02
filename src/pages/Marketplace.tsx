@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -70,8 +69,8 @@ const Marketplace = () => {
     handleCompletePurchase
   } = useLeadCheckout(user);
   
-  // Fix: Pass all required arguments to useCheckoutUrlParams
-  useCheckoutUrlParams(handleCompletePurchase, user?.id, selectedLead?.id, isLoggedIn);
+  // Fix: Pass the correct parameters to useCheckoutUrlParams based on its signature
+  useCheckoutUrlParams(!authLoading, isLoggedIn, role, handleCompletePurchase);
 
   // Function to handle refreshing auth
   const handleRefresh = () => {
