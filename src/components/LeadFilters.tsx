@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +99,11 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
                 <SelectItem value="garage-doors-repair">Garage Doors Repair</SelectItem>
                 <SelectItem value="sliding-door-repair">Sliding Door Repair</SelectItem>
                 <SelectItem value="flooring-services">Flooring Services</SelectItem>
+                <SelectItem value="home-cleaning">Home Cleaning</SelectItem>
+                <SelectItem value="pool-services">Pool Services</SelectItem>
+                <SelectItem value="insulation-services">Insulation Services</SelectItem>
+                <SelectItem value="smart-home-services">Smart Home Services</SelectItem>
+                <SelectItem value="foundation-repair">Foundation Repair</SelectItem>
               </SelectContent>
             </Select>
           </div>
