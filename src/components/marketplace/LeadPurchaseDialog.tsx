@@ -17,6 +17,7 @@ interface LeadPurchaseDialogProps {
   selectedLead: Lead | null;
   isOpen: boolean;
   isProcessing: boolean;
+  redirectingToStripe?: boolean;
   checkoutError?: string | null;
   onClose: () => void;
   onPurchase: () => void;
@@ -26,6 +27,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
   selectedLead,
   isOpen,
   isProcessing,
+  redirectingToStripe = false,
   checkoutError,
   onClose,
   onPurchase
@@ -40,7 +42,15 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        {selectedLead && (
+        {redirectingToStripe ? (
+          <div className="py-8 flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <div className="text-center">
+              <p className="text-lg font-medium">Redirecting to secure checkout...</p>
+              <p className="text-sm text-muted-foreground">Please do not close this window.</p>
+            </div>
+          </div>
+        ) : selectedLead && (
           <div className="py-4">
             <div className="space-y-3">
               <div>
@@ -75,26 +85,28 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
           </div>
         )}
         
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            disabled={isProcessing}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={onPurchase}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : `Purchase for ${selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}`}
-          </Button>
-        </DialogFooter>
+        {!redirectingToStripe && (
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={onPurchase}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : `Purchase for ${selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}`}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

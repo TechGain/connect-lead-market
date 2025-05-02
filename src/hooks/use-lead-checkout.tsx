@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
@@ -10,6 +11,7 @@ export const useLeadCheckout = (user: any) => {
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [redirectingToStripe, setRedirectingToStripe] = useState(false);
   
   const handlePurchaseLead = (lead: Lead) => {
     // Reset any previous errors
@@ -82,20 +84,38 @@ export const useLeadCheckout = (user: any) => {
         throw new Error('No checkout URL returned');
       }
       
-      // Close the dialog
+      // Close the dialog and set redirecting state
       setIsPreviewDialogOpen(false);
+      setRedirectingToStripe(true);
       
       // Log the URL we're redirecting to
       console.log("[CHECKOUT] Redirecting to Stripe checkout:", data.url);
       
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      // Show toast before redirecting
+      toast.info("Redirecting to secure checkout...");
+      
+      // Redirect with a small delay to allow the toast to be seen
+      setTimeout(() => {
+        // Use window.location.assign instead of window.location.href
+        // This is sometimes more reliable for redirects
+        window.location.assign(data.url);
+        
+        // Set a timeout to detect if redirect failed
+        setTimeout(() => {
+          if (document.visibilityState !== 'hidden') {
+            setRedirectingToStripe(false);
+            setIsProcessing(false);
+            toast.error("Redirect to Stripe failed. Please try again or contact support.");
+          }
+        }, 5000);
+      }, 800);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
       console.error('[CHECKOUT] Error initiating checkout:', error);
       
       // Set detailed error for debugging
       setCheckoutError(errorMessage);
+      setRedirectingToStripe(false);
       
       // Show different messages based on error type
       if (errorMessage.includes('authentication') || errorMessage.includes('auth') || 
@@ -154,6 +174,7 @@ export const useLeadCheckout = (user: any) => {
     isPreviewDialogOpen,
     isProcessing,
     checkoutError,
+    redirectingToStripe,
     handlePurchaseLead,
     setIsPreviewDialogOpen,
     initiateCheckout,
