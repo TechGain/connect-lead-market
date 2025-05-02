@@ -89,17 +89,29 @@ export const AddressAutocomplete = ({
           placeholder="Start typing address..."
           required={required}
           aria-invalid={!!error || !!loadError}
-          disabled={!isLoaded}
+          disabled={false} // Always enable input regardless of API loading status
         />
         {(error || loadError) && (
           <div className="flex items-center text-sm text-red-500 mt-1">
             <AlertCircle className="h-4 w-4 mr-1" />
-            <span>{error || loadError?.message || 'Error loading address autocomplete'}</span>
+            <span>
+              {error || 'Address autocomplete unavailable. You can still type your address manually.'}
+            </span>
           </div>
         )}
         {isLoaded && !error && (
           <p className="text-xs text-muted-foreground mt-1">
             Start typing to see address suggestions
+          </p>
+        )}
+        {!isLoaded && !loadError && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Loading address autocomplete...
+          </p>
+        )}
+        {loadError && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Autocomplete unavailable. Please enter address manually.
           </p>
         )}
       </div>
