@@ -23,12 +23,25 @@ export const supabase = createClient<Database>(
       headers: {
         'x-application-name': 'leads-platform'
       },
-      // Increase default fetch timeout
+      // Increase default fetch timeout for edge functions
       fetch: (url, options) => {
         return fetch(url, { 
           ...options, 
-          signal: AbortSignal.timeout(15000) // 15 second timeout
+          signal: AbortSignal.timeout(30000) // 30 second timeout - increase from 15s
         });
+      }
+    },
+    // Ensure edge functions properly receive auth token
+    functionsOptions: {
+      headers: async () => {
+        // Get the current session
+        const { data } = await supabase.auth.getSession();
+        const token = data?.session?.access_token;
+        
+        return {
+          Authorization: token ? `Bearer ${token}` : '',
+          'x-application-name': 'leads-platform'
+        };
       }
     }
   }

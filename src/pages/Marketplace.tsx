@@ -40,6 +40,7 @@ const Marketplace = () => {
     selectedLead,
     isPreviewDialogOpen,
     isProcessing,
+    checkoutError,
     handlePurchaseLead,
     setIsPreviewDialogOpen,
     initiateCheckout,
@@ -47,7 +48,7 @@ const Marketplace = () => {
   } = useLeadCheckout(user);
   
   // Handle URL parameters for checkout completion
-  useCheckoutUrlParams(authChecked, isLoggedIn, role, handleCompletePurchase);
+  useCheckoutUrlParams(authChecked, isLoggedIn, role === 'buyer', handleCompletePurchase);
 
   // Function to force show content
   const handleForceShow = () => {
@@ -107,6 +108,7 @@ const Marketplace = () => {
               selectedLead={selectedLead}
               isOpen={isPreviewDialogOpen}
               isProcessing={isProcessing}
+              checkoutError={checkoutError}
               onClose={() => setIsPreviewDialogOpen(false)}
               onPurchase={initiateCheckout}
             />

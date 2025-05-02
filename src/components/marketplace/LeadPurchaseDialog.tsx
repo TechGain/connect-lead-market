@@ -11,11 +11,13 @@ import {
   DialogDescription, 
   DialogFooter 
 } from '@/components/ui/dialog';
+import { AlertCircle } from 'lucide-react';
 
 interface LeadPurchaseDialogProps {
   selectedLead: Lead | null;
   isOpen: boolean;
   isProcessing: boolean;
+  checkoutError?: string | null;
   onClose: () => void;
   onPurchase: () => void;
 }
@@ -24,6 +26,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
   selectedLead,
   isOpen,
   isProcessing,
+  checkoutError,
   onClose,
   onPurchase
 }) => {
@@ -57,6 +60,17 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                   <span>{selectedLead.qualityRating} / 5</span>
                 </div>
               </div>
+              
+              {checkoutError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Checkout Error</p>
+                    <p className="text-sm">{checkoutError}</p>
+                    <p className="text-sm mt-1">Please try again or contact support if the issue persists.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

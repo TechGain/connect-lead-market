@@ -10,6 +10,7 @@ export const useLeadCheckout = (user: any) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   
   const handlePurchaseLead = (lead: Lead) => {
     if (!user) {
@@ -20,6 +21,8 @@ export const useLeadCheckout = (user: any) => {
     
     setSelectedLead(lead);
     setIsPreviewDialogOpen(true);
+    // Reset any previous checkout errors
+    setCheckoutError(null);
   };
   
   const initiateCheckout = async () => {
@@ -27,22 +30,43 @@ export const useLeadCheckout = (user: any) => {
     
     try {
       setIsProcessing(true);
+      setCheckoutError(null);
+      
+      console.log("Initiating checkout for lead:", selectedLead.id);
       
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
         body: { leadId: selectedLead.id }
       });
       
-      if (error) throw new Error(error.message);
-      if (!data.success) throw new Error(data.error || 'Failed to create checkout session');
+      console.log("Checkout response:", data, error);
+      
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(error.message || 'Function invocation failed');
+      }
+      
+      if (!data || !data.success) {
+        const errorMsg = data?.error || 'Failed to create checkout session';
+        console.error("Checkout error:", errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      if (!data.url) {
+        throw new Error('No checkout URL returned');
+      }
       
       // Close the dialog
       setIsPreviewDialogOpen(false);
       
       // Redirect to Stripe Checkout
+      console.log("Redirecting to Stripe checkout:", data.url);
       window.location.href = data.url;
     } catch (error) {
-      console.error('Error initiating checkout:', error);
-      toast.error('Failed to initiate checkout');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Error initiating checkout:', errorMessage);
+      setCheckoutError(errorMessage);
+      toast.error(`Failed to initiate checkout: ${errorMessage}`);
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -72,6 +96,7 @@ export const useLeadCheckout = (user: any) => {
     selectedLead,
     isPreviewDialogOpen,
     isProcessing,
+    checkoutError,
     handlePurchaseLead,
     setIsPreviewDialogOpen,
     initiateCheckout,
