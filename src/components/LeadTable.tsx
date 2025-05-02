@@ -120,6 +120,14 @@ const LeadTable = ({ leads }: LeadTableProps) => {
     }
   };
 
+  // Format the lead type for display (convert from kebab-case to Title Case)
+  const formatLeadType = (type: string) => {
+    return type
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
     <div className="space-y-4">
       <LeadFilters onFilterChange={handleFilterChange} />
@@ -174,7 +182,7 @@ const LeadTable = ({ leads }: LeadTableProps) => {
             <TableBody>
               {filteredLeads.map((lead) => (
                 <TableRow key={lead.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium capitalize">{lead.type}</TableCell>
+                  <TableCell className="font-medium">{formatLeadType(lead.type)}</TableCell>
                   <TableCell>{lead.location}</TableCell>
                   <TableCell>${lead.price.toFixed(2)}</TableCell>
                   <TableCell>

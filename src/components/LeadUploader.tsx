@@ -108,6 +108,15 @@ const LeadUploader = () => {
                   <SelectItem value="electrical">Electrical</SelectItem>
                   <SelectItem value="hvac">HVAC</SelectItem>
                   <SelectItem value="landscaping">Landscaping</SelectItem>
+                  <SelectItem value="bathroom-remodel">Bathroom Remodel</SelectItem>
+                  <SelectItem value="kitchen-remodel">Kitchen Remodel</SelectItem>
+                  <SelectItem value="full-home-renovation">Full Home Renovation</SelectItem>
+                  <SelectItem value="garage-conversion">Garage Conversion</SelectItem>
+                  <SelectItem value="new-construction">New Construction</SelectItem>
+                  <SelectItem value="locksmith-services">Locksmith Services</SelectItem>
+                  <SelectItem value="garage-doors-repair">Garage Doors Repair</SelectItem>
+                  <SelectItem value="sliding-door-repair">Sliding Door Repair</SelectItem>
+                  <SelectItem value="flooring-services">Flooring Services</SelectItem>
                 </SelectContent>
               </Select>
             </div>
