@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import { ensureUserProfile } from '@/utils/roleManager';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoggedIn, role, user } = useUserRole();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +24,14 @@ const Login = () => {
   useEffect(() => {
     // If the user is already logged in, redirect them
     if (isLoggedIn) {
-      if (role === 'seller') {
+      // Check if we have a stored redirect path
+      const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+      
+      if (redirectPath) {
+        console.log('[LOGIN] Redirecting to stored path after login:', redirectPath);
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectPath);
+      } else if (role === 'seller') {
         navigate('/my-leads');
       } else {
         navigate('/marketplace');
@@ -65,6 +74,14 @@ const Login = () => {
       if (!result) {
         setError('Invalid email or password');
         toast.error('Login failed. Please check your credentials.');
+      } else {
+        console.log('[LOGIN] Login successful');
+        
+        // Check if we need to handle a pending purchase
+        const pendingPurchaseStr = sessionStorage.getItem('pendingPurchase');
+        if (pendingPurchaseStr) {
+          console.log('[LOGIN] Found pending purchase after login');
+        }
       }
     } catch (error: any) {
       setError(error.message || 'An error occurred during login');
