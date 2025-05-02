@@ -50,6 +50,7 @@ export const useLeadCheckout = (user: any) => {
       console.log("[CHECKOUT] Authentication status:", !!sessionData.session);
       
       // Attempt to invoke the edge function with improved error handling
+      console.log("[CHECKOUT] Invoking create-lead-checkout function");
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
         body: { 
           leadId: selectedLead.id 
