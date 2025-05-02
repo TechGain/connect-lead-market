@@ -3,6 +3,7 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -16,6 +17,7 @@ interface LeadPurchaseDialogProps {
   selectedLead: Lead | null;
   isOpen: boolean;
   isProcessing: boolean;
+  checkoutError?: string | null;
   onClose: () => void;
   onPurchase: () => void;
 }
@@ -24,6 +26,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
   selectedLead,
   isOpen,
   isProcessing,
+  checkoutError,
   onClose,
   onPurchase
 }) => {
@@ -57,6 +60,16 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                   <span>{selectedLead.qualityRating} / 5</span>
                 </div>
               </div>
+              
+              {checkoutError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded flex items-start gap-2 text-sm">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-500" />
+                  <div>
+                    <p className="font-medium">Error</p>
+                    <p>{checkoutError}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

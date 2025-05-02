@@ -40,6 +40,7 @@ const Marketplace = () => {
     selectedLead,
     isPreviewDialogOpen,
     isProcessing,
+    checkoutError,
     handlePurchaseLead,
     setIsPreviewDialogOpen,
     initiateCheckout,
@@ -107,6 +108,7 @@ const Marketplace = () => {
               selectedLead={selectedLead}
               isOpen={isPreviewDialogOpen}
               isProcessing={isProcessing}
+              checkoutError={checkoutError}
               onClose={() => setIsPreviewDialogOpen(false)}
               onPurchase={initiateCheckout}
             />

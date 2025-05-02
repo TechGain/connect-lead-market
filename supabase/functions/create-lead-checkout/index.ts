@@ -18,6 +18,7 @@ const logStep = (step: string, details?: any) => {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    logStep("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -25,6 +26,7 @@ serve(async (req) => {
     logStep("Function started");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    logStep("Stripe key verified");
 
     // Get the request body
     const requestData = await req.json();
@@ -36,6 +38,7 @@ serve(async (req) => {
     // Get auth header for user authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
+    logStep("Authorization header found", { authHeader: authHeader.substring(0, 20) + "..." });
     
     // Initialize Supabase client with service role key for bypassing RLS
     const supabaseAdmin = createClient(
@@ -52,15 +55,24 @@ serve(async (req) => {
 
     // Authenticate the user
     const token = authHeader.replace("Bearer ", "");
+    logStep("Authenticating with token", { tokenLength: token.length });
+    
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      logStep("Authentication error", { error: userError });
+      throw new Error(`Authentication error: ${userError.message}`);
+    }
     
     const user = userData.user;
-    if (!user?.id) throw new Error("User not authenticated");
+    if (!user?.id) {
+      logStep("No user found");
+      throw new Error("User not authenticated");
+    }
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Fetch lead data
+    logStep("Fetching lead data", { leadId });
     const { data: lead, error: leadError } = await supabaseAdmin
       .from("leads")
       .select("*")
@@ -68,20 +80,24 @@ serve(async (req) => {
       .single();
 
     if (leadError || !lead) {
+      logStep("Lead fetch error", { error: leadError });
       throw new Error(`Failed to fetch lead: ${leadError?.message || "Lead not found"}`);
     }
 
     // Ensure the lead is available for purchase
     if (lead.status !== 'new') {
+      logStep("Lead not available", { status: lead.status });
       throw new Error("This lead is not available for purchase");
     }
 
     logStep("Lead fetched successfully", { leadId: lead.id, price: lead.price, type: lead.type });
 
     // Initialize Stripe with the secret key
+    logStep("Initializing Stripe");
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     
     // Create a Stripe Checkout session for one-time payment
+    logStep("Creating Stripe checkout session");
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -123,7 +139,14 @@ serve(async (req) => {
     logStep("ERROR in create-lead-checkout", { message: errorMessage });
     
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ 
+        success: false, 
+        error: errorMessage,
+        debug: {
+          timestamp: new Date().toISOString(),
+          headers: Object.fromEntries(req.headers),
+        }
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }
