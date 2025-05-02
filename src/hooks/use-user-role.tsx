@@ -12,7 +12,7 @@ interface UserRoleContextType {
   user: any;
   login: (email: string, password: string) => Promise<any>;
   register: (email: string, password: string, role: 'seller' | 'buyer', fullName: string, company?: string) => Promise<any>;
-  logout: () => Promise<void>;
+  logout: () => Promise<boolean>;
   refreshUserRole: () => void;
 }
 
@@ -204,6 +204,23 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [authRole, role, isLoggedIn, user?.id, isLoading, isForceRefreshing]);
 
+  // Wrapper for logout to ensure proper state reset
+  const handleLogout = async (): Promise<boolean> => {
+    console.log("UserRoleProvider: handling logout");
+    
+    // Clear role state before calling the auth logout
+    setRole(null);
+    
+    const success = await logout();
+    
+    // Double-check that state is cleared
+    if (success) {
+      setRole(null);
+    }
+    
+    return success;
+  };
+
   const value = {
     isLoggedIn, 
     isLoading: isLoading || isForceRefreshing,
@@ -211,7 +228,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     user,
     login,
     register,
-    logout,
+    logout: handleLogout, // Use our wrapped version
     refreshUserRole
   };
 

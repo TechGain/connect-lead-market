@@ -270,35 +270,40 @@ export function useAuth() {
     try {
       console.log("Attempting to sign out");
       
-      // Then perform the actual signout
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Logout error:", error);
-        throw error;
-      }
-      
-      // Clear state after successful logout
+      // First clear any cached user state
       setUser(null);
       setUserRole(null);
       
-      // Clear only profile-related cache, not the auth token
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('profile_')) {
-          localStorage.removeItem(key);
-        }
+      // Then perform the actual signout
+      const { error } = await supabase.auth.signOut({
+        scope: 'global'  // Ensure we sign out from all tabs/windows
       });
-      localStorage.removeItem('cachedUser');
+      
+      if (error) {
+        console.error("Logout error:", error);
+        toast.error(error.message || 'Failed to sign out');
+        return false;
+      }
       
       console.log("Sign out successful");
       
-      // Force a page reload to clear any cached state
-      window.location.href = '/';
+      // Clear only profile-related cache, but not the auth token
+      // as it will be cleared by Supabase's signOut method
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('profile_') || key === 'user_role') {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Don't force a page reload as this can interrupt the auth flow
+      // Let the onAuthStateChange event handle the UI update
       
       toast.success('Signed out successfully');
+      return true;
     } catch (error: any) {
       console.error("Error during logout:", error);
       toast.error(error.message || 'Failed to sign out');
+      return false;
     }
   };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -152,6 +151,10 @@ const Login = () => {
                     required
                   />
                 </div>
+                
+                {error && (
+                  <div className="text-red-500 text-sm">{error}</div>
+                )}
               </CardContent>
               
               <CardFooter className="flex flex-col space-y-4">
