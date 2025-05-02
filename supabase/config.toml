@@ -12,9 +12,3 @@ verify_jwt = true
 no_public_cache = true
 path = "complete-lead-purchase"
 import_map = "./import_map.json"
-
-[functions.get-google-maps-key]
-verify_jwt = true
-no_public_cache = true
-path = "get-google-maps-key"
-import_map = "./import_map.json"

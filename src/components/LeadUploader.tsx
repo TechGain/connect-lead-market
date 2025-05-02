@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,9 +13,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Loader2, MapPin } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { useLeadUpload } from '@/hooks/use-lead-upload';
-import { useGooglePlacesAutocomplete } from '@/hooks/use-google-places-autocomplete';
 
 const LeadUploader = () => {
   const [leadType, setLeadType] = useState('');
@@ -29,20 +28,9 @@ const LeadUploader = () => {
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  
-  // New state for address autocompletion
-  const [addressInput, setAddressInput] = useState('');
-  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
-  const addressContainerRef = useRef<HTMLDivElement>(null);
+  const [zipCode, setZipCode] = useState(''); // Add zip code state
   
   const { uploadLead, isUploading } = useLeadUpload();
-  const { 
-    predictions, 
-    isLoading: isLoadingPredictions, 
-    getAddressPredictions,
-    getPlaceDetails
-  } = useGooglePlacesAutocomplete();
 
   // Generate time slots in 2-hour windows (8 AM to 6 PM)
   const timeSlots = [
@@ -52,55 +40,6 @@ const LeadUploader = () => {
     '2:00 PM - 4:00 PM',
     '4:00 PM - 6:00 PM',
   ];
-
-  // Handle address input changes
-  useEffect(() => {
-    if (addressInput.trim()) {
-      getAddressPredictions(addressInput);
-    }
-  }, [addressInput, getAddressPredictions]);
-  
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        addressContainerRef.current && 
-        !addressContainerRef.current.contains(event.target as Node)
-      ) {
-        setShowAddressSuggestions(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleAddressSelect = async (placeId: string, description: string) => {
-    try {
-      const details = await getPlaceDetails(placeId);
-      
-      // Update the address fields
-      setAddressInput(details.address);
-      setAddress(details.address);
-      setZipCode(details.zipCode);
-      
-      // Auto-fill location field if it's empty
-      if (!location && details.city && details.state) {
-        setLocation(`${details.city}, ${details.state}`);
-      }
-      
-      // Hide suggestions
-      setShowAddressSuggestions(false);
-    } catch (error) {
-      console.error('Error getting place details:', error);
-      // Fall back to using the description
-      setAddressInput(description);
-      setAddress(description);
-      setShowAddressSuggestions(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +66,7 @@ const LeadUploader = () => {
         createdAt: new Date().toISOString(),
         appointmentTime: appointmentInfo,
         address,
-        zipCode,
+        zipCode, // Include zip code when creating a lead
       };
       
       const success = await uploadLead(newLead);
@@ -145,8 +84,7 @@ const LeadUploader = () => {
         setAppointmentDate(undefined);
         setAppointmentTimeSlot('');
         setAddress('');
-        setAddressInput('');
-        setZipCode('');
+        setZipCode(''); // Reset zip code
       }
     } catch (error) {
       console.error('Error submitting lead:', error);
@@ -217,48 +155,19 @@ const LeadUploader = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Property Address field with Autocomplete */}
-            <div className="space-y-2" ref={addressContainerRef}>
+            {/* Property Address field */}
+            <div className="space-y-2">
               <Label htmlFor="address">Property Address *</Label>
-              <div className="relative">
-                <Input
-                  id="address"
-                  value={addressInput}
-                  onChange={(e) => {
-                    setAddressInput(e.target.value);
-                    setShowAddressSuggestions(true);
-                  }}
-                  onClick={() => setShowAddressSuggestions(true)}
-                  placeholder="123 Main St, City, State"
-                  required
-                  className="w-full"
-                />
-                {showAddressSuggestions && addressInput && predictions.length > 0 && (
-                  <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto">
-                    {isLoadingPredictions ? (
-                      <div className="p-3 flex items-center justify-center">
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        <span>Loading suggestions...</span>
-                      </div>
-                    ) : (
-                      predictions.map((prediction) => (
-                        <button
-                          key={prediction.place_id}
-                          type="button"
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-start gap-2"
-                          onClick={() => handleAddressSelect(prediction.place_id, prediction.description)}
-                        >
-                          <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
-                          <span className="line-clamp-2">{prediction.description}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="123 Main St, City, State"
+                required
+              />
             </div>
             
-            {/* ZIP Code field */}
+            {/* Add ZIP Code field */}
             <div className="space-y-2">
               <Label htmlFor="zipCode">ZIP Code *</Label>
               <Input
