@@ -1,7 +1,7 @@
 
 import { serve } from "std/http/server.ts";
-import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 
 // Updated CORS headers to include the x-application-name header
 const corsHeaders = {
@@ -150,6 +150,8 @@ serve(async (req) => {
     logStep("Creating Stripe checkout session");
     let session;
     try {
+      const origin = req.headers.get("origin") || "https://lead-marketplace-platform.com";
+      
       session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -166,8 +168,8 @@ serve(async (req) => {
           },
         ],
         mode: "payment",
-        success_url: `${req.headers.get("origin") || "https://lead-marketplace-platform.com"}/purchases?success=true&lead_id=${lead.id}`,
-        cancel_url: `${req.headers.get("origin") || "https://lead-marketplace-platform.com"}/marketplace?canceled=true`,
+        success_url: `${origin}/purchases?success=true&lead_id=${lead.id}`,
+        cancel_url: `${origin}/marketplace?canceled=true`,
         client_reference_id: lead.id, // Store lead ID for reference
         metadata: {
           leadId: lead.id,

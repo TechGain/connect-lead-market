@@ -37,7 +37,8 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
   // Function to handle manual redirect if automatic redirect fails
   const handleManualRedirect = () => {
     if (stripeUrl) {
-      window.location.assign(stripeUrl);
+      // Use window.top to ensure redirect happens at the top level, not in iframe
+      window.top.location.href = stripeUrl;
     }
   };
   

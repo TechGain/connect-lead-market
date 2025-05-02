@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
@@ -51,7 +52,7 @@ export const useLeadCheckout = (user: any) => {
       }
       console.log("[CHECKOUT] Authentication status:", !!sessionData.session);
       
-      // Attempt to invoke the edge function with improved error handling
+      // Invoke the edge function
       console.log("[CHECKOUT] Invoking create-lead-checkout function");
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
         body: { 
@@ -61,13 +62,6 @@ export const useLeadCheckout = (user: any) => {
       
       if (error) {
         console.error('[CHECKOUT] Supabase function error:', error);
-        
-        // Check for CORS-related errors
-        if (error.message && (error.message.includes("CORS") || error.message.includes("fetch"))) {
-          console.error('[CHECKOUT] Possible CORS issue detected');
-          throw new Error(`CORS or network error: ${error.message}. Please check your network connection and browser settings.`);
-        }
-        
         throw new Error(`Function error: ${error.message || error.name || 'Unknown error'}`);
       }
       
@@ -98,18 +92,19 @@ export const useLeadCheckout = (user: any) => {
       // Show toast before redirecting
       toast.info("Redirecting to secure checkout...");
       
-      // Redirect with a small delay to allow the toast to be seen
+      // CRITICAL FIX: Use window.top to ensure redirect happens at top level, not in iframe
+      // This addresses the Stripe error: "Checkout is not able to run in an iFrame"
       setTimeout(() => {
-        // Use window.location.assign instead of window.location.href
-        // This is sometimes more reliable for redirects
-        window.location.assign(data.url);
+        // Use window.top.location.href to ensure redirect happens at the top level
+        window.top.location.href = data.url;
         
         // Set a timeout to detect if redirect failed
         setTimeout(() => {
           if (document.visibilityState !== 'hidden') {
+            console.log("[CHECKOUT] Redirect may have failed, visibility state:", document.visibilityState);
             setRedirectingToStripe(false);
             setIsProcessing(false);
-            toast.error("Redirect to Stripe failed. Please try again or contact support.");
+            toast.error("Redirect to Stripe failed. Please try the manual link or contact support.");
           }
         }, 5000);
       }, 800);
@@ -117,21 +112,17 @@ export const useLeadCheckout = (user: any) => {
       const errorMessage = error?.message || 'Unknown error occurred';
       console.error('[CHECKOUT] Error initiating checkout:', error);
       
-      // Set detailed error for debugging
       setCheckoutError(errorMessage);
       setRedirectingToStripe(false);
       setStripeUrl(null);
       
-      // Show different messages based on error type
       if (errorMessage.includes('authentication') || errorMessage.includes('auth') || 
           errorMessage.includes('session') || errorMessage.includes('login')) {
         toast.error('Authentication error. Please try logging out and back in.');
-        console.error('[CHECKOUT] Authentication issue. User may need to re-authenticate.');
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || 
                 errorMessage.includes('send') || errorMessage.includes('connect') ||
                 errorMessage.includes('CORS')) {
         toast.error('Network or CORS error. Please check your connection and try again.');
-        console.error('[CHECKOUT] Network or CORS issue. Edge function may be unreachable.');
       } else {
         toast.error('Failed to initiate checkout: ' + errorMessage);
       }
