@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
 import { getUserRole } from '@/utils/roleManager';
+import { Database } from '@/integrations/supabase/types';
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
@@ -31,7 +32,7 @@ export function useAuth() {
         
       if (profileError) {
         console.error("Error directly fetching profile:", profileError);
-      } else if (profileData?.role) {
+      } else if (profileData && profileData.role) {
         // Normalize the role value
         const normalizedRole = String(profileData.role).toLowerCase();
         
@@ -54,14 +55,15 @@ export function useAuth() {
             
             // Try to create profile with metadata role
             try {
+              const profileData: Database['public']['Tables']['profiles']['Insert'] = {
+                id: user.id,
+                role: metadataRole as 'seller' | 'buyer',
+                full_name: user.user_metadata?.full_name || 'User',
+              };
+
               const { error: createError } = await supabase
                 .from('profiles')
-                .upsert({
-                  id: user.id,
-                  role: metadataRole,
-                  full_name: user.user_metadata?.full_name || 'User',
-                  created_at: new Date().toISOString()
-                }, { onConflict: 'id' });
+                .upsert(profileData, { onConflict: 'id' });
                 
               if (createError) {
                 console.error("Error creating profile from metadata:", createError);
@@ -168,7 +170,7 @@ export function useAuth() {
           
         if (profileError) {
           console.error("Error fetching profile after login:", profileError);
-        } else if (profileData?.role) {
+        } else if (profileData && profileData.role) {
           const normalizedRole = String(profileData.role).toLowerCase();
           
           if (normalizedRole === 'seller' || normalizedRole === 'buyer') {
@@ -228,15 +230,16 @@ export function useAuth() {
         try {
           console.log("Creating profile for new user with role:", role);
           
+          const profileData: Database['public']['Tables']['profiles']['Insert'] = {
+            id: data.user.id,
+            role: role,
+            full_name: fullName,
+            company: company || null,
+          };
+            
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert({
-              id: data.user.id,
-              role: role,
-              full_name: fullName,
-              company: company || null,
-              created_at: new Date().toISOString()
-            });
+            .insert(profileData);
             
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);
