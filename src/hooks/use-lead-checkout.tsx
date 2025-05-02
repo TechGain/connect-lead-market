@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
@@ -54,10 +53,6 @@ export const useLeadCheckout = (user: any) => {
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
         body: { 
           leadId: selectedLead.id 
-        },
-        headers: {
-          // Remove the x-application-name header that's causing CORS issues
-          // Let Supabase JS client handle the necessary headers
         }
       });
       
@@ -65,7 +60,7 @@ export const useLeadCheckout = (user: any) => {
         console.error('[CHECKOUT] Supabase function error:', error);
         
         // Check for CORS-related errors
-        if (error.message && error.message.includes("CORS") || error.message.includes("fetch")) {
+        if (error.message && (error.message.includes("CORS") || error.message.includes("fetch"))) {
           console.error('[CHECKOUT] Possible CORS issue detected');
           throw new Error(`CORS or network error: ${error.message}. Please check your network connection and browser settings.`);
         }

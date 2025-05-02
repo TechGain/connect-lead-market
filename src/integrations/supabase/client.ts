@@ -20,9 +20,7 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true
     },
     global: {
-      headers: {
-        'x-application-name': 'leads-platform'
-      },
+      // Remove the custom header that's causing CORS issues
       // Increase default fetch timeout
       fetch: (url, options) => {
         return fetch(url, { 
