@@ -33,3 +33,12 @@ export const supabase = createClient<Database>(
     }
   }
 );
+
+// Add helper functions to safely handle data retrieval
+export const getDataOrNull = <T>(response: { data: T | null, error: any }): T | null => {
+  if (response.error) {
+    console.error("Supabase query error:", response.error);
+    return null;
+  }
+  return response.data;
+};

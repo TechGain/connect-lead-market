@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
-import { Lead } from '@/types/lead';
-import { fetchLeads } from '@/lib/mock-data';
+import { Lead, mapDbLeadToAppLead } from '@/types/lead';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -20,11 +21,22 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       
       setIsLoading(true);
       try {
-        console.log('useMarketplaceLeads: loading marketplace leads...');
-        const leadsData = await fetchLeads();
-        // Only show available leads (not sold)
-        const availableLeads = leadsData.filter(lead => lead.status !== 'sold');
+        console.log('useMarketplaceLeads: loading marketplace leads from Supabase...');
+        
+        const { data: leadsData, error } = await supabase
+          .from('leads')
+          .select('*')
+          .neq('status', 'sold')
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          throw error;
+        }
+        
+        // Map database leads to app format
+        const availableLeads = leadsData.map(mapDbLeadToAppLead);
         console.log('useMarketplaceLeads: loaded leads:', availableLeads.length);
+        
         setLeads(availableLeads);
         setFilteredLeads(availableLeads);
       } catch (error) {

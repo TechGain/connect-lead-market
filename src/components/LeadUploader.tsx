@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +13,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
+import { useLeadUpload } from '@/hooks/use-lead-upload';
 
 interface LeadUploaderProps {
   onLeadSubmit: (lead: Omit<Lead, 'id'>) => void;
 }
 
-const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
+const LeadUploader = () => {
   const [leadType, setLeadType] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
@@ -30,8 +30,9 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
   const [quality, setQuality] = useState(3);
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [address, setAddress] = useState(''); // Add address state
+  
+  const { uploadLead, isUploading } = useLeadUpload();
 
   // Generate time slots in 2-hour windows (8 AM to 6 PM)
   const timeSlots = [
@@ -50,8 +51,6 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
       return;
     }
     
-    setIsSubmitting(true);
-    
     try {
       const appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
       
@@ -65,31 +64,30 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
         price: Number(price),
         qualityRating: quality,
         status: 'new',
-        sellerId: 'current-seller-id', // This will be replaced by the actual seller ID in MyLeads
         createdAt: new Date().toISOString(),
-        appointmentTime: appointmentInfo, // Add the appointment time
-        address, // Add the address field
+        appointmentTime: appointmentInfo,
+        address,
       };
       
-      await onLeadSubmit(newLead);
+      const success = await uploadLead(newLead);
       
-      // Reset form
-      setLeadType('');
-      setLocation('');
-      setDescription('');
-      setContactName('');
-      setContactEmail('');
-      setContactPhone('');
-      setPrice('');
-      setQuality(3);
-      setAppointmentDate(undefined);
-      setAppointmentTimeSlot('');
-      setAddress(''); // Reset address
+      if (success) {
+        // Reset form
+        setLeadType('');
+        setLocation('');
+        setDescription('');
+        setContactName('');
+        setContactEmail('');
+        setContactPhone('');
+        setPrice('');
+        setQuality(3);
+        setAppointmentDate(undefined);
+        setAppointmentTimeSlot('');
+        setAddress('');
+      }
     } catch (error) {
       console.error('Error submitting lead:', error);
       toast.error('Failed to upload lead');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -265,9 +263,9 @@ const LeadUploader = ({ onLeadSubmit }: LeadUploaderProps) => {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isSubmitting}
+            disabled={isUploading}
           >
-            {isSubmitting ? 'Uploading...' : 'Upload Lead'}
+            {isUploading ? 'Uploading...' : 'Upload Lead'}
           </Button>
         </CardFooter>
       </form>
