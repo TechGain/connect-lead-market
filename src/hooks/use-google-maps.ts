@@ -8,23 +8,36 @@ export function useGoogleMaps() {
   const { apiKey, isLoading: isKeyLoading, error: keyError } = useGoogleMapsKey();
 
   useEffect(() => {
-    // Wait for API key to load
-    if (isKeyLoading || !apiKey) return;
+    // Wait for API key to load, but don't block UI
+    if (isKeyLoading) {
+      console.log('Waiting for Google Maps API key...');
+      return;
+    }
 
-    // If there was an error getting the API key, set the error
+    // If there was an error getting the API key, set the error but don't block UI
     if (keyError) {
+      console.error('Error getting Google Maps API key:', keyError);
       setLoadError(keyError);
+      return;
+    }
+
+    // Skip if we don't have an API key
+    if (!apiKey) {
+      console.warn('No Google Maps API key available');
+      setLoadError(new Error('No Google Maps API key available'));
       return;
     }
 
     // Skip if the script is already loaded
     if (window.google && window.google.maps) {
+      console.log('Google Maps API already loaded');
       setIsLoaded(true);
       return;
     }
 
     // Skip if the script is already being loaded
     if (document.querySelector('script#google-maps-script')) {
+      console.log('Google Maps API script is already being loaded');
       return;
     }
 
@@ -36,7 +49,13 @@ export function useGoogleMaps() {
     
     script.onload = () => {
       console.log('Google Maps API loaded successfully');
-      setIsLoaded(true);
+      if (window.google && window.google.maps && window.google.maps.places) {
+        console.log('Places API is available');
+        setIsLoaded(true);
+      } else {
+        console.error('Places library not available. Make sure it\'s enabled in your Google Cloud Console');
+        setLoadError(new Error('Google Maps Places library not available'));
+      }
     };
 
     script.onerror = (error) => {
@@ -44,6 +63,7 @@ export function useGoogleMaps() {
       setLoadError(new Error('Failed to load Google Maps API'));
     };
 
+    console.log('Adding Google Maps script to document head');
     document.head.appendChild(script);
 
     return () => {
