@@ -54,11 +54,22 @@ export const useLeadCheckout = (user: any) => {
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
         body: { 
           leadId: selectedLead.id 
+        },
+        headers: {
+          // Remove the x-application-name header that's causing CORS issues
+          // Let Supabase JS client handle the necessary headers
         }
       });
       
       if (error) {
         console.error('[CHECKOUT] Supabase function error:', error);
+        
+        // Check for CORS-related errors
+        if (error.message && error.message.includes("CORS") || error.message.includes("fetch")) {
+          console.error('[CHECKOUT] Possible CORS issue detected');
+          throw new Error(`CORS or network error: ${error.message}. Please check your network connection and browser settings.`);
+        }
+        
         throw new Error(`Function error: ${error.message || error.name || 'Unknown error'}`);
       }
       
@@ -97,9 +108,10 @@ export const useLeadCheckout = (user: any) => {
         toast.error('Authentication error. Please try logging out and back in.');
         console.error('[CHECKOUT] Authentication issue. User may need to re-authenticate.');
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || 
-                errorMessage.includes('send') || errorMessage.includes('connect')) {
-        toast.error('Network error. Please check your connection and try again.');
-        console.error('[CHECKOUT] Network connectivity issue. Edge function may be unreachable.');
+                errorMessage.includes('send') || errorMessage.includes('connect') ||
+                errorMessage.includes('CORS')) {
+        toast.error('Network or CORS error. Please check your connection and try again.');
+        console.error('[CHECKOUT] Network or CORS issue. Edge function may be unreachable.');
       } else {
         toast.error('Failed to initiate checkout: ' + errorMessage);
       }
