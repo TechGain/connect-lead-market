@@ -16,6 +16,7 @@ export interface Lead {
   contactPhone: string;
   appointmentTime?: string;
   address?: string;
+  zipCode?: string; // Added zipCode field
 }
 
 // Helper function to convert from database format to our app format
@@ -37,7 +38,8 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     contactPhone: dbLead.contact_phone || '',
     // These fields don't exist in DB schema but are used in the app
     appointmentTime: '',
-    address: ''
+    address: '',
+    zipCode: dbLead.zip_code || '' // Map zip_code from database
   };
 };
 
@@ -53,6 +55,7 @@ export const mapAppLeadToDbLead = (appLead: Omit<Lead, 'id'>): any => {
     seller_id: appLead.sellerId,
     contact_name: appLead.contactName,
     contact_email: appLead.contactEmail,
-    contact_phone: appLead.contactPhone
+    contact_phone: appLead.contactPhone,
+    zip_code: appLead.zipCode
   };
 };
