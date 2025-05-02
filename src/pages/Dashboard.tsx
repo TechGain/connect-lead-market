@@ -76,7 +76,10 @@ const Dashboard = () => {
     
     // Fix for the error - Ensure we're using numbers for division
     const soldLeadsCount = ensureNumber(soldLeads.length);
-    const averagePricePerLead = soldLeadsCount > 0 ? totalRevenue / soldLeadsCount : 0;
+    
+    // Fix - Convert values to numbers before arithmetic operations
+    const averagePricePerLead = totalRevenue > 0 && soldLeadsCount > 0 ? 
+      ensureNumber(totalRevenue) / ensureNumber(soldLeadsCount) : 0;
     
     // Generate monthly data
     const monthlyData = generateMonthlyData(soldLeads);
@@ -92,7 +95,7 @@ const Dashboard = () => {
       totalRevenue,
       totalSpent: 0, // Not relevant for sellers
       averagePricePerLead: averagePricePerLead || 0,
-      conversionRate: totalLeads > 0 ? Math.round((soldLeadsCount / totalLeads) * 100) : 0,
+      conversionRate: totalLeads > 0 ? Math.round((soldLeadsCount / ensureNumber(totalLeads)) * 100) : 0,
       monthlyLeadData: monthlyData,
       recentLeads
     });
@@ -118,7 +121,10 @@ const Dashboard = () => {
     
     // Fix for the error - Ensure we're using numbers for division
     const purchasedLeadsCount = ensureNumber(totalLeads);
-    const averageCostPerLead = purchasedLeadsCount > 0 ? totalSpent / purchasedLeadsCount : 0;
+    
+    // Fix - Convert values to numbers before arithmetic operations
+    const averageCostPerLead = totalSpent > 0 && purchasedLeadsCount > 0 ? 
+      ensureNumber(totalSpent) / ensureNumber(purchasedLeadsCount) : 0;
     
     // Generate monthly data for purchases
     const monthlyData = generateMonthlyData(purchasedLeads);
