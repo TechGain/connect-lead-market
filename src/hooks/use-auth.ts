@@ -84,24 +84,16 @@ export function useAuth() {
   }, [user]);
 
   useEffect(() => {
-    // Clear any session data on page load/refresh
-    const clearSessionOnPageLoad = () => {
-      console.log("Page loaded/refreshed - clearing session data");
-      localStorage.removeItem('supabase.auth.token');
-      sessionStorage.removeItem('supabase.auth.token');
-    };
-
-    // Execute immediately on first load
-    clearSessionOnPageLoad();
-
     // Check current auth state
     const checkUser = async () => {
       setIsLoadingUser(true);
       try {
+        console.log("Initial auth check - getting session");
         // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          console.log("Session found for user:", session.user.id);
           setUser(session.user);
           
           // Fetch the user's role
@@ -110,6 +102,7 @@ export function useAuth() {
           console.log("Initial role fetch result:", role, "for user:", session.user.id);
           setUserRole(role);
         } else {
+          console.log("No session found");
           setUser(null);
           setUserRole(null);
         }
@@ -277,15 +270,6 @@ export function useAuth() {
     try {
       console.log("Attempting to sign out");
       
-      // Clear state immediately without waiting for auth state change
-      setUser(null);
-      setUserRole(null);
-      console.log("User state cleared");
-      
-      // Clear all auth-related storage
-      localStorage.removeItem('supabase.auth.token');
-      sessionStorage.removeItem('supabase.auth.token');
-      
       // Then perform the actual signout
       const { error } = await supabase.auth.signOut();
       
@@ -293,6 +277,20 @@ export function useAuth() {
         console.error("Logout error:", error);
         throw error;
       }
+      
+      // Clear state after successful logout
+      setUser(null);
+      setUserRole(null);
+      
+      // Clear only profile-related cache, not the auth token
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('profile_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.removeItem('cachedUser');
+      
+      console.log("Sign out successful");
       
       // Force a page reload to clear any cached state
       window.location.href = '/';

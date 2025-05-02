@@ -64,6 +64,13 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               if (role !== dbRole) {
                 console.log("Setting role from database check:", dbRole);
                 setRole(dbRole as 'seller' | 'buyer');
+                
+                // Store in localStorage as backup
+                try {
+                  localStorage.setItem('user_role', dbRole);
+                } catch (err) {
+                  console.warn("Could not store role in localStorage", err);
+                }
               }
             }
           } else if (authRole) {
@@ -72,6 +79,30 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const success = await updateUserRole(user.id, authRole);
             if (success) {
               setRole(authRole);
+              
+              // Store in localStorage as backup
+              try {
+                localStorage.setItem('user_role', authRole);
+              } catch (err) {
+                console.warn("Could not store role in localStorage", err);
+              }
+            }
+          } else {
+            // Try to use cached role from localStorage as last resort
+            try {
+              const cachedRole = localStorage.getItem('user_role');
+              if (cachedRole === 'seller' || cachedRole === 'buyer') {
+                console.log("Using cached role from localStorage:", cachedRole);
+                setRole(cachedRole as 'seller' | 'buyer');
+                
+                // Try to update database with cached role
+                const success = await updateUserRole(user.id, cachedRole as 'seller' | 'buyer');
+                if (!success) {
+                  console.warn("Could not update database with cached role");
+                }
+              }
+            } catch (err) {
+              console.warn("Could not retrieve cached role", err);
             }
           }
         } catch (err) {
@@ -119,6 +150,14 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           
           if (dbRole === 'seller' || dbRole === 'buyer') {
             setRole(dbRole as 'seller' | 'buyer');
+            
+            // Update localStorage
+            try {
+              localStorage.setItem('user_role', dbRole);
+            } catch (err) {
+              console.warn("Could not store role in localStorage", err);
+            }
+            
             toast.success(`Your profile has been refreshed: ${dbRole}`);
           } else {
             toast.warning(`Invalid role found: ${dbRole}`);
@@ -129,6 +168,14 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const success = await updateUserRole(user.id, authRole);
           if (success) {
             setRole(authRole);
+            
+            // Update localStorage
+            try {
+              localStorage.setItem('user_role', authRole);
+            } catch (err) {
+              console.warn("Could not store role in localStorage", err);
+            }
+            
             toast.success(`Your profile has been updated with role: ${authRole}`);
           } else {
             toast.error("Failed to update your role");
