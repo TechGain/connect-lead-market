@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
@@ -12,6 +11,7 @@ export const useLeadCheckout = (user: any) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [redirectingToStripe, setRedirectingToStripe] = useState(false);
+  const [stripeUrl, setStripeUrl] = useState<string | null>(null);
   
   const handlePurchaseLead = (lead: Lead) => {
     // Reset any previous errors
@@ -37,6 +37,7 @@ export const useLeadCheckout = (user: any) => {
     try {
       setIsProcessing(true);
       setCheckoutError(null);
+      setStripeUrl(null);
       
       console.log("[CHECKOUT] Starting checkout process");
       console.log("[CHECKOUT] Lead ID:", selectedLead.id);
@@ -84,6 +85,9 @@ export const useLeadCheckout = (user: any) => {
         throw new Error('No checkout URL returned');
       }
       
+      // Store the URL for manual redirect fallback
+      setStripeUrl(data.url);
+      
       // Close the dialog and set redirecting state
       setIsPreviewDialogOpen(false);
       setRedirectingToStripe(true);
@@ -116,6 +120,7 @@ export const useLeadCheckout = (user: any) => {
       // Set detailed error for debugging
       setCheckoutError(errorMessage);
       setRedirectingToStripe(false);
+      setStripeUrl(null);
       
       // Show different messages based on error type
       if (errorMessage.includes('authentication') || errorMessage.includes('auth') || 
@@ -175,6 +180,7 @@ export const useLeadCheckout = (user: any) => {
     isProcessing,
     checkoutError,
     redirectingToStripe,
+    stripeUrl,
     handlePurchaseLead,
     setIsPreviewDialogOpen,
     initiateCheckout,

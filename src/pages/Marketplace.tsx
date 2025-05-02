@@ -42,6 +42,7 @@ const Marketplace = () => {
     isProcessing,
     redirectingToStripe,
     checkoutError,
+    stripeUrl,
     handlePurchaseLead,
     setIsPreviewDialogOpen,
     initiateCheckout,
@@ -111,6 +112,7 @@ const Marketplace = () => {
               isProcessing={isProcessing}
               redirectingToStripe={redirectingToStripe}
               checkoutError={checkoutError}
+              stripeUrl={stripeUrl}
               onClose={() => setIsPreviewDialogOpen(false)}
               onPurchase={initiateCheckout}
             />

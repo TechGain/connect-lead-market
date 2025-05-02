@@ -3,7 +3,7 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, ExternalLink } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -21,6 +21,7 @@ interface LeadPurchaseDialogProps {
   checkoutError?: string | null;
   onClose: () => void;
   onPurchase: () => void;
+  stripeUrl?: string | null;
 }
 
 const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
@@ -30,8 +31,16 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
   redirectingToStripe = false,
   checkoutError,
   onClose,
-  onPurchase
+  onPurchase,
+  stripeUrl
 }) => {
+  // Function to handle manual redirect if automatic redirect fails
+  const handleManualRedirect = () => {
+    if (stripeUrl) {
+      window.location.assign(stripeUrl);
+    }
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
@@ -42,15 +51,28 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        {redirectingToStripe ? (
+        {redirectingToStripe && (
           <div className="py-8 flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <div className="text-center">
               <p className="text-lg font-medium">Redirecting to secure checkout...</p>
               <p className="text-sm text-muted-foreground">Please do not close this window.</p>
+              
+              {stripeUrl && (
+                <Button 
+                  variant="link" 
+                  className="mt-4 flex items-center gap-2"
+                  onClick={handleManualRedirect}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Click here if not redirected automatically
+                </Button>
+              )}
             </div>
           </div>
-        ) : selectedLead && (
+        )}
+        
+        {!redirectingToStripe && selectedLead && (
           <div className="py-4">
             <div className="space-y-3">
               <div>
