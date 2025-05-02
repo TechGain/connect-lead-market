@@ -28,14 +28,6 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
       // If the role is valid, return it
       if (existingProfile.role === 'seller' || existingProfile.role === 'buyer') {
         console.log('Valid role found:', existingProfile.role);
-        
-        // Store in localStorage as backup
-        try {
-          localStorage.setItem('user_role', existingProfile.role);
-        } catch (err) {
-          console.warn("Could not store role in localStorage", err);
-        }
-        
         return existingProfile.role;
       }
       
@@ -55,14 +47,6 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
         }
         
         console.log('Profile role updated to:', role);
-        
-        // Store in localStorage as backup
-        try {
-          localStorage.setItem('user_role', role);
-        } catch (err) {
-          console.warn("Could not store role in localStorage", err);
-        }
-        
         return role;
       }
       
@@ -89,14 +73,6 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
     }
     
     console.log('New profile created with role:', defaultRole);
-    
-    // Store in localStorage as backup
-    try {
-      localStorage.setItem('user_role', defaultRole);
-    } catch (err) {
-      console.warn("Could not store role in localStorage", err);
-    }
-    
     return defaultRole;
   } catch (error) {
     console.error('Exception in ensureUserProfile:', error);
@@ -114,8 +90,6 @@ export async function getUserRole(userId: string): Promise<'seller' | 'buyer' | 
       return null;
     }
     
-    console.log('Getting user role for userId:', userId);
-    
     const { data, error } = await supabase
       .from('profiles')
       .select('role')
@@ -124,48 +98,17 @@ export async function getUserRole(userId: string): Promise<'seller' | 'buyer' | 
     
     if (error) {
       console.error('Error fetching user role:', error);
-      
-      // Try to fallback to cached role
-      try {
-        const cachedRole = localStorage.getItem('user_role');
-        if (cachedRole === 'seller' || cachedRole === 'buyer') {
-          console.log("Fallback to cached role from localStorage:", cachedRole);
-          return cachedRole as 'seller' | 'buyer';
-        }
-      } catch (err) {
-        console.warn("Could not retrieve cached role", err);
-      }
-      
       return null;
     }
     
     if (!data || !data.role) {
       console.warn('No role found for user:', userId);
-      
-      // Try to fallback to cached role
-      try {
-        const cachedRole = localStorage.getItem('user_role');
-        if (cachedRole === 'seller' || cachedRole === 'buyer') {
-          console.log("Fallback to cached role from localStorage:", cachedRole);
-          return cachedRole as 'seller' | 'buyer';
-        }
-      } catch (err) {
-        console.warn("Could not retrieve cached role", err);
-      }
-      
       return null;
     }
     
     // Normalize and validate role
     const normalizedRole = String(data.role).toLowerCase();
     if (normalizedRole === 'seller' || normalizedRole === 'buyer') {
-      // Store in localStorage as backup
-      try {
-        localStorage.setItem('user_role', normalizedRole);
-      } catch (err) {
-        console.warn("Could not store role in localStorage", err);
-      }
-      
       return normalizedRole as 'seller' | 'buyer';
     }
     
@@ -173,18 +116,6 @@ export async function getUserRole(userId: string): Promise<'seller' | 'buyer' | 
     return null;
   } catch (error) {
     console.error('Exception in getUserRole:', error);
-    
-    // Try to fallback to cached role
-    try {
-      const cachedRole = localStorage.getItem('user_role');
-      if (cachedRole === 'seller' || cachedRole === 'buyer') {
-        console.log("Exception fallback to cached role from localStorage:", cachedRole);
-        return cachedRole as 'seller' | 'buyer';
-      }
-    } catch (err) {
-      console.warn("Could not retrieve cached role", err);
-    }
-    
     return null;
   }
 }
@@ -224,14 +155,6 @@ export async function updateUserRole(userId: string, role: 'seller' | 'buyer'): 
       }
       
       console.log('Profile role successfully updated to:', role);
-      
-      // Store in localStorage as backup
-      try {
-        localStorage.setItem('user_role', role);
-      } catch (err) {
-        console.warn("Could not store role in localStorage", err);
-      }
-      
       return true;
     } else {
       // Create new profile if it doesn't exist
@@ -252,14 +175,6 @@ export async function updateUserRole(userId: string, role: 'seller' | 'buyer'): 
       }
       
       console.log('New profile created with role:', role);
-      
-      // Store in localStorage as backup
-      try {
-        localStorage.setItem('user_role', role);
-      } catch (err) {
-        console.warn("Could not store role in localStorage", err);
-      }
-      
       return true;
     }
   } catch (error) {

@@ -12,7 +12,7 @@ interface UserRoleContextType {
   user: any;
   login: (email: string, password: string) => Promise<any>;
   register: (email: string, password: string, role: 'seller' | 'buyer', fullName: string, company?: string) => Promise<any>;
-  logout: () => Promise<boolean>;
+  logout: () => Promise<void>;
   refreshUserRole: () => void;
 }
 
@@ -64,13 +64,6 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               if (role !== dbRole) {
                 console.log("Setting role from database check:", dbRole);
                 setRole(dbRole as 'seller' | 'buyer');
-                
-                // Store in localStorage as backup
-                try {
-                  localStorage.setItem('user_role', dbRole);
-                } catch (err) {
-                  console.warn("Could not store role in localStorage", err);
-                }
               }
             }
           } else if (authRole) {
@@ -79,30 +72,6 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const success = await updateUserRole(user.id, authRole);
             if (success) {
               setRole(authRole);
-              
-              // Store in localStorage as backup
-              try {
-                localStorage.setItem('user_role', authRole);
-              } catch (err) {
-                console.warn("Could not store role in localStorage", err);
-              }
-            }
-          } else {
-            // Try to use cached role from localStorage as last resort
-            try {
-              const cachedRole = localStorage.getItem('user_role');
-              if (cachedRole === 'seller' || cachedRole === 'buyer') {
-                console.log("Using cached role from localStorage:", cachedRole);
-                setRole(cachedRole as 'seller' | 'buyer');
-                
-                // Try to update database with cached role
-                const success = await updateUserRole(user.id, cachedRole as 'seller' | 'buyer');
-                if (!success) {
-                  console.warn("Could not update database with cached role");
-                }
-              }
-            } catch (err) {
-              console.warn("Could not retrieve cached role", err);
             }
           }
         } catch (err) {
@@ -150,14 +119,6 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           
           if (dbRole === 'seller' || dbRole === 'buyer') {
             setRole(dbRole as 'seller' | 'buyer');
-            
-            // Update localStorage
-            try {
-              localStorage.setItem('user_role', dbRole);
-            } catch (err) {
-              console.warn("Could not store role in localStorage", err);
-            }
-            
             toast.success(`Your profile has been refreshed: ${dbRole}`);
           } else {
             toast.warning(`Invalid role found: ${dbRole}`);
@@ -168,14 +129,6 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const success = await updateUserRole(user.id, authRole);
           if (success) {
             setRole(authRole);
-            
-            // Update localStorage
-            try {
-              localStorage.setItem('user_role', authRole);
-            } catch (err) {
-              console.warn("Could not store role in localStorage", err);
-            }
-            
             toast.success(`Your profile has been updated with role: ${authRole}`);
           } else {
             toast.error("Failed to update your role");
@@ -204,23 +157,6 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [authRole, role, isLoggedIn, user?.id, isLoading, isForceRefreshing]);
 
-  // Wrapper for logout to ensure proper state reset
-  const handleLogout = async (): Promise<boolean> => {
-    console.log("UserRoleProvider: handling logout");
-    
-    // Clear role state before calling the auth logout
-    setRole(null);
-    
-    const success = await logout();
-    
-    // Double-check that state is cleared
-    if (success) {
-      setRole(null);
-    }
-    
-    return success;
-  };
-
   const value = {
     isLoggedIn, 
     isLoading: isLoading || isForceRefreshing,
@@ -228,7 +164,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     user,
     login,
     register,
-    logout: handleLogout, // Use our wrapped version
+    logout,
     refreshUserRole
   };
 

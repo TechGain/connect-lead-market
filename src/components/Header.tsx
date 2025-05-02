@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -40,20 +41,9 @@ const Header = () => {
     }
   }, [isLoggedIn, role, isLoading, refreshUserRole]);
 
-  const handleLogout = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent any default action
-    console.log("Logout button clicked");
-    
-    try {
-      const success = await logout();
-      if (success) {
-        // Wait a moment for auth state to update
-        setTimeout(() => navigate('/'), 100); 
-      }
-    } catch (error) {
-      console.error("Error during logout:", error);
-      toast.error("Failed to log out. Please try again.");
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   const handleMarketplaceClick = () => {

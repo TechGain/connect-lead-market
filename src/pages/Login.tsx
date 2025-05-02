@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,9 +23,7 @@ const Login = () => {
 
   useEffect(() => {
     // If the user is already logged in, redirect them
-    if (isLoggedIn && role) {
-      console.log("Already logged in, redirecting based on role:", role);
-      
+    if (isLoggedIn) {
       // Check if we have a stored redirect path
       const redirectPath = sessionStorage.getItem('redirectAfterLogin');
       
@@ -54,24 +53,8 @@ const Login = () => {
             ? metadataRole as 'seller' | 'buyer'
             : 'buyer'; // Default to buyer
           
-          const assignedRole = await ensureUserProfile(user.id, validRole);
-          if (assignedRole) {
-            toast.info(`Your profile has been updated with role: ${assignedRole}`);
-            
-            // Store role in localStorage as backup
-            try {
-              localStorage.setItem('user_role', assignedRole);
-            } catch (err) {
-              console.warn("Could not store role in localStorage", err);
-            }
-            
-            // Redirect based on assigned role
-            if (assignedRole === 'seller') {
-              navigate('/my-leads');
-            } else {
-              navigate('/marketplace');
-            }
-          }
+          await ensureUserProfile(user.id, validRole);
+          toast.info(`Your profile has been updated with role: ${validRole}`);
         } catch (err) {
           console.error("Error fixing profile after login:", err);
         }
@@ -79,7 +62,7 @@ const Login = () => {
     };
     
     checkAndFixProfile();
-  }, [isLoggedIn, user?.id, role, navigate]);
+  }, [isLoggedIn, user?.id, role]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -151,15 +134,11 @@ const Login = () => {
                     required
                   />
                 </div>
-                
-                {error && (
-                  <div className="text-red-500 text-sm">{error}</div>
-                )}
               </CardContent>
               
               <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Logging in...' : 'Log In'}
+                <Button type="submit" className="w-full">
+                  Log In
                 </Button>
                 <div className="text-center text-sm">
                   Don't have an account?{' '}

@@ -31,6 +31,23 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>(null);
   
+  // Clear cached profile data on component mount
+  useEffect(() => {
+    // Clear any cached profile data
+    const clearCachedProfiles = () => {
+      console.log("Clearing cached profile data");
+      // Clear all profile-related items from localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('profile_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.removeItem('cachedUser');
+    };
+    
+    clearCachedProfiles();
+  }, []);
+  
   // Simple direct fetch function without complex hooks
   const fetchProfileData = async () => {
     console.log("Fetching profile data directly...");
@@ -80,9 +97,8 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
       
       console.log("Formatted profile:", formattedProfile);
       
-      // Cache for offline mode - use a consistent key
-      const cacheKey = `profile_${user.id}`;
-      localStorage.setItem(cacheKey, JSON.stringify(formattedProfile));
+      // Cache for offline mode
+      localStorage.setItem('profile_data', JSON.stringify(formattedProfile));
       
       setProfileData(formattedProfile);
       setError(null);
@@ -92,26 +108,20 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
       
       // Try to use cached data as fallback
       try {
-        if (user?.id) {
-          const cacheKey = `profile_${user.id}`;
-          const cachedData = localStorage.getItem(cacheKey);
-          if (cachedData) {
-            console.log("Using cached profile data");
-            setProfileData(JSON.parse(cachedData));
-            toast.warning("Using cached profile data");
-          } else {
-            console.log("No cached data for this user, using default");
-            // Use minimal default data as last resort
-            setProfileData({
-              ...DEFAULT_PROFILE_DATA,
-              name: user?.user_metadata?.full_name || 'User',
-              email: user?.email || '',
-              role: userRole || 'buyer'
-            });
-          }
+        const cachedData = localStorage.getItem('profile_data');
+        if (cachedData) {
+          console.log("Using cached profile data");
+          setProfileData(JSON.parse(cachedData));
+          toast.warning("Using cached profile data");
         } else {
-          // Absolute fallback
-          setProfileData(DEFAULT_PROFILE_DATA);
+          console.log("No cached data, using default");
+          // Use minimal default data as last resort
+          setProfileData({
+            ...DEFAULT_PROFILE_DATA,
+            name: user?.user_metadata?.full_name || 'User',
+            email: user?.email || '',
+            role: userRole || 'buyer'
+          });
         }
       } catch (cacheErr) {
         console.error("Cache retrieval error:", cacheErr);
@@ -140,8 +150,7 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
     isLoading, 
     hasError: !!error, 
     hasData: !!profileData,
-    isOffline,
-    userRole
+    isOffline
   });
   
   // Show loading state during initial load
