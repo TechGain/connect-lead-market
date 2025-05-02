@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +14,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { useLeadUpload } from '@/hooks/use-lead-upload';
+import { AddressAutocomplete } from './AddressAutocomplete';
 
 const LeadUploader = () => {
   const [leadType, setLeadType] = useState('');
@@ -28,7 +28,7 @@ const LeadUploader = () => {
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
-  const [zipCode, setZipCode] = useState(''); // Add zip code state
+  const [zipCode, setZipCode] = useState('');
   
   const { uploadLead, isUploading } = useLeadUpload();
 
@@ -40,6 +40,16 @@ const LeadUploader = () => {
     '2:00 PM - 4:00 PM',
     '4:00 PM - 6:00 PM',
   ];
+
+  // Handle address change with ZIP code auto-fill
+  const handleAddressChange = (newAddress: string) => {
+    setAddress(newAddress);
+  };
+
+  // Handle ZIP code auto-fill when an address is selected
+  const handleZipCodeFound = (newZipCode: string) => {
+    setZipCode(newZipCode);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +76,7 @@ const LeadUploader = () => {
         createdAt: new Date().toISOString(),
         appointmentTime: appointmentInfo,
         address,
-        zipCode, // Include zip code when creating a lead
+        zipCode,
       };
       
       const success = await uploadLead(newLead);
@@ -84,7 +94,7 @@ const LeadUploader = () => {
         setAppointmentDate(undefined);
         setAppointmentTimeSlot('');
         setAddress('');
-        setZipCode(''); // Reset zip code
+        setZipCode('');
       }
     } catch (error) {
       console.error('Error submitting lead:', error);
@@ -155,19 +165,15 @@ const LeadUploader = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Property Address field */}
-            <div className="space-y-2">
-              <Label htmlFor="address">Property Address *</Label>
-              <Input
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="123 Main St, City, State"
-                required
-              />
-            </div>
+            {/* Replace standard address input with AddressAutocomplete */}
+            <AddressAutocomplete
+              value={address}
+              onChange={handleAddressChange}
+              onZipCodeFound={handleZipCodeFound}
+              required={true}
+              id="address"
+            />
             
-            {/* Add ZIP Code field */}
             <div className="space-y-2">
               <Label htmlFor="zipCode">ZIP Code *</Label>
               <Input
