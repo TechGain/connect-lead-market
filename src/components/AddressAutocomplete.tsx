@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from '@/components/ui/label';
-import { AlertCircle, MapPin } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useGoogleMaps } from '@/hooks/use-google-maps';
 
 interface AddressAutocompleteProps {
@@ -24,16 +24,12 @@ export const AddressAutocomplete = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [autocompleteInitialized, setAutocompleteInitialized] = useState(false);
-  const [hasAttemptedInit, setHasAttemptedInit] = useState(false);
 
   // Initialize the autocomplete once the Google Maps API is loaded
   useEffect(() => {
     if (!isLoaded || !inputRef.current) return;
-    
+
     try {
-      console.log('Initializing Google Places Autocomplete');
-      
       // Create the autocomplete object
       autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
         types: ['address'],
@@ -49,8 +45,6 @@ export const AddressAutocomplete = ({
           setError('Invalid address selected');
           return;
         }
-
-        console.log('Place selected:', place);
 
         // Parse the address components
         let zipCode = '';
@@ -70,14 +64,9 @@ export const AddressAutocomplete = ({
         
         setError(null);
       });
-      
-      setAutocompleteInitialized(true);
-      setHasAttemptedInit(true);
-      console.log('Google Places Autocomplete initialized successfully');
     } catch (err) {
       console.error('Error initializing Google Maps Autocomplete:', err);
       setError('Failed to initialize address autocomplete');
-      setHasAttemptedInit(true);
     }
 
     // Clean up
@@ -88,63 +77,29 @@ export const AddressAutocomplete = ({
     };
   }, [isLoaded, onChange, onZipCodeFound]);
 
-  const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-  };
-
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>Property Address {required && '*'}</Label>
-      <div className="relative">
+      <div>
         <Input
           id={id}
           ref={inputRef}
           value={value}
-          onChange={handleManualChange}
+          onChange={(e) => onChange(e.target.value)}
           placeholder="Start typing address..."
           required={required}
           aria-invalid={!!error || !!loadError}
-          disabled={false}
-          className="pl-9"
+          disabled={!isLoaded}
         />
-        <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-        
         {(error || loadError) && (
           <div className="flex items-center text-sm text-red-500 mt-1">
             <AlertCircle className="h-4 w-4 mr-1" />
-            <span>
-              {error || 'Address autocomplete unavailable. You can still type your address manually.'}
-            </span>
+            <span>{error || loadError?.message || 'Error loading address autocomplete'}</span>
           </div>
         )}
-        
-        {isLoaded && autocompleteInitialized && !error && (
+        {isLoaded && !error && (
           <p className="text-xs text-muted-foreground mt-1">
             Start typing to see address suggestions
-          </p>
-        )}
-        
-        {isLoaded && !autocompleteInitialized && hasAttemptedInit && !error && !loadError && (
-          <p className="text-xs text-amber-500 mt-1">
-            Failed to initialize autocomplete but you can still enter address manually
-          </p>
-        )}
-        
-        {isLoaded && !autocompleteInitialized && !hasAttemptedInit && !error && !loadError && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Loading address autocomplete...
-          </p>
-        )}
-        
-        {!isLoaded && !loadError && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Loading address autocomplete...
-          </p>
-        )}
-        
-        {loadError && (
-          <p className="text-xs text-amber-500 mt-1">
-            Autocomplete unavailable. Please enter address manually.
           </p>
         )}
       </div>
