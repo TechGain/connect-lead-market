@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, DollarSign, UserCheck, Package, Activity } from 'lucide-react';
+import { ArrowUpRight, DollarSign, UserCheck, Package, Activity } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -20,19 +20,19 @@ const Dashboard = () => {
     }
   }, [isLoggedIn, navigate]);
   
-  // Mock data - in a real app, this would come from an API
+  // Reset all mock data to zero
   const dashboardData = {
-    totalLeads: role === 'seller' ? 48 : 23,
-    activeLeads: role === 'seller' ? 12 : null,
-    totalRevenue: role === 'seller' ? 4750 : null,
-    totalSpent: role === 'buyer' ? 2300 : null,
-    conversionRate: role === 'buyer' ? 68 : null,
+    totalLeads: 0,
+    activeLeads: 0,
+    totalRevenue: 0,
+    totalSpent: 0,
+    conversionRate: 0,
     monthlyLeadData: [
-      { name: 'Jan', value: role === 'seller' ? 4 : 2 },
-      { name: 'Feb', value: role === 'seller' ? 6 : 3 },
-      { name: 'Mar', value: role === 'seller' ? 8 : 5 },
-      { name: 'Apr', value: role === 'seller' ? 12 : 6 },
-      { name: 'May', value: role === 'seller' ? 18 : 7 },
+      { name: 'Jan', value: 0 },
+      { name: 'Feb', value: 0 },
+      { name: 'Mar', value: 0 },
+      { name: 'Apr', value: 0 },
+      { name: 'May', value: 0 },
     ]
   };
 
@@ -62,7 +62,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">{dashboardData.totalLeads}</div>
               <p className="text-xs text-muted-foreground">
-                +{role === 'seller' ? 12 : 5} from last month
+                +0 from last month
               </p>
             </CardContent>
           </Card>
@@ -82,10 +82,8 @@ const Dashboard = () => {
                 {role === 'seller' ? dashboardData.activeLeads : `${dashboardData.conversionRate}%`}
               </div>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
-                {role === 'seller' 
-                  ? <ArrowUpRight className="h-3 w-3 text-green-500" /> 
-                  : <ArrowDownRight className="h-3 w-3 text-red-500" />}
-                {role === 'seller' ? '+3 from last month' : '-2% from last month'}
+                <ArrowUpRight className="h-3 w-3 text-green-500" />
+                {role === 'seller' ? '+0 from last month' : '+0% from last month'}
               </p>
             </CardContent>
           </Card>
@@ -104,7 +102,7 @@ const Dashboard = () => {
               </div>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <ArrowUpRight className="h-3 w-3 text-green-500" />
-                +${role === 'seller' ? 850 : 450} from last month
+                +$0 from last month
               </p>
             </CardContent>
           </Card>
@@ -119,13 +117,10 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
-                {role === 'seller' 
-                  ? Math.round(dashboardData.totalRevenue! / dashboardData.totalLeads) 
-                  : Math.round(dashboardData.totalSpent! / dashboardData.totalLeads)}
+                $0
               </div>
               <p className="text-xs text-muted-foreground">
-                {role === 'seller' ? '+$12 from last month' : '-$8 from last month'}
+                +$0 from last month
               </p>
             </CardContent>
           </Card>
