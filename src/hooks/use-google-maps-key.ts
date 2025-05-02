@@ -31,6 +31,7 @@ export function useGoogleMapsKey() {
           throw new Error('No API key returned from server');
         }
         
+        console.log('Successfully retrieved Google Maps API key from Edge Function');
         setApiKey(data.apiKey);
         
       } catch (err) {

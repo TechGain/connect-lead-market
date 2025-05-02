@@ -25,6 +25,7 @@ export const AddressAutocomplete = ({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [autocompleteInitialized, setAutocompleteInitialized] = useState(false);
+  const [hasAttemptedInit, setHasAttemptedInit] = useState(false);
 
   // Initialize the autocomplete once the Google Maps API is loaded
   useEffect(() => {
@@ -49,6 +50,8 @@ export const AddressAutocomplete = ({
           return;
         }
 
+        console.log('Place selected:', place);
+
         // Parse the address components
         let zipCode = '';
         for (const component of place.address_components) {
@@ -69,10 +72,12 @@ export const AddressAutocomplete = ({
       });
       
       setAutocompleteInitialized(true);
+      setHasAttemptedInit(true);
       console.log('Google Places Autocomplete initialized successfully');
     } catch (err) {
       console.error('Error initializing Google Maps Autocomplete:', err);
       setError('Failed to initialize address autocomplete');
+      setHasAttemptedInit(true);
     }
 
     // Clean up
@@ -119,7 +124,13 @@ export const AddressAutocomplete = ({
           </p>
         )}
         
-        {isLoaded && !autocompleteInitialized && !error && !loadError && (
+        {isLoaded && !autocompleteInitialized && hasAttemptedInit && !error && !loadError && (
+          <p className="text-xs text-amber-500 mt-1">
+            Failed to initialize autocomplete but you can still enter address manually
+          </p>
+        )}
+        
+        {isLoaded && !autocompleteInitialized && !hasAttemptedInit && !error && !loadError && (
           <p className="text-xs text-muted-foreground mt-1">
             Loading address autocomplete...
           </p>
@@ -132,7 +143,7 @@ export const AddressAutocomplete = ({
         )}
         
         {loadError && (
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-amber-500 mt-1">
             Autocomplete unavailable. Please enter address manually.
           </p>
         )}

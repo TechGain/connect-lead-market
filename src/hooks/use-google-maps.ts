@@ -36,12 +36,14 @@ export function useGoogleMaps() {
     }
 
     // Skip if the script is already being loaded
-    if (document.querySelector('script#google-maps-script')) {
+    const existingScript = document.querySelector('script#google-maps-script');
+    if (existingScript) {
       console.log('Google Maps API script is already being loaded');
       return;
     }
 
-    console.log('Loading Google Maps API with key:', apiKey.substring(0, 5) + '...');
+    console.log('Loading Google Maps API with key starting with:', apiKey.substring(0, 5) + '...');
+    
     const script = document.createElement('script');
     script.id = 'google-maps-script';
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
@@ -50,7 +52,13 @@ export function useGoogleMaps() {
     
     script.onload = () => {
       console.log('Google Maps API loaded successfully');
-      setIsLoaded(true);
+      if (window.google && window.google.maps) {
+        console.log('Google Maps API object available in window');
+        setIsLoaded(true);
+      } else {
+        console.error('Google Maps API loaded but google.maps object not available');
+        setLoadError(new Error('Maps API loaded incorrectly'));
+      }
     };
 
     script.onerror = (error) => {
@@ -59,6 +67,7 @@ export function useGoogleMaps() {
     };
 
     document.head.appendChild(script);
+    console.log('Google Maps API script added to document head');
 
     return () => {
       // Clean up only if the component is unmounted before the script loads
