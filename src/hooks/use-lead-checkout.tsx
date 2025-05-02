@@ -37,19 +37,24 @@ export const useLeadCheckout = (user: any) => {
       setIsProcessing(true);
       setCheckoutError(null);
       
-      console.log("Starting checkout process for lead:", selectedLead.id);
-      console.log("Current user:", user.id);
+      console.log("[CHECKOUT] Starting checkout process");
+      console.log("[CHECKOUT] Lead ID:", selectedLead.id);
+      console.log("[CHECKOUT] User ID:", user.id);
+      console.log("[CHECKOUT] User email:", user.email);
+      console.log("[CHECKOUT] Authentication status:", !!supabase.auth.getSession());
       
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
-        body: { leadId: selectedLead.id }
+        body: { 
+          leadId: selectedLead.id 
+        }
       });
       
       if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(`Function error: ${error.message}`);
+        console.error('[CHECKOUT] Supabase function error:', error);
+        throw new Error(`Function error: ${error.message || error.name || 'Unknown error'}`);
       }
       
-      console.log("Checkout function response:", data);
+      console.log("[CHECKOUT] Checkout function response:", data);
       
       if (!data) {
         throw new Error("No data returned from checkout function");
@@ -67,13 +72,13 @@ export const useLeadCheckout = (user: any) => {
       setIsPreviewDialogOpen(false);
       
       // Log the URL we're redirecting to
-      console.log("Redirecting to Stripe checkout:", data.url);
+      console.log("[CHECKOUT] Redirecting to Stripe checkout:", data.url);
       
       // Redirect to Stripe Checkout
       window.location.href = data.url;
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
-      console.error('Error initiating checkout:', error);
+      console.error('[CHECKOUT] Error initiating checkout:', error);
       
       // Set detailed error for debugging
       setCheckoutError(errorMessage);
@@ -82,7 +87,10 @@ export const useLeadCheckout = (user: any) => {
       if (errorMessage.includes('authentication') || errorMessage.includes('auth')) {
         toast.error('Authentication error. Please try logging out and back in.');
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        toast.error('Network error. Please check your connection.');
+        toast.error('Network error. Please check your connection and try again.');
+      } else if (errorMessage.includes('Failed to send')) {
+        toast.error('Could not connect to payment service. Please try again later.');
+        console.error('[CHECKOUT] Edge function connectivity issue. Make sure the Edge Function is deployed and accessible.');
       } else {
         toast.error('Failed to initiate checkout: ' + errorMessage);
       }
@@ -96,18 +104,18 @@ export const useLeadCheckout = (user: any) => {
       setIsProcessing(true);
       setCheckoutError(null);
       
-      console.log("Completing purchase for lead:", leadId);
+      console.log("[CHECKOUT] Completing purchase for lead:", leadId);
       
       const { data, error } = await supabase.functions.invoke('complete-lead-purchase', {
         body: { leadId }
       });
 
       if (error) {
-        console.error('Function error:', error);
+        console.error('[CHECKOUT] Function error:', error);
         throw new Error(error.message);
       }
       
-      console.log("Complete purchase response:", data);
+      console.log("[CHECKOUT] Complete purchase response:", data);
 
       if (!data.success) {
         throw new Error(data.error || 'Failed to complete purchase');
@@ -117,7 +125,7 @@ export const useLeadCheckout = (user: any) => {
       navigate('/purchases');
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
-      console.error('Error completing purchase:', error);
+      console.error('[CHECKOUT] Error completing purchase:', error);
       setCheckoutError(errorMessage);
       toast.error('Failed to complete the purchase: ' + errorMessage);
     } finally {

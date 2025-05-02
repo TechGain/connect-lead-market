@@ -3,7 +3,7 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -67,6 +67,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                   <div>
                     <p className="font-medium">Error</p>
                     <p>{checkoutError}</p>
+                    <p className="mt-1 text-xs">Please try again or contact support if this issue persists.</p>
                   </div>
                 </div>
               )}
@@ -86,7 +87,12 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
             onClick={onPurchase}
             disabled={isProcessing}
           >
-            {isProcessing ? 'Processing...' : `Purchase for ${selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}`}
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : `Purchase for ${selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}`}
           </Button>
         </DialogFooter>
       </DialogContent>
