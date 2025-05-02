@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
@@ -84,16 +83,6 @@ export function useAuth() {
   }, [user]);
 
   useEffect(() => {
-    // Clear any session data on page load/refresh
-    const clearSessionOnPageLoad = () => {
-      console.log("Page loaded/refreshed - clearing session data");
-      localStorage.removeItem('supabase.auth.token');
-      sessionStorage.removeItem('supabase.auth.token');
-    };
-
-    // Execute immediately on first load
-    clearSessionOnPageLoad();
-
     // Check current auth state
     const checkUser = async () => {
       setIsLoadingUser(true);
