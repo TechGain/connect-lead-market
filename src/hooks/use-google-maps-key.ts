@@ -26,9 +26,9 @@ export function useGoogleMapsKey() {
         
         console.log('Fetching Google Maps API key from Edge Function...');
         
-        // If no env key, fetch from Supabase Edge Function
+        // If no env key, fetch from Supabase Edge Function with proper error handling
         const { data, error: functionError } = await supabase.functions.invoke('get-google-maps-api-key', {
-          method: 'GET'
+          method: 'GET',
         });
         
         if (functionError) {
