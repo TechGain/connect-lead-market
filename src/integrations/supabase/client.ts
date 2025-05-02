@@ -9,13 +9,13 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create client with increased timeouts
+// Create client with sessions disabled for development purposes
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: true,
+      persistSession: false, // Disable session persistence for development
       autoRefreshToken: true,
       detectSessionInUrl: true
     },

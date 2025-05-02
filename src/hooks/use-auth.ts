@@ -82,6 +82,16 @@ export function useAuth() {
   }, [user]);
 
   useEffect(() => {
+    // Clear any session data on page load/refresh
+    const clearSessionOnPageLoad = () => {
+      console.log("Page loaded/refreshed - clearing session data");
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+    };
+
+    // Execute immediately on first load
+    clearSessionOnPageLoad();
+
     // Check current auth state
     const checkUser = async () => {
       setIsLoadingUser(true);
@@ -267,6 +277,10 @@ export function useAuth() {
       setUser(null);
       setUserRole(null);
       console.log("User state cleared");
+      
+      // Clear all auth-related storage
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
       
       // Then perform the actual signout
       const { error } = await supabase.auth.signOut();

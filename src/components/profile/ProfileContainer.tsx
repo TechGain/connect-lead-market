@@ -31,6 +31,23 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>(null);
   
+  // Clear cached profile data on component mount
+  useEffect(() => {
+    // Clear any cached profile data
+    const clearCachedProfiles = () => {
+      console.log("Clearing cached profile data");
+      // Clear all profile-related items from localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('profile_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.removeItem('cachedUser');
+    };
+    
+    clearCachedProfiles();
+  }, []);
+  
   // Simple direct fetch function without complex hooks
   const fetchProfileData = async () => {
     console.log("Fetching profile data directly...");

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { UserRoleProvider, useUserRole } from "./hooks/use-user-role";
 import { HelmetProvider } from 'react-helmet-async';
+import { useEffect } from "react";
 
 // Pages
 import Index from "./pages/Index";
@@ -19,7 +20,6 @@ import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import UploadLeads from "./pages/UploadLeads";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +30,21 @@ const queryClient = new QueryClient({
     }
   }
 });
+
+// Function to clear auth-related storage
+const clearAuthStorage = () => {
+  console.log("Clearing auth storage");
+  localStorage.removeItem('supabase.auth.token');
+  sessionStorage.removeItem('supabase.auth.token');
+  
+  // Clear all profile-related items from localStorage
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('profile_')) {
+      localStorage.removeItem(key);
+    }
+  });
+  localStorage.removeItem('cachedUser');
+};
 
 // Buyer Route Guard
 const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
@@ -58,39 +73,53 @@ const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <HelmetProvider>
-      <Router>
-        <TooltipProvider>
-          <UserRoleProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route 
-                path="/marketplace" 
-                element={
-                  <BuyerRoute>
-                    <Marketplace />
-                  </BuyerRoute>
-                } 
-              />
-              <Route path="/my-leads" element={<MyLeads />} />
-              <Route path="/purchases" element={<Purchases />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/upload-leads" element={<UploadLeads />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </UserRoleProvider>
-        </TooltipProvider>
-      </Router>
-    </HelmetProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Add event listener to clear auth storage on page refresh/unload
+  useEffect(() => {
+    window.addEventListener('beforeunload', clearAuthStorage);
+    
+    // Clear on initial load too
+    clearAuthStorage();
+    
+    return () => {
+      window.removeEventListener('beforeunload', clearAuthStorage);
+    };
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <Router>
+          <TooltipProvider>
+            <UserRoleProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route 
+                  path="/marketplace" 
+                  element={
+                    <BuyerRoute>
+                      <Marketplace />
+                    </BuyerRoute>
+                  } 
+                />
+                <Route path="/my-leads" element={<MyLeads />} />
+                <Route path="/purchases" element={<Purchases />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/upload-leads" element={<UploadLeads />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </UserRoleProvider>
+          </TooltipProvider>
+        </Router>
+      </HelmetProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
