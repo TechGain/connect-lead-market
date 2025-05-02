@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from "sonner";
-import { Lead } from '@/types/lead';
-import { fetchLeadsByBuyer, rateLead } from '@/lib/mock-data';
+import { Lead, mapDbLeadToAppLead } from '@/types/lead';
+import { rateLead } from '@/lib/mock-data';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 const Purchases = () => {
   const navigate = useNavigate();
@@ -41,8 +43,25 @@ const Purchases = () => {
       setIsLoading(true);
       try {
         if (user?.id) {
-          const leads = await fetchLeadsByBuyer(user.id);
-          setPurchasedLeads(leads);
+          console.log("Loading purchased leads for user:", user.id);
+          
+          // Fetch leads from Supabase where the current user is the buyer
+          const { data: leadsData, error } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('buyer_id', user.id)
+            .eq('status', 'sold')
+            .order('purchased_at', { ascending: false });
+            
+          if (error) {
+            throw error;
+          }
+          
+          // Map database leads to app format
+          const purchased = leadsData.map(mapDbLeadToAppLead);
+          console.log("Fetched purchased leads:", purchased.length);
+          
+          setPurchasedLeads(purchased);
         }
       } catch (error) {
         console.error('Error loading purchased leads:', error);
@@ -66,16 +85,22 @@ const Purchases = () => {
     if (!selectedLead || !user?.id) return;
     
     try {
-      const success = await rateLead(selectedLead.id, user.id, rating, review);
+      // Insert rating into lead_ratings table
+      const { error } = await supabase.from('lead_ratings').insert({
+        lead_id: selectedLead.id,
+        buyer_id: user.id,
+        rating: rating,
+        review: review
+      });
       
-      if (success) {
-        toast.success('Thank you for your feedback!');
-        setRatingDialogOpen(false);
-        
-        // Reset form
-        setRating(5);
-        setReview('');
-      }
+      if (error) throw error;
+      
+      toast.success('Thank you for your feedback!');
+      setRatingDialogOpen(false);
+      
+      // Reset form
+      setRating(5);
+      setReview('');
     } catch (error) {
       console.error('Error submitting rating:', error);
       toast.error('Failed to submit rating');
@@ -96,6 +121,7 @@ const Purchases = () => {
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin mr-2" />
             <p>Loading your purchases...</p>
           </div>
         ) : purchasedLeads.length > 0 ? (
