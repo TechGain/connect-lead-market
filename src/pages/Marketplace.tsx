@@ -70,8 +70,8 @@ const Marketplace = () => {
     handleCompletePurchase
   } = useLeadCheckout(user);
   
-  // Handle URL params after checkout
-  useCheckoutUrlParams(handleCompletePurchase);
+  // Fix: Pass all required arguments to useCheckoutUrlParams
+  useCheckoutUrlParams(handleCompletePurchase, user?.id, selectedLead?.id, isLoggedIn);
 
   // Function to handle refreshing auth
   const handleRefresh = () => {
