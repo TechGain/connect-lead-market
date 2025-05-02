@@ -58,7 +58,9 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       filtered = filtered.filter(lead => 
         lead.type.toLowerCase().includes(searchTerm) ||
         lead.location.toLowerCase().includes(searchTerm) ||
-        lead.description.toLowerCase().includes(searchTerm)
+        lead.description.toLowerCase().includes(searchTerm) ||
+        lead.zipCode?.toLowerCase().includes(searchTerm) ||
+        lead.firstName?.toLowerCase().includes(searchTerm)
       );
     }
     
@@ -70,7 +72,8 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
     
     if (filters.location) {
       filtered = filtered.filter(lead => 
-        lead.location.toLowerCase().includes(filters.location.toLowerCase())
+        lead.location.toLowerCase().includes(filters.location.toLowerCase()) ||
+        lead.zipCode?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
     

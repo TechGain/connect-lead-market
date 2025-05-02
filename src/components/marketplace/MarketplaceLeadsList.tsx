@@ -48,6 +48,7 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
           key={lead.id}
           lead={lead}
           onPurchase={onPurchase}
+          showFullDetails={false} // Never show full details in marketplace
         />
       ))}
     </div>

@@ -22,10 +22,17 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-medium text-lg">{lead.type}</h3>
-            <div className="flex items-center text-gray-500 mt-1">
-              <MapPin className="h-4 w-4 mr-1" />
-              <span>{lead.location}</span>
-            </div>
+            {showFullDetails ? (
+              <div className="flex items-center text-gray-500 mt-1">
+                <MapPin className="h-4 w-4 mr-1" />
+                <span>{lead.location}</span>
+              </div>
+            ) : (
+              <div className="flex items-center text-gray-500 mt-1">
+                <MapPin className="h-4 w-4 mr-1" />
+                <span>{lead.zipCode || 'Unknown ZIP'}</span>
+              </div>
+            )}
           </div>
           <Badge variant={lead.status === 'new' ? 'default' : 'secondary'}>
             {lead.status === 'new' ? 'Available' : 'Sold'}
@@ -57,8 +64,12 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
               )}
             </>
           ) : (
-            // Limited view - only show description and no contact info
-            <p className="text-gray-700 line-clamp-3">{lead.description}</p>
+            // Limited view - only show firstName for marketplace
+            <div className="space-y-2">
+              <p className="text-gray-700"><span className="font-medium">First Name:</span> {lead.firstName || 'Unknown'}</p>
+              <p className="text-gray-700"><span className="font-medium">Lead Type:</span> {lead.type}</p>
+              <p className="text-gray-700"><span className="font-medium">ZIP Code:</span> {lead.zipCode || 'Unknown'}</p>
+            </div>
           )}
         </div>
       </CardContent>
