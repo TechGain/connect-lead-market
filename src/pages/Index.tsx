@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,8 @@ const Index = () => {
             <div className="flex flex-col md:flex-row items-center">
               <div className="md:w-1/2 mb-8 md:mb-0">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">Connect, Buy & Sell Quality Leads</h1>
-                <p className="text-xl mb-6">The premier marketplace connecting lead generation companies with contractors looking for qualified leads. </p>
+                <p className="text-xl mb-6">The premier marketplace connecting lead generation companies with contractors looking for qualified leads. </p>
+                <p className="text-lg mb-6"><strong>100% money back guaranteed for unqualified leads</strong></p>
                 <div className="flex flex-wrap gap-4">
                   <Link to={isLoggedIn ? "/marketplace" : "/register"}>
                     <Button className="bg-white text-brand-600 hover:bg-gray-100">
