@@ -17,7 +17,9 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true, // Enable session persistence
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storageKey: 'supabase.auth.token', // Explicitly define storage key
+      storage: localStorage // Explicitly use localStorage
     },
     global: {
       // Increase default fetch timeout

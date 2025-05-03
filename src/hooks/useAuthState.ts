@@ -87,10 +87,12 @@ export function useAuthState() {
     const checkUser = async () => {
       setIsLoadingUser(true);
       try {
+        console.log("Checking current session...");
         // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          console.log("Session found, user is logged in:", session.user.id);
           setUser(session.user);
           
           // Fetch the user's role
@@ -99,6 +101,7 @@ export function useAuthState() {
           console.log("Initial role fetch result:", role, "for user:", session.user.id);
           setUserRole(role);
         } else {
+          console.log("No active session found");
           setUser(null);
           setUserRole(null);
         }
@@ -118,6 +121,7 @@ export function useAuthState() {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session?.user) {
+        console.log("User signed in:", session.user.id);
         setUser(session.user);
         
         // Fetch the user's role
@@ -126,12 +130,14 @@ export function useAuthState() {
         setUserRole(role);
         
       } else if (event === 'SIGNED_OUT') {
+        console.log("User signed out, clearing state");
         setUser(null);
         setUserRole(null);
       }
     });
 
     return () => {
+      console.log("Cleaning up auth listener");
       authListener.subscription.unsubscribe();
     };
   }, []);

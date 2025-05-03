@@ -112,19 +112,39 @@ export function useAuthActions() {
       console.log("Attempting to sign out");
       setIsLoading(true);
       
-      // Perform the actual signout
-      const { error } = await supabase.auth.signOut();
+      // Perform the actual signout with more complete options
+      const { error } = await supabase.auth.signOut({
+        scope: 'global' // This ensures all devices/tabs are signed out
+      });
       
       if (error) {
         console.error("Logout error:", error);
         throw error;
       }
       
-      // Clear any local state if needed
-      console.log("Signout successful, redirecting to home");
+      // Clear any persisted data that might be causing issues
+      try {
+        // Clear any profile or role data from localStorage
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('profile_') || 
+              key.startsWith('supabase.auth') || 
+              key.includes('role') || 
+              key === 'cachedUser') {
+            console.log("Clearing storage item:", key);
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        console.error("Error clearing localStorage:", e);
+      }
       
-      // Force a page reload to clear any cached state
-      window.location.href = '/';
+      console.log("Signout successful, forcing navigation to home");
+      
+      // Force a complete page reload to clear any cached state
+      // Add a small delay to ensure supabase has time to complete the signout
+      setTimeout(() => {
+        window.location.replace('/');
+      }, 100);
       
       toast.success('Signed out successfully');
     } catch (error: any) {
