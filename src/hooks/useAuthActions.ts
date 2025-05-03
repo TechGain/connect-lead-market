@@ -120,6 +120,9 @@ export function useAuthActions() {
         throw error;
       }
       
+      // Clear any local state if needed
+      console.log("Signout successful, redirecting to home");
+      
       // Force a page reload to clear any cached state
       window.location.href = '/';
       
