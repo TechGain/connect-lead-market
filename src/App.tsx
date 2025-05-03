@@ -32,21 +32,6 @@ const queryClient = new QueryClient({
   }
 });
 
-// Function to clear auth-related storage
-const clearAuthStorage = () => {
-  console.log("Clearing auth storage");
-  localStorage.removeItem('supabase.auth.token');
-  sessionStorage.removeItem('supabase.auth.token');
-  
-  // Clear all profile-related items from localStorage
-  Object.keys(localStorage).forEach(key => {
-    if (key.startsWith('profile_')) {
-      localStorage.removeItem(key);
-    }
-  });
-  localStorage.removeItem('cachedUser');
-};
-
 // Buyer Route Guard
 const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn, role, isLoading } = useUserRole();
@@ -75,18 +60,6 @@ const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  // Add event listener to clear auth storage on page refresh/unload
-  useEffect(() => {
-    window.addEventListener('beforeunload', clearAuthStorage);
-    
-    // Clear on initial load too
-    clearAuthStorage();
-    
-    return () => {
-      window.removeEventListener('beforeunload', clearAuthStorage);
-    };
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>

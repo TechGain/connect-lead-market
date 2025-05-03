@@ -9,18 +9,17 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create client with sessions disabled for development purposes
+// Create client with session persistence enabled
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: false, // Disable session persistence for development
+      persistSession: true, // Enable session persistence
       autoRefreshToken: true,
       detectSessionInUrl: true
     },
     global: {
-      // Remove the custom header that's causing CORS issues
       // Increase default fetch timeout
       fetch: (url, options) => {
         return fetch(url, { 
