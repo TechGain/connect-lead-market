@@ -83,30 +83,39 @@ export function useAuthState() {
   }, [user]);
 
   useEffect(() => {
-    // Check current auth state
-    const checkUser = async () => {
-      setIsLoadingUser(true);
+    const fetchInitialSession = async () => {
       try {
-        console.log("Checking current session...");
-        // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Fetching initial session...");
         
-        if (session?.user) {
-          console.log("Session found, user is logged in:", session.user.id);
-          setUser(session.user);
+        // Get current session
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error fetching session:", error);
+          setUser(null);
+          setUserRole(null);
+          setIsLoadingUser(false);
+          return;
+        }
+        
+        if (data?.session) {
+          console.log("Initial session found:", data.session.user.id);
+          setUser(data.session.user);
           
-          // Fetch the user's role
-          console.log("Fetching initial role for user:", session.user.id);
-          const role = await getUserRole(session.user.id);
-          console.log("Initial role fetch result:", role, "for user:", session.user.id);
-          setUserRole(role);
+          // Fetch role for user
+          if (data.session.user.id) {
+            console.log("Fetching role for user:", data.session.user.id);
+            const role = await getUserRole(data.session.user.id);
+            console.log("Initial user role:", role);
+            setUserRole(role);
+          }
         } else {
           console.log("No active session found");
           setUser(null);
           setUserRole(null);
         }
-      } catch (error) {
-        console.error('Error fetching auth user:', error);
+      } catch (err) {
+        console.error("Error in initial session fetch:", err);
         setUser(null);
         setUserRole(null);
       } finally {
@@ -114,27 +123,38 @@ export function useAuthState() {
       }
     };
     
-    checkUser();
-    
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // First set up the auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log("User signed in:", session.user.id);
+        console.log("Auth event: User signed in:", session.user.id);
         setUser(session.user);
         
-        // Fetch the user's role
-        const role = await getUserRole(session.user.id);
-        console.log("Auth state change role fetch:", role);
-        setUserRole(role);
-        
-      } else if (event === 'SIGNED_OUT') {
-        console.log("User signed out, clearing state");
+        // Handle role in a separate non-blocking call to avoid Supabase listener deadlocks
+        setTimeout(async () => {
+          try {
+            const role = await getUserRole(session.user.id);
+            console.log("Role fetched after sign in:", role);
+            setUserRole(role);
+          } catch (e) {
+            console.error("Error fetching role after sign in:", e);
+          }
+        }, 0);
+      } 
+      else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        console.log("Auth event: User signed out");
         setUser(null);
         setUserRole(null);
       }
+      else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log("Auth event: Token refreshed, updating user");
+        setUser(session.user);
+      }
     });
+    
+    // Then check for existing session
+    fetchInitialSession();
 
     return () => {
       console.log("Cleaning up auth listener");

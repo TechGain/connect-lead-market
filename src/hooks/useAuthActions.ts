@@ -109,10 +109,10 @@ export function useAuthActions() {
 
   const logout = async () => {
     try {
-      console.log("Attempting to sign out");
+      console.log("Starting logout process");
       setIsLoading(true);
       
-      // Perform the actual signout with more complete options
+      // First, perform a complete sign-out
       const { error } = await supabase.auth.signOut({
         scope: 'global' // This ensures all devices/tabs are signed out
       });
@@ -122,15 +122,24 @@ export function useAuthActions() {
         throw error;
       }
       
-      // Clear any persisted data that might be causing issues
+      console.log("Supabase signOut completed successfully");
+      
+      // Force clear all auth-related localStorage items
       try {
-        // Clear any profile or role data from localStorage
+        const authItems = ['supabase.auth.token', 'supabase.auth.refreshToken', 'sb-bfmxxuarnqmxqqnpxqjf-auth-token'];
+        authItems.forEach(key => {
+          console.log(`Clearing ${key} from localStorage`);
+          localStorage.removeItem(key);
+        });
+        
+        // Clear any other relevant items
         Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('profile_') || 
-              key.startsWith('supabase.auth') || 
-              key.includes('role') || 
-              key === 'cachedUser') {
-            console.log("Clearing storage item:", key);
+          if (key.includes('supabase') || 
+              key.includes('auth') || 
+              key.includes('user') || 
+              key.includes('profile') || 
+              key.includes('session')) {
+            console.log(`Clearing additional item: ${key}`);
             localStorage.removeItem(key);
           }
         });
@@ -138,15 +147,18 @@ export function useAuthActions() {
         console.error("Error clearing localStorage:", e);
       }
       
-      console.log("Signout successful, forcing navigation to home");
+      console.log("Logout successful, redirecting to home page");
       
-      // Force a complete page reload to clear any cached state
-      // Add a small delay to ensure supabase has time to complete the signout
-      setTimeout(() => {
-        window.location.replace('/');
-      }, 100);
-      
+      // Use a more forceful approach to redirect and clear state
       toast.success('Signed out successfully');
+      
+      // Use a small delay to ensure the toast is shown
+      setTimeout(() => {
+        // Force a complete page reload to clear any cached state
+        window.location.href = '/';
+        window.location.replace('/');
+      }, 500);
+      
     } catch (error: any) {
       console.error("Error during logout:", error);
       toast.error(error.message || 'Failed to sign out');

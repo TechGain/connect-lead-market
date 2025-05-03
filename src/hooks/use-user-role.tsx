@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
@@ -33,6 +32,14 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [role, setRole] = useState<'seller' | 'buyer' | null>(authRole);
   const [isForceRefreshing, setIsForceRefreshing] = useState(false);
 
+  // Keep the role in sync with auth role
+  useEffect(() => {
+    if (authRole !== role) {
+      console.log("UserRoleProvider - Auth role changed:", authRole);
+      setRole(authRole);
+    }
+  }, [authRole, role]);
+
   // Direct database check for user role - this is the primary source of truth
   useEffect(() => {
     async function fetchAndUpdateRole() {
@@ -49,7 +56,6 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             
           if (error) {
             console.error("Error directly fetching role:", error);
-            console.error("Error details:", error.message, error.code, error.details);
             return;
           }
           

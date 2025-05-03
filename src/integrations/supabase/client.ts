@@ -15,20 +15,11 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: true, // Enable session persistence
+      persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey: 'supabase.auth.token', // Explicitly define storage key
-      storage: localStorage // Explicitly use localStorage
-    },
-    global: {
-      // Increase default fetch timeout
-      fetch: (url, options) => {
-        return fetch(url, { 
-          ...options, 
-          signal: AbortSignal.timeout(15000) // 15 second timeout
-        });
-      }
+      storageKey: 'supabase.auth.token',
+      storage: window.localStorage // Make sure we explicitly use window.localStorage
     }
   }
 );
