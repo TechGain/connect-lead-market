@@ -38,7 +38,7 @@ const Index = () => {
                 </div>
               </div>
               <div className="md:w-1/2">
-                <img src="https://images.unsplash.com/photo-1586473219010-2ffc57b0d282?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80" alt="Lead Marketplace" className="rounded-lg shadow-lg w-full" />
+                <img src="/lovable-uploads/6bbd1604-1e91-478c-b078-65c2ccbb42d3.png" alt="StayConnect Logo" className="rounded-lg shadow-lg w-full" />
               </div>
             </div>
           </div>
@@ -141,7 +141,7 @@ const Index = () => {
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-xl mb-6 max-w-2xl mx-auto">
-              Join LeadMarket today and start growing your business with quality leads.
+              Join StayConnect today and start growing your business with quality leads.
             </p>
             <div className="flex justify-center gap-4">
               <Link to="/register?role=seller">

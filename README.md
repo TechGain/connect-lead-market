@@ -1,4 +1,5 @@
-# Welcome to your Lovable project
+
+# Welcome to your StayConnect project
 
 ## Project info
 
@@ -8,15 +9,15 @@
 
 There are several ways of editing your application.
 
-**Use Lovable**
+**Use StayConnect**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/14a3cedf-255d-498d-90f2-67c0737d3465) and start prompting.
+Simply visit the [StayConnect Project](https://lovable.dev/projects/14a3cedf-255d-498d-90f2-67c0737d3465) and start prompting.
 
-Changes made via Lovable will be committed automatically to this repo.
+Changes made via StayConnect will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in StayConnect.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,9 +63,9 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/14a3cedf-255d-498d-90f2-67c0737d3465) and click on Share -> Publish.
+Simply open [StayConnect](https://lovable.dev/projects/14a3cedf-255d-498d-90f2-67c0737d3465) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
+## Can I connect a custom domain to my StayConnect project?
 
 Yes, you can!
 
