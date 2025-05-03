@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getUserRole } from '@/utils/roleManager';
 
 /**
  * Hook for authentication actions (login, register, logout)
@@ -13,6 +12,7 @@ export function useAuthActions() {
   const login = async (email: string, password: string) => {
     try {
       console.log("Attempting login with:", { email });
+      setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -20,25 +20,13 @@ export function useAuthActions() {
       
       if (error) throw error;
       
-      // After successful login, explicitly fetch and set the role
-      if (data.user) {
-        // DIRECT DATABASE QUERY - Get role directly after login
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .maybeSingle();
-          
-        if (profileError) {
-          console.error("Error fetching profile after login:", profileError);
-        }
-      }
-      
       return data;
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error.message || 'Failed to sign in');
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,9 +90,6 @@ export function useAuthActions() {
         }
       }
       
-      // Add a log to confirm state was set
-      console.log("Registration complete - UserRole state set to:", role);
-      
       return data;
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -125,8 +110,9 @@ export function useAuthActions() {
   const logout = async () => {
     try {
       console.log("Attempting to sign out");
+      setIsLoading(true);
       
-      // Then perform the actual signout
+      // Perform the actual signout
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -141,6 +127,8 @@ export function useAuthActions() {
     } catch (error: any) {
       console.error("Error during logout:", error);
       toast.error(error.message || 'Failed to sign out');
+    } finally {
+      setIsLoading(false);
     }
   };
 

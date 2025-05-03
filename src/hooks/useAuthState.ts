@@ -21,9 +21,6 @@ export function useAuthState() {
     console.log("Refreshing role for user:", user.id);
     
     try {
-      // Force a delay to ensure any database updates have time to propagate
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       // DIRECT DATABASE QUERY - Get the role directly from the database
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
