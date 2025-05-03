@@ -126,6 +126,7 @@ const LeadUploader = () => {
                   <SelectItem value="insulation-services">Insulation Services</SelectItem>
                   <SelectItem value="smart-home-services">Smart Home Services</SelectItem>
                   <SelectItem value="foundation-repair">Foundation Repair</SelectItem>
+                  <SelectItem value="exterior-paint">Exterior Paint</SelectItem>
                 </SelectContent>
               </Select>
             </div>
