@@ -18,11 +18,8 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row items-center">
               <div className="md:w-1/2 mb-8 md:mb-0">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">Connect, Buy &amp; Sell Quality Leads
-              </h1>
-                <p className="text-xl mb-6">The premier marketplace connecting lead generation companies with contractors looking for qualified leads.
-
-Money back guaranteed for unqualified leads!</p>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">Connect, Buy & Sell Quality Leads</h1>
+                <p className="text-xl mb-6">The premier marketplace connecting lead generation companies with contractors looking for qualified leads. </p>
                 <div className="flex flex-wrap gap-4">
                   <Link to={isLoggedIn ? "/marketplace" : "/register"}>
                     <Button className="bg-white text-brand-600 hover:bg-gray-100">
