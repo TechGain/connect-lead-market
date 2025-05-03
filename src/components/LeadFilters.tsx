@@ -105,6 +105,7 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
                 <SelectItem value="smart-home-services">Smart Home Services</SelectItem>
                 <SelectItem value="foundation-repair">Foundation Repair</SelectItem>
                 <SelectItem value="exterior-paint">Exterior Paint</SelectItem>
+                <SelectItem value="interior-paint">Interior Paint</SelectItem>
               </SelectContent>
             </Select>
           </div>
