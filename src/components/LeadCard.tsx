@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import StarRating from '@/components/StarRating';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
 import { MapPin } from 'lucide-react';
 
@@ -21,7 +21,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="font-medium text-lg">{lead.type}</h3>
+            <h3 className="font-medium text-lg">{formatLeadType(lead.type)}</h3>
             {showFullDetails ? (
               <div className="flex items-center text-gray-500 mt-1">
                 <MapPin className="h-4 w-4 mr-1" />

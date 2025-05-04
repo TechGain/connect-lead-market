@@ -28,3 +28,16 @@ export function getRandomInt(min: number, max: number): number {
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+/**
+ * Formats a lead type from kebab-case to Title Case
+ * Example: "full-home-renovation" -> "Full Home Renovation"
+ */
+export function formatLeadType(type: string): string {
+  if (!type) return '';
+  
+  return type
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}

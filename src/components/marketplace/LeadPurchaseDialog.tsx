@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Lead } from '@/types/lead';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle, Loader2, ExternalLink } from 'lucide-react';
 import { 
@@ -77,7 +77,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
           <div className="py-4">
             <div className="space-y-3">
               <div>
-                <h3 className="font-medium text-lg">{selectedLead.type}</h3>
+                <h3 className="font-medium text-lg">{formatLeadType(selectedLead.type)}</h3>
                 <p className="text-gray-500">{selectedLead.location}</p>
               </div>
               
