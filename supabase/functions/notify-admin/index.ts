@@ -40,13 +40,13 @@ serve(async (req) => {
     const createdAt = payload.created_at;
     const metadata = payload.user_metadata || {};
     
-    // Admin email to receive notifications (can be configured later in environment variables)
-    const adminEmail = Deno.env.get("ADMIN_EMAIL") || "admin@yourdomain.com";
+    // Admin emails to receive notifications
+    const adminEmails = ["stayconnectorg@gmail.com", "poratitai@gmail.com"];
     
     // Create email content
     const emailResponse = await resend.emails.send({
       from: "Notifications <onboarding@resend.dev>",
-      to: adminEmail,
+      to: adminEmails,
       subject: "New User Signup Notification",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
