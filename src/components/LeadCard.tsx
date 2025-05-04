@@ -72,7 +72,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
             // Limited view - only show firstName for marketplace
             <div className="space-y-2">
               <p className="text-gray-700"><span className="font-medium">First Name:</span> {lead.firstName || 'Unknown'}</p>
-              <p className="text-gray-700"><span className="font-medium">Lead Type:</span> {lead.type}</p>
+              <p className="text-gray-700"><span className="font-medium">Lead Type:</span> {formatLeadType(lead.type)}</p>
               <p className="text-gray-700"><span className="font-medium">ZIP Code:</span> {lead.zipCode || 'Unknown'}</p>
             </div>
           )}
@@ -104,3 +104,4 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
 };
 
 export default LeadCard;
+

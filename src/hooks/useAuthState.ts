@@ -142,7 +142,7 @@ export function useAuthState() {
           }
         }, 0);
       } 
-      else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      else if (event === 'SIGNED_OUT') {
         console.log("Auth event: User signed out");
         setUser(null);
         setUserRole(null);
@@ -170,3 +170,4 @@ export function useAuthState() {
     refreshRole,
   };
 }
+
