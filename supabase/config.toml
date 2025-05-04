@@ -12,3 +12,9 @@ verify_jwt = true
 no_public_cache = true
 path = "complete-lead-purchase"
 import_map = "./import_map.json"
+
+[functions.notify-admin]
+verify_jwt = false
+no_public_cache = true
+path = "notify-admin"
+import_map = "./import_map.json"
