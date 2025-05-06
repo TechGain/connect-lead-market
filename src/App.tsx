@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { UserRoleProvider, useUserRole } from "./hooks/use-user-role";
 import { HelmetProvider } from 'react-helmet-async';
 import { useEffect } from "react";
+import { ChatWidget } from "./components/chat/ChatWidget";
 
 // Pages
 import Index from "./pages/Index";
@@ -96,6 +98,9 @@ const App = () => {
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              
+              {/* Chat Widget */}
+              <ChatWidget />
             </UserRoleProvider>
           </TooltipProvider>
         </Router>

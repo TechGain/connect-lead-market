@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chats: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       lead_ratings: {
         Row: {
           buyer_id: string
@@ -100,6 +130,41 @@ export type Database = {
           zip_code?: string | null
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          chat_id: string | null
+          content: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_type: string
+        }
+        Insert: {
+          chat_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_type: string
+        }
+        Update: {
+          chat_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
