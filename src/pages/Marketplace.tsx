@@ -12,7 +12,9 @@ import MarketplaceLeadsList from '@/components/marketplace/MarketplaceLeadsList'
 import LeadPurchaseDialog from '@/components/marketplace/LeadPurchaseDialog';
 import AuthStateDisplay from '@/components/marketplace/AuthStateDisplay';
 import { Button } from '@/components/ui/button';
+import { RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const Marketplace = () => {
   const [forceShowContent, setForceShowContent] = useState(false);
@@ -24,7 +26,8 @@ const Marketplace = () => {
     role,
     authLoading,
     authChecked,
-    authError
+    authError,
+    refreshUserRole
   } = useAuthCheck();
   
   // Leads management with filtering
@@ -32,7 +35,9 @@ const Marketplace = () => {
     filteredLeads,
     isLoading: leadsLoading,
     handleFilterChange,
-    resetFilters
+    resetFilters,
+    refreshLeads,
+    lastRefreshed
   } = useMarketplaceLeads(isLoggedIn || forceShowContent, role);
   
   // Lead checkout process
@@ -54,8 +59,26 @@ const Marketplace = () => {
 
   // Function to force show content
   const handleForceShow = () => {
+    localStorage.removeItem('supabase.auth.token');
+    sessionStorage.removeItem('supabase.auth.token');
+    
+    // Clean up any Supabase auth items
+    Object.keys(localStorage).forEach(key => {
+      if (key.includes('supabase') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
     setForceShowContent(true);
     toast.info("Showing marketplace content without authentication");
+  };
+  
+  // Function to handle refresh
+  const handleRefresh = async () => {
+    if (isLoggedIn) {
+      await refreshUserRole();
+    }
+    refreshLeads();
   };
 
   // Check if user is buyer or admin
@@ -95,10 +118,27 @@ const Marketplace = () => {
         {/* Show marketplace content when auth passes OR when forced */}
         {((isLoggedIn && canAccessMarketplace && !authLoading) || forceShowContent) && !leadsLoading && (
           <>
-            <MarketplaceHeader 
-              title="Lead Marketplace" 
-              description="Browse available leads from verified sellers" 
-            />
+            <div className="flex justify-between items-center mb-6">
+              <MarketplaceHeader 
+                title="Lead Marketplace" 
+                description="Browse available leads from verified sellers" 
+              />
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">
+                  Last updated: {format(lastRefreshed, 'h:mm:ss a')}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRefresh}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCcw size={16} />
+                  Refresh Data
+                </Button>
+              </div>
+            </div>
             
             <LeadFilters onFilterChange={handleFilterChange} />
             

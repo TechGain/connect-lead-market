@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { Lead, mapDbLeadToAppLead } from '@/types/lead';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,58 +8,65 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
   
-  // Load leads when shouldLoad is true (auth is successful or force show enabled)
-  useEffect(() => {
-    const loadLeads = async () => {
-      console.log('useMarketplaceLeads: checking if leads should be loaded', { shouldLoad });
+  // Extract the load leads function so we can call it manually
+  const loadLeads = useCallback(async () => {
+    console.log('useMarketplaceLeads: loading leads, force refresh triggered');
+    
+    setIsLoading(true);
+    try {
+      console.log('useMarketplaceLeads: loading ALL leads from Supabase...');
       
-      if (!shouldLoad) {
-        console.log('useMarketplaceLeads: not loading leads yet, waiting for auth or force show');
+      const { data: leadsData, error } = await supabase
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      
+      console.log('Raw leads data from Supabase:', leadsData);
+      
+      if (!leadsData || leadsData.length === 0) {
+        console.log('No leads returned from database');
+        setLeads([]);
+        setFilteredLeads([]);
+        setIsLoading(false);
         return;
       }
       
-      setIsLoading(true);
-      try {
-        console.log('useMarketplaceLeads: loading ALL leads from Supabase...');
-        
-        const { data: leadsData, error } = await supabase
-          .from('leads')
-          .select('*')
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          throw error;
-        }
-        
-        console.log('Raw leads data from Supabase:', leadsData);
-        
-        if (!leadsData || leadsData.length === 0) {
-          console.log('No leads returned from database');
-          setLeads([]);
-          setFilteredLeads([]);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Map database leads to app format and do NOT filter out sold ones
-        const allLeads = leadsData.map(mapDbLeadToAppLead);
-        
-        console.log('useMarketplaceLeads: loaded leads count:', allLeads.length);
-        console.log('Lead statuses:', allLeads.map(l => l.status).join(', '));
-        
-        setLeads(allLeads);
-        setFilteredLeads(allLeads);
-      } catch (error) {
-        console.error('Error loading marketplace leads:', error);
-        toast.error('Failed to load marketplace leads');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      // Map database leads to app format and do NOT filter out sold ones
+      const allLeads = leadsData.map(mapDbLeadToAppLead);
+      
+      console.log('useMarketplaceLeads: loaded leads count:', allLeads.length);
+      console.log('Lead statuses:', allLeads.map(l => l.status).join(', '));
+      
+      setLeads(allLeads);
+      setFilteredLeads(allLeads);
+      // Update last refreshed timestamp
+      setLastRefreshed(new Date());
+      toast.success('Marketplace data refreshed');
+    } catch (error) {
+      console.error('Error loading marketplace leads:', error);
+      toast.error('Failed to load marketplace leads');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  // Load leads when shouldLoad is true (auth is successful or force show enabled)
+  useEffect(() => {
+    console.log('useMarketplaceLeads: checking if leads should be loaded', { shouldLoad });
+    
+    if (!shouldLoad) {
+      console.log('useMarketplaceLeads: not loading leads yet, waiting for auth or force show');
+      return;
+    }
     
     loadLeads();
-  }, [shouldLoad]);
+  }, [shouldLoad, loadLeads]);
 
   const handleFilterChange = (filters: any) => {
     let filtered = [...leads];
@@ -109,6 +116,8 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
     filteredLeads,
     isLoading,
     handleFilterChange,
-    resetFilters
+    resetFilters,
+    refreshLeads: loadLeads,
+    lastRefreshed
   };
 };

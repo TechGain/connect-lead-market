@@ -2,7 +2,8 @@
 import React from 'react';
 import { Lead } from '@/types/lead';
 import LeadCard from '@/components/LeadCard';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface MarketplaceLeadsListProps {
   leads: Lead[];
@@ -17,6 +18,10 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   onPurchase,
   onResetFilters
 }) => {
+  // Count leads by status
+  const availableLeads = leads.filter(lead => lead.status === 'new').length;
+  const soldLeads = leads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -46,15 +51,30 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {leads.map(lead => (
-        <LeadCard
-          key={lead.id}
-          lead={lead}
-          onPurchase={lead.status === 'new' ? onPurchase : undefined}
-          showFullDetails={false} // Never show full details in marketplace
-        />
-      ))}
+    <div className="space-y-6">
+      {/* Display count info */}
+      <div className="flex flex-col gap-2">
+        <Alert variant="default" className="bg-blue-50 border border-blue-100">
+          <AlertDescription className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-blue-500" />
+            <span>
+              Showing {leads.length} leads ({availableLeads} available, {soldLeads} sold/pending)
+              {soldLeads > 0 && " - Sold leads appear with a gray background"}
+            </span>
+          </AlertDescription>
+        </Alert>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {leads.map(lead => (
+          <LeadCard
+            key={lead.id}
+            lead={lead}
+            onPurchase={lead.status === 'new' ? onPurchase : undefined}
+            showFullDetails={false} // Never show full details in marketplace
+          />
+        ))}
+      </div>
     </div>
   );
 };
