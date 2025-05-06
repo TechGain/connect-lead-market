@@ -10,17 +10,26 @@ interface MarketplaceLeadsListProps {
   isLoading: boolean;
   onPurchase: (lead: Lead) => void;
   onResetFilters: () => void;
+  leadCounts?: {
+    available: number;
+    sold: number;
+    pending: number;
+    total: number;
+  };
 }
 
 const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   leads,
   isLoading,
   onPurchase,
-  onResetFilters
+  onResetFilters,
+  leadCounts
 }) => {
-  // Count leads by status
-  const availableLeads = leads.filter(lead => lead.status === 'new').length;
-  const soldLeads = leads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
+  // Use provided leadCounts or calculate them here as fallback
+  const availableLeads = leadCounts?.available || leads.filter(lead => lead.status === 'new').length;
+  const soldLeads = leadCounts?.sold || leads.filter(lead => lead.status === 'sold').length;
+  const pendingLeads = leadCounts?.pending || leads.filter(lead => lead.status === 'pending').length;
+  const soldAndPendingLeads = soldLeads + pendingLeads;
   
   if (isLoading) {
     return (
@@ -58,8 +67,8 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
           <AlertDescription className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500" />
             <span>
-              Showing {leads.length} leads ({availableLeads} available, {soldLeads} sold/pending)
-              {soldLeads > 0 && " - Sold leads appear with a gray background"}
+              Showing {leads.length} leads ({availableLeads} available, {soldAndPendingLeads} sold/pending)
+              {soldAndPendingLeads > 0 && " - Sold leads appear with a gray background"}
             </span>
           </AlertDescription>
         </Alert>

@@ -9,6 +9,7 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
+  const [leadCounts, setLeadCounts] = useState({ available: 0, sold: 0, pending: 0, total: 0 });
   
   // Extract the load leads function so we can call it manually
   const loadLeads = useCallback(async () => {
@@ -33,6 +34,7 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
         console.log('No leads returned from database');
         setLeads([]);
         setFilteredLeads([]);
+        setLeadCounts({ available: 0, sold: 0, pending: 0, total: 0 });
         setIsLoading(false);
         return;
       }
@@ -40,8 +42,24 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       // Map database leads to app format and do NOT filter out sold ones
       const allLeads = leadsData.map(mapDbLeadToAppLead);
       
+      // Count leads by status
+      const availableCount = allLeads.filter(lead => lead.status === 'new').length;
+      const soldCount = allLeads.filter(lead => lead.status === 'sold').length;
+      const pendingCount = allLeads.filter(lead => lead.status === 'pending').length;
+      
+      setLeadCounts({
+        available: availableCount,
+        sold: soldCount,
+        pending: pendingCount,
+        total: allLeads.length
+      });
+      
       console.log('useMarketplaceLeads: loaded leads count:', allLeads.length);
-      console.log('Lead statuses:', allLeads.map(l => l.status).join(', '));
+      console.log('Lead statuses breakdown:', {
+        new: availableCount,
+        sold: soldCount,
+        pending: pendingCount
+      });
       
       setLeads(allLeads);
       setFilteredLeads(allLeads);
@@ -104,10 +122,34 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       filtered = filtered.filter(lead => lead.qualityRating >= filters.minRating);
     }
     
+    // Update counts for the filtered results
+    const availableCount = filtered.filter(lead => lead.status === 'new').length;
+    const soldCount = filtered.filter(lead => lead.status === 'sold').length;
+    const pendingCount = filtered.filter(lead => lead.status === 'pending').length;
+    
+    setLeadCounts({
+      available: availableCount,
+      sold: soldCount,
+      pending: pendingCount,
+      total: filtered.length
+    });
+    
     setFilteredLeads(filtered);
   };
   
   const resetFilters = () => {
+    // Reset counts to match all leads when filters are reset
+    const availableCount = leads.filter(lead => lead.status === 'new').length;
+    const soldCount = leads.filter(lead => lead.status === 'sold').length;
+    const pendingCount = leads.filter(lead => lead.status === 'pending').length;
+    
+    setLeadCounts({
+      available: availableCount,
+      sold: soldCount,
+      pending: pendingCount,
+      total: leads.length
+    });
+    
     setFilteredLeads(leads);
   };
 
@@ -118,6 +160,7 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
     handleFilterChange,
     resetFilters,
     refreshLeads: loadLeads,
-    lastRefreshed
+    lastRefreshed,
+    leadCounts
   };
 };
