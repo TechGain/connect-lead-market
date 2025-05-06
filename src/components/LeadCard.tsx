@@ -15,9 +15,27 @@ interface LeadCardProps {
   isPurchased?: boolean;
 }
 
-const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
+// New SoldOverlay component to show on sold leads
+const SoldOverlay: React.FC = () => {
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-10">
+      <div className="transform rotate-12">
+        <span className="text-4xl font-extrabold text-red-600 shadow-sm drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
+          SOLD
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
+  const isSold = lead.status === 'sold';
+  
+  return (
+    <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'opacity-90' : ''}`}>
+      {/* Render the SOLD overlay when the lead is sold */}
+      {isSold && <SoldOverlay />}
+      
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
@@ -89,6 +107,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
             <span className="font-bold text-lg">{formatCurrency(lead.price)}</span>
           </div>
           
+          {/* Only show the Buy Lead button for new leads */}
           {lead.status === 'new' && onPurchase && (
             <Button 
               size="sm" 
@@ -104,4 +123,3 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
 };
 
 export default LeadCard;
-

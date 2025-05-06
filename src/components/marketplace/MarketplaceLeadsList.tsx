@@ -47,7 +47,7 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
         <LeadCard
           key={lead.id}
           lead={lead}
-          onPurchase={onPurchase}
+          onPurchase={lead.status === 'new' ? onPurchase : undefined}
           showFullDetails={false} // Never show full details in marketplace
         />
       ))}
@@ -56,4 +56,3 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
 };
 
 export default MarketplaceLeadsList;
-

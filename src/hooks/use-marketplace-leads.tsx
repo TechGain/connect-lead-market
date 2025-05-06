@@ -26,7 +26,7 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
         const { data: leadsData, error } = await supabase
           .from('leads')
           .select('*')
-          .neq('status', 'sold')
+          // Removed the filter to exclude sold leads
           .order('created_at', { ascending: false });
           
         if (error) {
