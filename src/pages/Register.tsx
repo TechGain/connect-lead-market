@@ -57,6 +57,13 @@ const Register = () => {
       return;
     }
     
+    // Validate company name
+    if (!companyName.trim()) {
+      setRegistrationError("Company name is required");
+      toast.error("Company name is required");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -98,7 +105,7 @@ const Register = () => {
                 id: user.id,
                 full_name: name,
                 role: userRole,
-                company: companyName || null,
+                company: companyName,
                 created_at: new Date().toISOString()
               }, { onConflict: 'id' });
               
@@ -111,7 +118,7 @@ const Register = () => {
               // Double check that the profile was created correctly
               const { data: profileCheck } = await supabase
                 .from('profiles')
-                .select('role')
+                .select('role, company')
                 .eq('id', user.id)
                 .maybeSingle();
                 
@@ -222,15 +229,16 @@ const Register = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
-              {/* Modified to show company name field for both buyer and seller */}
+              {/* Modified to show company name field as required */}
               <div className="grid gap-2">
-                <Label htmlFor="company-name">Company Name {selectedRole !== 'seller' && <span className="text-xs text-muted-foreground">(Optional)</span>}</Label>
+                <Label htmlFor="company-name">Company Name</Label>
                 <Input
                   id="company-name"
                   placeholder="Company Name"
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
+                  required
                 />
               </div>
               {registrationError && (

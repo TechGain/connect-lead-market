@@ -46,14 +46,20 @@ export function useAuthActions() {
         throw new Error("Invalid role. Must be 'seller' or 'buyer'");
       }
       
-      // Sign up the user with role in metadata
+      // Validate company input
+      if (!company) {
+        throw new Error("Company name is required");
+      }
+      
+      // Sign up the user with role and company in metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-            role: role // Store role in user metadata
+            role: role,
+            company: company // Store company in user metadata
           }
         }
       });
@@ -73,7 +79,7 @@ export function useAuthActions() {
             id: data.user.id,
             full_name: fullName,
             role: role,
-            company: company || null
+            company: company // Ensure company is included in the profile
           };
           
           const { error: profileError } = await supabase
@@ -83,7 +89,7 @@ export function useAuthActions() {
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);
           } else {
-            console.log("Profile successfully created with role:", role);
+            console.log("Profile successfully created with role and company:", { role, company });
           }
         } catch (err) {
           console.error("Exception creating profile during registration:", err);
