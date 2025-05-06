@@ -17,7 +17,7 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   onPurchase,
   onResetFilters
 }) => {
-  // Count data is kept but not displayed anymore
+  // Variables are kept for future use but not displayed
   const availableLeads = leads.filter(lead => lead.status === 'new').length;
   const soldLeads = leads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
   
@@ -51,7 +51,7 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* No Alert component or lead count message displayed here */}
+      {/* No lead count information displayed here */}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {leads.map(lead => (
