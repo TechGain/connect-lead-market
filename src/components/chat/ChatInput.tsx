@@ -8,12 +8,14 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
   placeholder?: string;
+  isAdmin?: boolean;
 }
 
 export const ChatInput = ({ 
   onSendMessage, 
   isLoading = false,
-  placeholder = "Type your message here..."
+  placeholder = "Type your message here...",
+  isAdmin = false
 }: ChatInputProps) => {
   const [message, setMessage] = useState('');
 
@@ -52,3 +54,4 @@ export const ChatInput = ({
     </form>
   );
 };
+

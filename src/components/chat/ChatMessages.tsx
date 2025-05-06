@@ -7,12 +7,14 @@ interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  isAdmin?: boolean;
 }
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ 
   messages, 
   isLoading, 
-  messagesEndRef 
+  messagesEndRef,
+  isAdmin = false
 }) => {
   return (
     <div className="flex-1 overflow-y-auto p-4">
@@ -39,3 +41,4 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     </div>
   );
 };
+

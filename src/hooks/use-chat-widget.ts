@@ -201,16 +201,20 @@ export const useChatWidget = () => {
     if (!currentChatId || !content) return;
 
     try {
-      // Optimistically update UI with temporary ID
+      // Determine sender type based on user role
+      const senderType: 'user' | 'rep' = isAdmin ? 'rep' : 'user';
+      
+      // Create a properly typed temporary message
       const tempId = `temp-${Date.now()}`;
-      const tempMessage = {
+      const tempMessage: Message = {
         id: tempId,
         content,
-        sender_type: isAdmin ? 'rep' : 'user' as const,
+        sender_type: senderType,
         created_at: new Date().toISOString(),
         sender_name: isAdmin ? 'Support Team' : user?.user_metadata?.full_name || 'User'
       };
       
+      // Add temporary message to the UI
       setMessages(prev => [...prev, tempMessage]);
 
       // Add the message to the database
@@ -218,7 +222,7 @@ export const useChatWidget = () => {
         .from('messages')
         .insert({
           chat_id: currentChatId,
-          sender_type: isAdmin ? 'rep' : 'user',
+          sender_type: senderType,
           content,
           sender_name: isAdmin ? 'Support Team' : user?.user_metadata?.full_name || 'User'
         })
@@ -255,14 +259,9 @@ export const useChatWidget = () => {
         });
       }
 
-      // Replace temp message with real message
+      // Replace temp message with real message - ensure proper typing
       setMessages(prev => prev.map(msg => 
-        msg.id === tempId ? (
-          {
-            ...data, 
-            sender_name: isAdmin ? 'Support Team' : user?.user_metadata?.full_name || 'User'
-          } as Message
-        ) : msg
+        msg.id === tempId ? {...data as Message} : msg
       ));
     } catch (error) {
       console.error('Error sending message:', error);
@@ -288,3 +287,4 @@ export const useChatWidget = () => {
 };
 
 export type { Message };
+
