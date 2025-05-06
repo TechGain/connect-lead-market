@@ -17,7 +17,8 @@ interface LeadCardProps {
 }
 
 const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
-  const isSold = lead.status === 'sold';
+  // Check if lead is sold explicitly
+  const isSold = lead.status === 'sold' || lead.status === 'pending';
   
   // Format date for display
   const formattedDate = lead.createdAt ? format(new Date(lead.createdAt), 'MMM d, yyyy h:mm a') : 'Unknown date';
@@ -26,7 +27,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
   const isConfirmed = lead.confirmationStatus === 'confirmed';
   
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow relative">
+    <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'bg-gray-50' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>

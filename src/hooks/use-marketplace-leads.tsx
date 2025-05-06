@@ -21,10 +21,7 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       
       setIsLoading(true);
       try {
-        console.log('useMarketplaceLeads: loading marketplace leads from Supabase...');
-        
-        // Explicitly debug what we're fetching
-        console.log('Fetching ALL leads including sold ones');
+        console.log('useMarketplaceLeads: loading ALL leads from Supabase...');
         
         const { data: leadsData, error } = await supabase
           .from('leads')
@@ -35,16 +32,24 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
           throw error;
         }
         
-        // Explicitly log what we got back
         console.log('Raw leads data from Supabase:', leadsData);
         
-        // Map database leads to app format
-        const availableLeads = leadsData.map(mapDbLeadToAppLead);
-        console.log('useMarketplaceLeads: loaded leads count:', availableLeads.length);
-        console.log('Lead statuses:', availableLeads.map(l => l.status).join(', '));
+        if (!leadsData || leadsData.length === 0) {
+          console.log('No leads returned from database');
+          setLeads([]);
+          setFilteredLeads([]);
+          setIsLoading(false);
+          return;
+        }
         
-        setLeads(availableLeads);
-        setFilteredLeads(availableLeads);
+        // Map database leads to app format and do NOT filter out sold ones
+        const allLeads = leadsData.map(mapDbLeadToAppLead);
+        
+        console.log('useMarketplaceLeads: loaded leads count:', allLeads.length);
+        console.log('Lead statuses:', allLeads.map(l => l.status).join(', '));
+        
+        setLeads(allLeads);
+        setFilteredLeads(allLeads);
       } catch (error) {
         console.error('Error loading marketplace leads:', error);
         toast.error('Failed to load marketplace leads');
