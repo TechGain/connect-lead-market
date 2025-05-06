@@ -1,30 +1,31 @@
-
 export interface Lead {
   id: string;
   type: string;
   location: string;
-  description: string;
+  description?: string;
   price: number;
-  qualityRating: number;
+  qualityRating: number | null;
   status: 'new' | 'pending' | 'sold';
-  sellerId?: string;
+  sellerId: string;
+  sellerName?: string; // Added field
   buyerId?: string | null;
+  buyerName?: string | null; // Added field
   createdAt: string;
   purchasedAt?: string | null;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  appointmentTime?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
   address?: string;
-  zipCode?: string; 
+  zipCode?: string;
+  appointmentTime?: string;
   firstName?: string;
-  confirmationStatus: string; // Add the new field
+  confirmationStatus?: 'confirmed' | 'unconfirmed';
 }
 
 // Helper function to convert from database format to our app format
 export const mapDbLeadToAppLead = (dbLead: any): Lead => {
   // Extract the first name from the contact_name field
-  const firstName = dbLead.contact_name?.split(' ')[0] || '';
+  const firstName = dbLead.contact_name ? dbLead.contact_name.split(' ')[0] : undefined;
   
   // Get the zip code directly from the database field if available
   // Otherwise try to extract it from the location field as a fallback
@@ -39,17 +40,18 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     type: dbLead.type,
     location: dbLead.location,
     description: dbLead.description || '',
-    price: dbLead.price,
-    qualityRating: dbLead.quality_rating || 3,
+    price: parseFloat(dbLead.price) || 0,
+    qualityRating: dbLead.quality_rating,
     status: dbLead.status,
     sellerId: dbLead.seller_id,
+    sellerName: dbLead.seller_name, // Map the new field
     buyerId: dbLead.buyer_id,
+    buyerName: dbLead.buyer_name, // Map the new field
     createdAt: dbLead.created_at,
     purchasedAt: dbLead.purchased_at,
     contactName: dbLead.contact_name || '',
     contactEmail: dbLead.contact_email || '',
     contactPhone: dbLead.contact_phone || '',
-    appointmentTime: dbLead.appointment_time || '',
     address: dbLead.address || '', 
     zipCode: zipCode,
     firstName: firstName,
@@ -67,6 +69,7 @@ export const mapAppLeadToDbLead = (appLead: Omit<Lead, 'id'>): any => {
     quality_rating: appLead.qualityRating,
     status: appLead.status,
     seller_id: appLead.sellerId,
+    seller_name: appLead.sellerName, // Map the new field
     contact_name: appLead.contactName,
     contact_email: appLead.contactEmail,
     contact_phone: appLead.contactPhone,

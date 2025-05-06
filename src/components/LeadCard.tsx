@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar, Check, X } from 'lucide-react';
+import { MapPin, Calendar, Check, X, User } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -57,6 +57,14 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
             <Calendar className="h-4 w-4 mr-1" />
             <span>Added: {formattedDate}</span>
           </div>
+
+          {/* Display seller info */}
+          {lead.sellerName && (
+            <div className="flex items-center text-sm text-gray-500">
+              <User className="h-4 w-4 mr-1" />
+              <span>Seller: {lead.sellerName}</span>
+            </div>
+          )}
           
           {showFullDetails ? (
             <>
@@ -79,6 +87,9 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
                       <p>
                         <span className="font-medium">Appointment:</span> {lead.appointmentTime}
                       </p>
+                    )}
+                    {lead.buyerName && (
+                      <p><span className="font-medium">Buyer:</span> {lead.buyerName}</p>
                     )}
                   </div>
                 </div>

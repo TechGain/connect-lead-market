@@ -161,6 +161,18 @@ const LeadTable = ({ leads }: LeadTableProps) => {
                 </TableHead>
                 <TableHead 
                   className="cursor-pointer"
+                  onClick={() => sortLeads('sellerName')}
+                >
+                  Seller {renderSortIcon('sellerName')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => sortLeads('buyerName')}
+                >
+                  Buyer {renderSortIcon('buyerName')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer"
                   onClick={() => sortLeads('qualityRating')}
                 >
                   Quality {renderSortIcon('qualityRating')}
@@ -185,6 +197,8 @@ const LeadTable = ({ leads }: LeadTableProps) => {
                   <TableCell className="font-medium">{formatLeadType(lead.type)}</TableCell>
                   <TableCell>{lead.location}</TableCell>
                   <TableCell>${lead.price.toFixed(2)}</TableCell>
+                  <TableCell>{lead.sellerName || 'Unknown'}</TableCell>
+                  <TableCell>{lead.buyerName || '-'}</TableCell>
                   <TableCell>
                     {Array.from({ length: 5 }).map((_, i) => (
                       <span key={i} className={`text-lg ${i < (lead.qualityRating || 0) ? 'text-yellow-400' : 'text-gray-200'}`}>

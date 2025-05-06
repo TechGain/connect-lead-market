@@ -79,6 +79,7 @@ export type Database = {
           address: string | null
           appointment_time: string | null
           buyer_id: string | null
+          buyer_name: string | null
           confirmation_status: string
           contact_email: string | null
           contact_name: string | null
@@ -91,6 +92,7 @@ export type Database = {
           purchased_at: string | null
           quality_rating: number | null
           seller_id: string
+          seller_name: string | null
           status: string
           type: string
           zip_code: string | null
@@ -99,6 +101,7 @@ export type Database = {
           address?: string | null
           appointment_time?: string | null
           buyer_id?: string | null
+          buyer_name?: string | null
           confirmation_status?: string
           contact_email?: string | null
           contact_name?: string | null
@@ -111,6 +114,7 @@ export type Database = {
           purchased_at?: string | null
           quality_rating?: number | null
           seller_id: string
+          seller_name?: string | null
           status?: string
           type: string
           zip_code?: string | null
@@ -119,6 +123,7 @@ export type Database = {
           address?: string | null
           appointment_time?: string | null
           buyer_id?: string | null
+          buyer_name?: string | null
           confirmation_status?: string
           contact_email?: string | null
           contact_name?: string | null
@@ -131,6 +136,7 @@ export type Database = {
           purchased_at?: string | null
           quality_rating?: number | null
           seller_id?: string
+          seller_name?: string | null
           status?: string
           type?: string
           zip_code?: string | null
