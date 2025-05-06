@@ -13,7 +13,7 @@ interface Message {
 }
 
 export const useChatWidget = () => {
-  const { user, isLoggedIn } = useUserRole();
+  const { user, isLoggedIn, isAdmin } = useUserRole();
   const [isOpen, setIsOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -206,9 +206,9 @@ export const useChatWidget = () => {
       const tempMessage = {
         id: tempId,
         content,
-        sender_type: 'user' as const,
+        sender_type: isAdmin ? 'rep' : 'user' as const,
         created_at: new Date().toISOString(),
-        sender_name: user?.user_metadata?.full_name || 'User'
+        sender_name: isAdmin ? 'Support Team' : user?.user_metadata?.full_name || 'User'
       };
       
       setMessages(prev => [...prev, tempMessage]);
@@ -218,9 +218,9 @@ export const useChatWidget = () => {
         .from('messages')
         .insert({
           chat_id: currentChatId,
-          sender_type: 'user',
+          sender_type: isAdmin ? 'rep' : 'user',
           content,
-          sender_name: user?.user_metadata?.full_name || 'User'
+          sender_name: isAdmin ? 'Support Team' : user?.user_metadata?.full_name || 'User'
         })
         .select()
         .single();
@@ -232,19 +232,37 @@ export const useChatWidget = () => {
         processingLocalMessageIds.current.add(data.id);
       }
 
-      // Send notification for new message
-      await supabase.functions.invoke('send-chat-notification', {
-        body: {
-          chatId: currentChatId,
-          userName: isLoggedIn ? user?.user_metadata?.full_name : null,
-          userEmail: isLoggedIn ? user?.email : null,
-          message: content
-        }
-      });
+      // Send notification for new message (only for user messages, not admin responses)
+      if (!isAdmin) {
+        await supabase.functions.invoke('send-chat-notification', {
+          body: {
+            chatId: currentChatId,
+            userName: isLoggedIn ? user?.user_metadata?.full_name : null,
+            userEmail: isLoggedIn ? user?.email : null,
+            message: content,
+            isAdmin: false
+          }
+        });
+      } else {
+        // For admin messages, still notify but with isAdmin flag
+        await supabase.functions.invoke('send-chat-notification', {
+          body: {
+            chatId: currentChatId,
+            message: content,
+            isAdmin: true,
+            senderName: 'Support Team'
+          }
+        });
+      }
 
       // Replace temp message with real message
       setMessages(prev => prev.map(msg => 
-        msg.id === tempId ? ({...data, sender_name: user?.user_metadata?.full_name || 'User'} as Message) : msg
+        msg.id === tempId ? (
+          {
+            ...data, 
+            sender_name: isAdmin ? 'Support Team' : user?.user_metadata?.full_name || 'User'
+          } as Message
+        ) : msg
       ));
     } catch (error) {
       console.error('Error sending message:', error);
@@ -264,7 +282,8 @@ export const useChatWidget = () => {
     messages,
     messagesEndRef,
     handleInitialSubmit,
-    handleSendMessage
+    handleSendMessage,
+    isAdmin
   };
 };
 

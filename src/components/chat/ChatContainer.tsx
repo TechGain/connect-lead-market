@@ -17,6 +17,7 @@ interface ChatContainerProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   onInitialSubmit: (data: { name: string; email: string; message: string }) => void;
   onSendMessage: (message: string) => void;
+  isAdmin?: boolean;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -28,7 +29,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   messages,
   messagesEndRef,
   onInitialSubmit,
-  onSendMessage
+  onSendMessage,
+  isAdmin = false
 }) => {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -37,7 +39,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         side="right"
       >
         <ChatHeader 
-          title={chatStarted ? "Chat with Support" : "Contact Support"} 
+          title={chatStarted ? (isAdmin ? "Admin Support Chat" : "Chat with Support") : "Contact Support"} 
           onClose={() => setIsOpen(false)} 
         />
         
@@ -52,11 +54,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               messages={messages}
               isLoading={isLoadingMessages}
               messagesEndRef={messagesEndRef}
+              isAdmin={isAdmin}
             />
             
             <ChatInput 
               onSendMessage={onSendMessage} 
-              placeholder="Type your message here..."
+              placeholder={isAdmin ? "Type your response as Support Team..." : "Type your message here..."}
+              isAdmin={isAdmin}
             />
           </>
         )}

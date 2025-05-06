@@ -26,6 +26,7 @@ import SellerGuide from "./pages/SellerGuide";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import AdminChatDashboardPage from "./pages/AdminChatDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +58,29 @@ const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (role !== 'buyer') {
+    console.log("Access denied: User role is", role);
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Admin Route Guard
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isLoggedIn, role, isLoading } = useUserRole();
+  
+  // Show loading state while determining role
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <p>Loading...</p>
+    </div>;
+  }
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (role !== 'admin') {
     console.log("Access denied: User role is", role);
     return <Navigate to="/" replace />;
   }
@@ -96,6 +120,14 @@ const App = () => {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
+                <Route 
+                  path="/admin/chats" 
+                  element={
+                    <AdminRoute>
+                      <AdminChatDashboardPage />
+                    </AdminRoute>
+                  } 
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               

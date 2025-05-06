@@ -14,7 +14,8 @@ export const ChatWidget = () => {
     messages,
     messagesEndRef,
     handleInitialSubmit,
-    handleSendMessage
+    handleSendMessage,
+    isAdmin
   } = useChatWidget();
 
   return (
@@ -31,6 +32,7 @@ export const ChatWidget = () => {
         messagesEndRef={messagesEndRef}
         onInitialSubmit={handleInitialSubmit}
         onSendMessage={handleSendMessage}
+        isAdmin={isAdmin}
       />
     </>
   );
