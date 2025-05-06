@@ -44,6 +44,20 @@ const Index = () => {
     );
   };
   
+  // Function to conditionally render the guarantee text based on user role
+  const getGuaranteeText = () => {
+    if (!isLoggedIn) {
+      return null; // Don't show any guarantee text for logged out users
+    }
+    
+    if (role === 'seller') {
+      return <p className="text-lg mb-6"><strong>100% RETURN ON QUALIFIED SOLD LEADS!</strong></p>;
+    }
+    
+    // Default for buyers or admin
+    return <p className="text-lg mb-6"><strong>100% MONEY BACK GUARANTEED FOR UNQUALIFIED LEADS!</strong></p>;
+  };
+  
   return <div className="flex flex-col min-h-screen">
       <Header />
       
@@ -55,7 +69,7 @@ const Index = () => {
               <div className="md:w-1/2 mb-8 md:mb-0">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">Connect, Buy & Sell Quality Leads</h1>
                 <p className="text-xl mb-6">The premier marketplace connecting lead generation companies with contractors looking for qualified leads. </p>
-                <p className="text-lg mb-6"><strong>100% MONEY BACK GUARANTEED FOR UNQUALIFIED LEADS!</strong></p>
+                {getGuaranteeText()}
                 <div className="flex flex-wrap gap-4">
                   {getActionButton()}
                   <Link to="/about">
