@@ -43,8 +43,8 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
               </div>
             )}
           </div>
-          <Badge variant={lead.status === 'new' ? 'default' : 'secondary'}>
-            {lead.status === 'new' ? 'Available' : 'Sold'}
+          <Badge variant={isSold ? 'secondary' : 'default'}>
+            {isSold ? 'Sold' : 'Available'}
           </Badge>
         </div>
       </CardHeader>

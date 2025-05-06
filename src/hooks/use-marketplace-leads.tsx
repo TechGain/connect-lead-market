@@ -23,19 +23,25 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       try {
         console.log('useMarketplaceLeads: loading marketplace leads from Supabase...');
         
+        // Explicitly debug what we're fetching
+        console.log('Fetching ALL leads including sold ones');
+        
         const { data: leadsData, error } = await supabase
           .from('leads')
           .select('*')
-          // Load all leads without filtering out sold ones
           .order('created_at', { ascending: false });
           
         if (error) {
           throw error;
         }
         
+        // Explicitly log what we got back
+        console.log('Raw leads data from Supabase:', leadsData);
+        
         // Map database leads to app format
         const availableLeads = leadsData.map(mapDbLeadToAppLead);
-        console.log('useMarketplaceLeads: loaded leads:', availableLeads.length);
+        console.log('useMarketplaceLeads: loaded leads count:', availableLeads.length);
+        console.log('Lead statuses:', availableLeads.map(l => l.status).join(', '));
         
         setLeads(availableLeads);
         setFilteredLeads(availableLeads);

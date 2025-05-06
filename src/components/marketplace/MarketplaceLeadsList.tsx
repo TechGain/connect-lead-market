@@ -41,6 +41,10 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
     );
   }
 
+  // Debug what leads we're displaying
+  console.log('MarketplaceLeadsList: Displaying leads:', leads.length);
+  console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {leads.map(lead => (
