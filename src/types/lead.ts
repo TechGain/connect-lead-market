@@ -34,6 +34,17 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     zipCode = zipMatch ? zipMatch[0] : '';
   }
   
+  // Ensure status is explicitly mapped to one of our valid statuses
+  let status: 'new' | 'pending' | 'sold' = 'new';
+  if (dbLead.status === 'sold') {
+    status = 'sold';
+  } else if (dbLead.status === 'pending') {
+    status = 'pending';
+  }
+  
+  // Debug lead mapping
+  console.log(`Mapping lead ${dbLead.id}: DB status = "${dbLead.status}", mapped status = "${status}"`);
+  
   return {
     id: dbLead.id,
     type: dbLead.type,
@@ -41,7 +52,7 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     description: dbLead.description || '',
     price: dbLead.price,
     qualityRating: dbLead.quality_rating || 3,
-    status: dbLead.status,
+    status: status,
     sellerId: dbLead.seller_id,
     buyerId: dbLead.buyer_id,
     createdAt: dbLead.created_at,

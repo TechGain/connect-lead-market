@@ -42,10 +42,23 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       // Map database leads to app format and do NOT filter out sold ones
       const allLeads = leadsData.map(mapDbLeadToAppLead);
       
+      // Explicitly log each lead's status to debug
+      console.log('Lead statuses after mapping:');
+      allLeads.forEach(lead => {
+        console.log(`Lead ID: ${lead.id}, Status: ${lead.status}`);
+      });
+      
       // Count leads by status
       const availableCount = allLeads.filter(lead => lead.status === 'new').length;
       const soldCount = allLeads.filter(lead => lead.status === 'sold').length;
       const pendingCount = allLeads.filter(lead => lead.status === 'pending').length;
+      
+      console.log('Status counts calculation:', {
+        new: availableCount,
+        sold: soldCount,
+        pending: pendingCount,
+        total: allLeads.length
+      });
       
       setLeadCounts({
         available: availableCount,

@@ -58,6 +58,14 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   // Debug what leads we're displaying
   console.log('MarketplaceLeadsList: Displaying leads:', leads.length);
   console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
+  
+  // Additional debug information about leadCounts
+  console.log('Lead counts from props:', leadCounts);
+  console.log('Calculated counts in component:', {
+    available: availableLeads,
+    sold: soldLeads,
+    pending: pendingLeads
+  });
 
   return (
     <div className="space-y-6">
