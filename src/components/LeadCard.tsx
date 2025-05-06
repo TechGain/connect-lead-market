@@ -6,7 +6,8 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin } from 'lucide-react';
+import { MapPin, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface LeadCardProps {
   lead: Lead;
@@ -30,6 +31,9 @@ const SoldOverlay: React.FC = () => {
 
 const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
   const isSold = lead.status === 'sold';
+  
+  // Format date for display
+  const formattedDate = lead.createdAt ? format(new Date(lead.createdAt), 'MMM d, yyyy h:mm a') : 'Unknown date';
   
   return (
     <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'opacity-90' : ''}`}>
@@ -60,6 +64,12 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
       
       <CardContent className="py-2 flex-grow">
         <div className="space-y-3">
+          {/* Display upload date with calendar icon */}
+          <div className="flex items-center text-sm text-gray-500">
+            <Calendar className="h-4 w-4 mr-1" />
+            <span>Added: {formattedDate}</span>
+          </div>
+          
           {showFullDetails ? (
             <>
               <p className="text-gray-700">{lead.description}</p>
