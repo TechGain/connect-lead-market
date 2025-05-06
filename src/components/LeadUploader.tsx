@@ -77,6 +77,7 @@ const LeadUploader = () => {
         appointmentTime: appointmentInfo,
         address,
         zipCode,
+        confirmationStatus, // Include the confirmation status
       };
       
       const success = await uploadLead(newLead);

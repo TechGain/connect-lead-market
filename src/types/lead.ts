@@ -1,3 +1,4 @@
+
 export interface Lead {
   id: string;
   type: string;
@@ -16,7 +17,8 @@ export interface Lead {
   appointmentTime?: string;
   address?: string;
   zipCode?: string; 
-  firstName?: string; 
+  firstName?: string;
+  confirmationStatus: string; // Add the new field
 }
 
 // Helper function to convert from database format to our app format
@@ -47,12 +49,11 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     contactName: dbLead.contact_name || '',
     contactEmail: dbLead.contact_email || '',
     contactPhone: dbLead.contact_phone || '',
-    // These fields don't exist in DB schema but are used in the app
-    appointmentTime: '',
+    appointmentTime: dbLead.appointment_time || '',
     address: dbLead.address || '', 
-    // New derived fields
     zipCode: zipCode,
-    firstName: firstName
+    firstName: firstName,
+    confirmationStatus: dbLead.confirmation_status || 'confirmed' // Map the new field with default
   };
 };
 
@@ -70,6 +71,8 @@ export const mapAppLeadToDbLead = (appLead: Omit<Lead, 'id'>): any => {
     contact_email: appLead.contactEmail,
     contact_phone: appLead.contactPhone,
     address: appLead.address,
-    zip_code: appLead.zipCode // Add zip code to database mapping
+    zip_code: appLead.zipCode,
+    confirmation_status: appLead.confirmationStatus,
+    appointment_time: appLead.appointmentTime
   };
 };
