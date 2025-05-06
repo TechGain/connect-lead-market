@@ -138,6 +138,7 @@ export type Database = {
           created_at: string
           id: string
           read_at: string | null
+          sender_name: string | null
           sender_type: string
         }
         Insert: {
@@ -146,6 +147,7 @@ export type Database = {
           created_at?: string
           id?: string
           read_at?: string | null
+          sender_name?: string | null
           sender_type: string
         }
         Update: {
@@ -154,6 +156,7 @@ export type Database = {
           created_at?: string
           id?: string
           read_at?: string | null
+          sender_name?: string | null
           sender_type?: string
         }
         Relationships: [

@@ -1,4 +1,5 @@
 
+
 export type Json =
   | string
   | number
@@ -118,6 +119,64 @@ export interface Database {
           created_at?: string
         }
       }
+      messages: {
+        Row: {
+          id: string
+          chat_id: string | null
+          content: string
+          sender_type: string
+          created_at: string
+          read_at: string | null
+          sender_name: string | null
+        }
+        Insert: {
+          id?: string
+          chat_id?: string | null
+          content: string
+          sender_type: string
+          created_at?: string
+          read_at?: string | null
+          sender_name?: string | null
+        }
+        Update: {
+          id?: string
+          chat_id?: string | null
+          content?: string
+          sender_type?: string
+          created_at?: string
+          read_at?: string | null
+          sender_name?: string | null
+        }
+      }
+      chats: {
+        Row: {
+          id: string
+          user_id: string | null
+          user_name: string | null
+          user_email: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          user_name?: string | null
+          user_email?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          user_name?: string | null
+          user_email?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -130,3 +189,4 @@ export interface Database {
     }
   }
 }
+

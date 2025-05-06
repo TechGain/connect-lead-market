@@ -9,7 +9,7 @@ interface Message {
   content: string;
   sender_type: 'user' | 'rep';
   created_at: string;
-  sender_name?: string; // Add sender name field
+  sender_name?: string;
 }
 
 export const useChatWidget = () => {
@@ -162,7 +162,7 @@ export const useChatWidget = () => {
           chat_id: chatId,
           sender_type: 'user',
           content: message,
-          sender_name: name // Add sender name
+          sender_name: name
         })
         .select()
         .single();
@@ -208,7 +208,7 @@ export const useChatWidget = () => {
         content,
         sender_type: 'user' as const,
         created_at: new Date().toISOString(),
-        sender_name: user?.user_metadata?.full_name || 'User' // Add sender name
+        sender_name: user?.user_metadata?.full_name || 'User'
       };
       
       setMessages(prev => [...prev, tempMessage]);
@@ -220,7 +220,7 @@ export const useChatWidget = () => {
           chat_id: currentChatId,
           sender_type: 'user',
           content,
-          sender_name: user?.user_metadata?.full_name || 'User' // Add sender name
+          sender_name: user?.user_metadata?.full_name || 'User'
         })
         .select()
         .single();
