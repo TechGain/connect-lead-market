@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -9,19 +8,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-
 const Contact = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
       title: "Message sent",
-      description: "Thank you for contacting us. We'll get back to you soon.",
+      description: "Thank you for contacting us. We'll get back to you soon."
     });
     (e.target as HTMLFormElement).reset();
   };
-
-  return (
-    <div className="flex flex-col min-h-screen">
+  return <div className="flex flex-col min-h-screen">
       <Helmet>
         <title>Contact Us | StayConnect</title>
         <meta name="description" content="Contact StayConnect for lead generation and contractor connection services." />
@@ -60,7 +56,7 @@ const Contact = () => {
                   <MapPin className="h-5 w-5 text-brand-600 mt-1" />
                   <div>
                     <h3 className="font-medium">Location</h3>
-                    <p className="text-gray-600">Serving contractors and lead generators across the United States</p>
+                    <p className="text-gray-600">LA and the surrounding areas</p>
                   </div>
                 </div>
               </div>
@@ -125,12 +121,7 @@ const Contact = () => {
                         <label htmlFor="message" className="text-sm font-medium">
                           Message
                         </label>
-                        <Textarea
-                          id="message"
-                          placeholder="How can we help you?"
-                          className="min-h-[120px]"
-                          required
-                        />
+                        <Textarea id="message" placeholder="How can we help you?" className="min-h-[120px]" required />
                       </div>
                     </div>
                     <Button type="submit" className="w-full mt-4">
@@ -145,8 +136,6 @@ const Contact = () => {
       </main>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Contact;

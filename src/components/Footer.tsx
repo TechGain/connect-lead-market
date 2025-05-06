@@ -8,9 +8,7 @@ const Footer = () => {
             <Link to="/" className="flex items-center">
               <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">StayConnect</span>
             </Link>
-            <p className="mt-4 text-sm text-gray-600">
-              Connecting lead generation companies with contractors looking for quality leads.
-            </p>
+            <p className="mt-4 text-sm text-gray-600">We connect reputable lead generation companies with contractors seeking high-quality, targeted leads to support business growth and client acquisition.</p>
           </div>
           
           <div>
