@@ -17,7 +17,7 @@ serve(async (req) => {
   try {
     // Get the request body
     const requestData = await req.json();
-    const { chatId, userName, userEmail, message } = requestData;
+    const { chatId, userName, userEmail, message, isAdmin, senderName } = requestData;
     
     if (!chatId || !message) {
       throw new Error("Chat ID and message are required");
@@ -29,7 +29,16 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
 
-    // Add a response message from representative
+    // Skip adding a system response if message is coming from an admin
+    if (isAdmin) {
+      // For admin messages, we only log the successful reception
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Add a response message from representative for user messages
     const { data, error } = await supabaseAdmin
       .from("messages")
       .insert({

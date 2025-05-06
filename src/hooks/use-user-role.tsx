@@ -7,12 +7,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface UserRoleContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
-  role: 'seller' | 'buyer' | null;
+  role: 'seller' | 'buyer' | 'admin' | null;
   user: any;
   login: (email: string, password: string) => Promise<any>;
   register: (email: string, password: string, role: 'seller' | 'buyer', fullName: string, company?: string) => Promise<any>;
   logout: () => Promise<void>;
   refreshUserRole: () => void;
+  isAdmin: boolean;
 }
 
 const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
@@ -29,14 +30,18 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     refreshRole
   } = useAuth();
 
-  const [role, setRole] = useState<'seller' | 'buyer' | null>(authRole);
+  const [role, setRole] = useState<'seller' | 'buyer' | 'admin' | null>(authRole);
   const [isForceRefreshing, setIsForceRefreshing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Keep the role in sync with auth role
   useEffect(() => {
     if (authRole !== role) {
       console.log("UserRoleProvider - Auth role changed:", authRole);
       setRole(authRole);
+      
+      // Update admin state based on role
+      setIsAdmin(authRole === 'admin');
     }
   }, [authRole, role]);
 
@@ -65,27 +70,35 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             // Normalize the role value
             const dbRole = String(data.role).toLowerCase();
             
-            if (dbRole === 'seller' || dbRole === 'buyer') {
+            // Now also check for admin role
+            if (dbRole === 'seller' || dbRole === 'buyer' || dbRole === 'admin') {
               // Only update if role is different to avoid unnecessary rerenders
               if (role !== dbRole) {
                 console.log("Setting role from database check:", dbRole);
-                setRole(dbRole as 'seller' | 'buyer');
+                setRole(dbRole as 'seller' | 'buyer' | 'admin');
+                
+                // Update admin state
+                setIsAdmin(dbRole === 'admin');
               }
             }
-          } else if (authRole) {
+          } else if (authRole && authRole !== 'admin') {
             // If no role in database but we have one from auth, update the database
+            // NEVER update to admin role via code
             console.log("No role in database but auth has role:", authRole);
-            const success = await updateUserRole(user.id, authRole);
-            if (success) {
-              setRole(authRole);
+            if (authRole === 'seller' || authRole === 'buyer') {
+              const success = await updateUserRole(user.id, authRole);
+              if (success) {
+                setRole(authRole);
+              }
             }
           }
         } catch (err) {
           console.error("Exception during direct database check:", err);
         }
       } else if (!user) {
-        // If no user, reset the role
+        // If no user, reset the role and admin status
         setRole(null);
+        setIsAdmin(false);
       }
     }
     
@@ -123,24 +136,30 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const dbRole = String(data.role).toLowerCase();
           console.log("Database role during refresh:", dbRole);
           
-          if (dbRole === 'seller' || dbRole === 'buyer') {
-            setRole(dbRole as 'seller' | 'buyer');
+          // Check for all valid roles including admin
+          if (dbRole === 'seller' || dbRole === 'buyer' || dbRole === 'admin') {
+            setRole(dbRole as 'seller' | 'buyer' | 'admin');
+            setIsAdmin(dbRole === 'admin');
             toast.success(`Your profile has been refreshed: ${dbRole}`);
           } else {
             toast.warning(`Invalid role found: ${dbRole}`);
           }
-        } else if (authRole) {
+        } else if (authRole && authRole !== 'admin') {
           // If no role in database but we have one from auth, update the database
+          // But NEVER automatically set to admin
           console.log("No role in database but auth has role during refresh:", authRole);
-          const success = await updateUserRole(user.id, authRole);
-          if (success) {
-            setRole(authRole);
-            toast.success(`Your profile has been updated with role: ${authRole}`);
-          } else {
-            toast.error("Failed to update your role");
+          if (authRole === 'seller' || authRole === 'buyer') {
+            const success = await updateUserRole(user.id, authRole);
+            if (success) {
+              setRole(authRole);
+              setIsAdmin(false); // Ensure admin status is correct
+              toast.success(`Your profile has been updated with role: ${authRole}`);
+            } else {
+              toast.error("Failed to update your role");
+            }
           }
         } else {
-          toast.warning("No role found in your profile");
+          toast.warning("No valid role found in your profile");
         }
       }
     } catch (err) {
@@ -156,12 +175,13 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log("UserRoleProvider state update:", { 
       authRole,
       role,
+      isAdmin,
       isLoggedIn, 
       userId: user?.id,
       isLoading,
       isForceRefreshing
     });
-  }, [authRole, role, isLoggedIn, user?.id, isLoading, isForceRefreshing]);
+  }, [authRole, role, isAdmin, isLoggedIn, user?.id, isLoading, isForceRefreshing]);
 
   const value = {
     isLoggedIn, 
@@ -171,7 +191,8 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     login,
     register,
     logout,
-    refreshUserRole
+    refreshUserRole,
+    isAdmin
   };
 
   return (

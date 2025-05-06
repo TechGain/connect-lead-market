@@ -41,7 +41,7 @@ export function useAuthActions() {
       console.log("Registration starting with:", { email, role, fullName, company });
       setIsLoading(true);
       
-      // Validate role input before proceeding
+      // Validate role input before proceeding - ensure admin can't be set
       if (role !== 'seller' && role !== 'buyer') {
         throw new Error("Invalid role. Must be 'seller' or 'buyer'");
       }

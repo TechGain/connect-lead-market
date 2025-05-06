@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 /**
  * Directly ensures that a profile exists with the correct role for a given user
  */
-export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer', fullName?: string): Promise<'seller' | 'buyer' | null> {
+export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer', fullName?: string): Promise<'seller' | 'buyer' | 'admin' | null> {
   try {
     console.log('ensureUserProfile called for userId:', userId, 'with role:', role);
     
@@ -25,14 +25,21 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
     if (existingProfile) {
       console.log('Existing profile found:', existingProfile);
       
-      // If the role is valid, return it
+      // Return admin role if it exists - but don't allow changing to it
+      if (existingProfile.role === 'admin') {
+        console.log('Admin role found');
+        return 'admin';
+      }
+      
+      // For non-admin roles, proceed as usual
       if (existingProfile.role === 'seller' || existingProfile.role === 'buyer') {
         console.log('Valid role found:', existingProfile.role);
         return existingProfile.role;
       }
       
       // If role is invalid and we have a provided role, update it
-      if (role) {
+      // Only allow updating to seller or buyer
+      if (role && (role === 'seller' || role === 'buyer')) {
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
@@ -54,7 +61,8 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
     }
     
     // Profile doesn't exist, create it with mandatory fields
-    const defaultRole = role || 'buyer';
+    // Default to buyer if no role provided, NEVER create admin through this function
+    const defaultRole = role && (role === 'seller' || role === 'buyer') ? role : 'buyer';
     
     // Define profile data according to the expected schema
     const profileData = {
@@ -83,7 +91,7 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
 /**
  * Gets the current user's role directly from the database
  */
-export async function getUserRole(userId: string): Promise<'seller' | 'buyer' | null> {
+export async function getUserRole(userId: string): Promise<'seller' | 'buyer' | 'admin' | null> {
   try {
     if (!userId) {
       console.warn('getUserRole called with no userId');
@@ -108,8 +116,8 @@ export async function getUserRole(userId: string): Promise<'seller' | 'buyer' | 
     
     // Normalize and validate role
     const normalizedRole = String(data.role).toLowerCase();
-    if (normalizedRole === 'seller' || normalizedRole === 'buyer') {
-      return normalizedRole as 'seller' | 'buyer';
+    if (normalizedRole === 'seller' || normalizedRole === 'buyer' || normalizedRole === 'admin') {
+      return normalizedRole as 'seller' | 'buyer' | 'admin';
     }
     
     console.warn('Invalid role found for user:', normalizedRole);
@@ -122,20 +130,33 @@ export async function getUserRole(userId: string): Promise<'seller' | 'buyer' | 
 
 /**
  * Directly updates a user's role in the database
+ * IMPORTANT: This function can never set a user to admin role
  */
 export async function updateUserRole(userId: string, role: 'seller' | 'buyer'): Promise<boolean> {
   try {
+    // Validate role input to ensure we never allow setting admin role
+    if (role !== 'seller' && role !== 'buyer') {
+      console.error('Invalid role provided:', role);
+      return false;
+    }
+    
     console.log('Updating user role for', userId, 'to', role);
     
     // Check if profile exists
     const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, role')
       .eq('id', userId)
       .maybeSingle();
     
     if (checkError && checkError.code !== 'PGRST116') {
       console.error('Error checking profile existence:', checkError);
+      return false;
+    }
+    
+    // If user is already admin, do not allow changing the role
+    if (existingProfile?.role === 'admin') {
+      console.warn('Attempted to change admin role to', role);
       return false;
     }
     

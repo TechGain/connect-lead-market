@@ -1,5 +1,4 @@
 
-
 export type Json =
   | string
   | number
@@ -68,7 +67,7 @@ export interface Database {
           username: string | null
           full_name: string | null
           avatar_url: string | null
-          role: 'seller' | 'buyer'
+          role: 'seller' | 'buyer' | 'admin'
           company: string | null
           rating: number | null
         }
@@ -78,7 +77,7 @@ export interface Database {
           username?: string | null
           full_name?: string | null
           avatar_url?: string | null
-          role: 'seller' | 'buyer'
+          role: 'seller' | 'buyer' | 'admin'
           company?: string | null
           rating?: number | null
         }
@@ -88,7 +87,7 @@ export interface Database {
           username?: string | null
           full_name?: string | null
           avatar_url?: string | null
-          role?: 'seller' | 'buyer'
+          role?: 'seller' | 'buyer' | 'admin'
           company?: string | null
           rating?: number | null
         }
@@ -189,4 +188,3 @@ export interface Database {
     }
   }
 }
-

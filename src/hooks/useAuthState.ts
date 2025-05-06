@@ -9,7 +9,7 @@ import { getUserRole } from '@/utils/roleManager';
 export function useAuthState() {
   const [user, setUser] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [userRole, setUserRole] = useState<'seller' | 'buyer' | null>(null);
+  const [userRole, setUserRole] = useState<'seller' | 'buyer' | 'admin' | null>(null);
 
   // Function to refresh user role with enhanced error handling
   const refreshRole = useCallback(async () => {
@@ -34,9 +34,10 @@ export function useAuthState() {
         // Normalize the role value
         const normalizedRole = String(profileData.role).toLowerCase();
         
-        if (normalizedRole === 'seller' || normalizedRole === 'buyer') {
+        // Now support admin role too
+        if (['seller', 'buyer', 'admin'].includes(normalizedRole)) {
           console.log("Role directly fetched from database:", normalizedRole);
-          setUserRole(normalizedRole as 'seller' | 'buyer');
+          setUserRole(normalizedRole as 'seller' | 'buyer' | 'admin');
         } else {
           console.warn("Invalid role found in database:", normalizedRole);
         }
@@ -48,6 +49,7 @@ export function useAuthState() {
           const metadataRole = user.user_metadata.role;
           console.log("Falling back to metadata role:", metadataRole);
           
+          // Don't create admin profiles from metadata
           if (metadataRole === 'seller' || metadataRole === 'buyer') {
             setUserRole(metadataRole);
             
@@ -170,4 +172,3 @@ export function useAuthState() {
     refreshRole,
   };
 }
-
