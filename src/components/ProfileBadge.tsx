@@ -24,8 +24,10 @@ const ProfileBadge = ({ name, rating, avatar, role, totalLeads }: ProfileBadgePr
         <p className="font-medium text-sm">{name}</p>
         <div className="flex items-center gap-2 mt-1">
           <StarRating rating={rating} size={16} readOnly />
-          {role === 'seller' && totalLeads !== undefined && (
-            <span className="text-xs text-gray-500">{totalLeads} leads</span>
+          {totalLeads !== undefined && (
+            <span className="text-xs text-gray-500">
+              {totalLeads} {role === 'seller' ? 'lead(s) sold' : 'lead(s) bought'}
+            </span>
           )}
         </div>
       </div>

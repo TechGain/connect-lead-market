@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -108,14 +107,29 @@ export const useSimpleProfile = (isOffline = false) => {
       // Cache profile for offline mode
       localStorage.setItem(`profile_${currentUser.id}`, JSON.stringify(profile));
       
-      // Determine lead count for sellers
+      // Determine lead count based on role
       let totalLeads = 0;
       if (profile.role?.toLowerCase() === 'seller') {
         try {
+          // Count sold leads for sellers
           const { count } = await supabase
             .from('leads')
             .select('*', { count: 'exact', head: true })
-            .eq('seller_id', currentUser.id);
+            .eq('seller_id', currentUser.id)
+            .eq('status', 'sold');
+          
+          totalLeads = count || 0;
+        } catch (err) {
+          console.warn('Error counting leads:', err);
+        }
+      } else if (profile.role?.toLowerCase() === 'buyer') {
+        try {
+          // Count purchased leads for buyers
+          const { count } = await supabase
+            .from('leads')
+            .select('*', { count: 'exact', head: true })
+            .eq('buyer_id', currentUser.id)
+            .eq('status', 'sold');
           
           totalLeads = count || 0;
         } catch (err) {

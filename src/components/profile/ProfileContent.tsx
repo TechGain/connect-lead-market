@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProfileInfoCard from './ProfileInfoCard';
 import ProfileSettingsCard from './ProfileSettingsCard';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileData {
   name: string;
@@ -23,10 +24,53 @@ interface ProfileContentProps {
 
 const ProfileContent = ({ 
   profileData, 
+  userData,
   refreshProfile, 
   isOffline = false,
   role
 }: ProfileContentProps) => {
+  const [leadCount, setLeadCount] = useState<number>(profileData.totalLeads || 0);
+  
+  useEffect(() => {
+    const fetchLeadCount = async () => {
+      if (isOffline || !userData?.id) return;
+      
+      try {
+        let query;
+        if (role === 'seller') {
+          // Count leads sold by this seller (status = 'sold')
+          query = supabase
+            .from('leads')
+            .select('*', { count: 'exact', head: true })
+            .eq('seller_id', userData.id)
+            .eq('status', 'sold');
+        } else {
+          // Count leads purchased by this buyer
+          query = supabase
+            .from('leads')
+            .select('*', { count: 'exact', head: true })
+            .eq('buyer_id', userData.id)
+            .eq('status', 'sold');
+        }
+        
+        const { count, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching lead count:", error);
+          return;
+        }
+        
+        if (count !== null) {
+          setLeadCount(count);
+        }
+      } catch (err) {
+        console.error("Exception in leads count fetch:", err);
+      }
+    };
+    
+    fetchLeadCount();
+  }, [userData?.id, role, isOffline]);
+  
   // Handle refresh with visual feedback
   const handleRefresh = () => {
     if (isOffline) {
@@ -42,7 +86,8 @@ const ProfileContent = ({
     name: profileData.name,
     company: profileData.company,
     role,
-    isOffline
+    isOffline,
+    leadCount
   });
   
   return (
@@ -50,7 +95,8 @@ const ProfileContent = ({
       <ProfileInfoCard 
         profileData={{
           ...profileData,
-          avatar: undefined // No avatar support yet
+          avatar: undefined, // No avatar support yet
+          totalLeads: leadCount // Use the fetched count
         }} 
         role={role}
         onRefresh={handleRefresh}
