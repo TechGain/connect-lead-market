@@ -34,28 +34,6 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     zipCode = zipMatch ? zipMatch[0] : '';
   }
   
-  // Ensure status is explicitly mapped to one of our valid statuses
-  // This section is critical for proper status display
-  let status: 'new' | 'pending' | 'sold';
-  
-  // Convert database status to our application status format
-  // Use lowercase comparison to handle any case inconsistencies
-  const dbStatus = String(dbLead.status).toLowerCase();
-  
-  if (dbStatus === 'sold') {
-    status = 'sold';
-  } else if (dbStatus === 'pending') {
-    status = 'pending';
-  } else {
-    status = 'new'; // Default status
-  }
-  
-  // More detailed debug for status mapping
-  console.log(`Mapping lead ${dbLead.id}: 
-    Original DB status = "${dbLead.status}" (${typeof dbLead.status})
-    Normalized status = "${dbStatus}"
-    Mapped status = "${status}"`);
-  
   return {
     id: dbLead.id,
     type: dbLead.type,
@@ -63,7 +41,7 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     description: dbLead.description || '',
     price: dbLead.price,
     qualityRating: dbLead.quality_rating || 3,
-    status: status,
+    status: dbLead.status,
     sellerId: dbLead.seller_id,
     buyerId: dbLead.buyer_id,
     createdAt: dbLead.created_at,

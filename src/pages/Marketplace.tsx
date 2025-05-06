@@ -37,8 +37,7 @@ const Marketplace = () => {
     handleFilterChange,
     resetFilters,
     refreshLeads,
-    lastRefreshed,
-    leadCounts
+    lastRefreshed
   } = useMarketplaceLeads(isLoggedIn || forceShowContent, role);
   
   // Lead checkout process
@@ -148,7 +147,6 @@ const Marketplace = () => {
               isLoading={leadsLoading}
               onPurchase={handlePurchaseLead}
               onResetFilters={resetFilters}
-              leadCounts={leadCounts}
             />
             
             <LeadPurchaseDialog 

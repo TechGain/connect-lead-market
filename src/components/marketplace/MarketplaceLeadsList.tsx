@@ -10,26 +10,17 @@ interface MarketplaceLeadsListProps {
   isLoading: boolean;
   onPurchase: (lead: Lead) => void;
   onResetFilters: () => void;
-  leadCounts?: {
-    available: number;
-    sold: number;
-    pending: number;
-    total: number;
-  };
 }
 
 const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   leads,
   isLoading,
   onPurchase,
-  onResetFilters,
-  leadCounts
+  onResetFilters
 }) => {
-  // Use provided leadCounts or calculate them here as fallback
-  const availableLeads = leadCounts?.available || leads.filter(lead => lead.status === 'new').length;
-  const soldLeads = leadCounts?.sold || leads.filter(lead => lead.status === 'sold').length;
-  const pendingLeads = leadCounts?.pending || leads.filter(lead => lead.status === 'pending').length;
-  const soldAndPendingLeads = soldLeads + pendingLeads;
+  // Count leads by status
+  const availableLeads = leads.filter(lead => lead.status === 'new').length;
+  const soldLeads = leads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
   
   if (isLoading) {
     return (
@@ -55,27 +46,9 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
     );
   }
 
-  // Enhanced debugging for lead display
+  // Debug what leads we're displaying
   console.log('MarketplaceLeadsList: Displaying leads:', leads.length);
   console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
-  
-  // Detailed breakdown of lead statuses for debugging
-  const statusCounts = {
-    new: leads.filter(l => l.status === 'new').length,
-    sold: leads.filter(l => l.status === 'sold').length,
-    pending: leads.filter(l => l.status === 'pending').length
-  };
-  
-  console.log('Lead status counts in current filtered view:', statusCounts);
-  
-  // Additional debug information about leadCounts
-  console.log('Lead counts from props:', leadCounts);
-  console.log('Calculated counts in component:', {
-    available: availableLeads,
-    sold: soldLeads,
-    pending: pendingLeads,
-    total: leads.length
-  });
 
   return (
     <div className="space-y-6">
@@ -85,8 +58,8 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
           <AlertDescription className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500" />
             <span>
-              Showing {leads.length} leads ({availableLeads} available, {soldAndPendingLeads} sold/pending)
-              {soldAndPendingLeads > 0 && " - Sold leads appear with a gray background"}
+              Showing {leads.length} leads ({availableLeads} available, {soldLeads} sold/pending)
+              {soldLeads > 0 && " - Sold leads appear with a gray background"}
             </span>
           </AlertDescription>
         </Alert>

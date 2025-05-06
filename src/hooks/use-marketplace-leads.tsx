@@ -9,7 +9,6 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
-  const [leadCounts, setLeadCounts] = useState({ available: 0, sold: 0, pending: 0, total: 0 });
   
   // Extract the load leads function so we can call it manually
   const loadLeads = useCallback(async () => {
@@ -18,9 +17,6 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
     setIsLoading(true);
     try {
       console.log('useMarketplaceLeads: loading ALL leads from Supabase...');
-      
-      // Explicitly log the query we're sending to Supabase
-      console.log('Querying Supabase leads table with no filters or status restrictions');
       
       const { data: leadsData, error } = await supabase
         .from('leads')
@@ -37,51 +33,15 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
         console.log('No leads returned from database');
         setLeads([]);
         setFilteredLeads([]);
-        setLeadCounts({ available: 0, sold: 0, pending: 0, total: 0 });
         setIsLoading(false);
         return;
       }
       
-      // Log each raw lead status before mapping
-      console.log('Lead statuses BEFORE mapping:');
-      leadsData.forEach(lead => {
-        console.log(`Lead ID: ${lead.id}, Raw DB Status: ${lead.status} (${typeof lead.status})`);
-      });
-      
       // Map database leads to app format and do NOT filter out sold ones
       const allLeads = leadsData.map(mapDbLeadToAppLead);
       
-      // Explicitly log each lead's status after mapping
-      console.log('Lead statuses AFTER mapping:');
-      allLeads.forEach(lead => {
-        console.log(`Lead ID: ${lead.id}, Mapped Status: ${lead.status}`);
-      });
-      
-      // Count leads by status with explicit type checking
-      const availableCount = allLeads.filter(lead => lead.status === 'new').length;
-      const soldCount = allLeads.filter(lead => lead.status === 'sold').length;
-      const pendingCount = allLeads.filter(lead => lead.status === 'pending').length;
-      
-      console.log('Status counts calculation:', {
-        new: availableCount,
-        sold: soldCount,
-        pending: pendingCount,
-        total: allLeads.length
-      });
-      
-      setLeadCounts({
-        available: availableCount,
-        sold: soldCount,
-        pending: pendingCount,
-        total: allLeads.length
-      });
-      
       console.log('useMarketplaceLeads: loaded leads count:', allLeads.length);
-      console.log('Lead statuses breakdown:', {
-        new: availableCount,
-        sold: soldCount,
-        pending: pendingCount
-      });
+      console.log('Lead statuses:', allLeads.map(l => l.status).join(', '));
       
       setLeads(allLeads);
       setFilteredLeads(allLeads);
@@ -144,34 +104,10 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       filtered = filtered.filter(lead => lead.qualityRating >= filters.minRating);
     }
     
-    // Update counts for the filtered results
-    const availableCount = filtered.filter(lead => lead.status === 'new').length;
-    const soldCount = filtered.filter(lead => lead.status === 'sold').length;
-    const pendingCount = filtered.filter(lead => lead.status === 'pending').length;
-    
-    setLeadCounts({
-      available: availableCount,
-      sold: soldCount,
-      pending: pendingCount,
-      total: filtered.length
-    });
-    
     setFilteredLeads(filtered);
   };
   
   const resetFilters = () => {
-    // Reset counts to match all leads when filters are reset
-    const availableCount = leads.filter(lead => lead.status === 'new').length;
-    const soldCount = leads.filter(lead => lead.status === 'sold').length;
-    const pendingCount = leads.filter(lead => lead.status === 'pending').length;
-    
-    setLeadCounts({
-      available: availableCount,
-      sold: soldCount,
-      pending: pendingCount,
-      total: leads.length
-    });
-    
     setFilteredLeads(leads);
   };
 
@@ -182,7 +118,6 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
     handleFilterChange,
     resetFilters,
     refreshLeads: loadLeads,
-    lastRefreshed,
-    leadCounts
+    lastRefreshed
   };
 };
