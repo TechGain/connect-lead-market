@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -37,6 +36,56 @@ const queryClient = new QueryClient({
     }
   }
 });
+
+// Buyer or Admin Route Guard - allows both buyers and admins
+const BuyerOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isLoggedIn, role, isLoading, isAdmin } = useUserRole();
+  
+  useEffect(() => {
+    console.log("BuyerOrAdminRoute - Current state:", { isLoggedIn, role, isAdmin, isLoading });
+  }, [isLoggedIn, role, isAdmin, isLoading]);
+  
+  // Show loading state while determining role
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <p>Loading...</p>
+    </div>;
+  }
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (role !== 'buyer' && !isAdmin) {
+    console.log("Access denied: User role is", role);
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Seller or Admin Route Guard
+const SellerOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isLoggedIn, role, isLoading, isAdmin } = useUserRole();
+  
+  // Show loading state while determining role
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <p>Loading...</p>
+    </div>;
+  }
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (role !== 'seller' && !isAdmin) {
+    console.log("Access denied: User role is", role);
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 // Buyer Route Guard
 const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
@@ -104,12 +153,27 @@ const App = () => {
                 <Route 
                   path="/marketplace" 
                   element={
-                    <BuyerRoute>
+                    <BuyerOrAdminRoute>
                       <Marketplace />
-                    </BuyerRoute>
+                    </BuyerOrAdminRoute>
                   } 
                 />
-                <Route path="/my-leads" element={<MyLeads />} />
+                <Route 
+                  path="/my-leads" 
+                  element={
+                    <SellerOrAdminRoute>
+                      <MyLeads />
+                    </SellerOrAdminRoute>
+                  } 
+                />
+                <Route 
+                  path="/upload-leads" 
+                  element={
+                    <SellerOrAdminRoute>
+                      <UploadLeads />
+                    </SellerOrAdminRoute>
+                  } 
+                />
                 <Route path="/purchases" element={<Purchases />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
