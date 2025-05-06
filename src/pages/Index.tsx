@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,10 +6,44 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
+
 const Index = () => {
   const {
-    isLoggedIn
+    isLoggedIn,
+    role
   } = useUserRole();
+  
+  const getActionButton = () => {
+    if (!isLoggedIn) {
+      return (
+        <Link to="/register">
+          <Button className="bg-white text-brand-600 hover:bg-gray-100">
+            Get Started
+          </Button>
+        </Link>
+      );
+    }
+    
+    if (role === 'seller') {
+      return (
+        <Link to="/upload-leads">
+          <Button className="bg-white text-brand-600 hover:bg-gray-100">
+            Upload Leads
+          </Button>
+        </Link>
+      );
+    }
+    
+    // Default for buyers and any other role
+    return (
+      <Link to="/marketplace">
+        <Button className="bg-white text-brand-600 hover:bg-gray-100">
+          Browse Marketplace
+        </Button>
+      </Link>
+    );
+  };
+  
   return <div className="flex flex-col min-h-screen">
       <Header />
       
@@ -22,11 +57,7 @@ const Index = () => {
                 <p className="text-xl mb-6">The premier marketplace connecting lead generation companies with contractors looking for qualified leads. </p>
                 <p className="text-lg mb-6"><strong>100% MONEY BACK GUARANTEED FOR UNQUALIFIED LEADS!</strong></p>
                 <div className="flex flex-wrap gap-4">
-                  <Link to={isLoggedIn ? "/marketplace" : "/register"}>
-                    <Button className="bg-white text-brand-600 hover:bg-gray-100">
-                      {isLoggedIn ? "Browse Marketplace" : "Get Started"}
-                    </Button>
-                  </Link>
+                  {getActionButton()}
                   <Link to="/about">
                     <Button variant="outline" className="bg-white/10 font-normal">
                       Learn More
