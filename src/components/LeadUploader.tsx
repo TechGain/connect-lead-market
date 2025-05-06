@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,6 +83,7 @@ const LeadUploader = () => {
         address,
         zipCode,
         confirmationStatus, // This is now properly typed
+        sellerId: '', // Initialize with empty string, will be set by the upload function
       };
       
       const success = await uploadLead(newLead);
