@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar } from 'lucide-react';
+import { MapPin, Calendar, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -34,6 +34,9 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
   
   // Format date for display
   const formattedDate = lead.createdAt ? format(new Date(lead.createdAt), 'MMM d, yyyy h:mm a') : 'Unknown date';
+  
+  // Determine confirmation status display
+  const isConfirmed = lead.confirmationStatus === 'confirmed';
   
   return (
     <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'opacity-90' : ''}`}>
@@ -97,11 +100,27 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
               )}
             </>
           ) : (
-            // Limited view - only show firstName for marketplace
+            // Limited view - only show firstName and confirmation status for marketplace
             <div className="space-y-2">
               <p className="text-gray-700"><span className="font-medium">First Name:</span> {lead.firstName || 'Unknown'}</p>
               <p className="text-gray-700"><span className="font-medium">Lead Type:</span> {formatLeadType(lead.type)}</p>
               <p className="text-gray-700"><span className="font-medium">ZIP Code:</span> {lead.zipCode || 'Unknown'}</p>
+              
+              {/* Display confirmation status with icon */}
+              <div className="flex items-center">
+                <span className="font-medium text-gray-700 mr-2">Status:</span>
+                {isConfirmed ? (
+                  <span className="flex items-center text-green-600">
+                    <Check className="h-4 w-4 mr-1" />
+                    Confirmed
+                  </span>
+                ) : (
+                  <span className="flex items-center text-amber-600">
+                    <X className="h-4 w-4 mr-1" />
+                    Unconfirmed
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
