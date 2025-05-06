@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,12 +5,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
-
 const Index = () => {
   const {
     isLoggedIn
   } = useUserRole();
-
   return <div className="flex flex-col min-h-screen">
       <Header />
       
@@ -38,7 +35,7 @@ const Index = () => {
                 </div>
               </div>
               <div className="md:w-1/2">
-                <img src="/lovable-uploads/6bbd1604-1e91-478c-b078-65c2ccbb42d3.png" alt="StayConnect Logo" className="rounded-lg shadow-lg w-full" />
+                <img alt="StayConnect Logo" className="rounded-lg shadow-lg w-full" src="/lovable-uploads/318ae4bc-6abd-49a8-b1ce-6debffe38792.jpg" />
               </div>
             </div>
           </div>
@@ -162,5 +159,4 @@ const Index = () => {
       <Footer />
     </div>;
 };
-
 export default Index;
