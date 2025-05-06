@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +21,9 @@ import NotFound from "./pages/NotFound";
 import UploadLeads from "./pages/UploadLeads";
 import BuyerGuide from "./pages/BuyerGuide";
 import SellerGuide from "./pages/SellerGuide";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +91,9 @@ const App = () => {
                 <Route path="/upload-leads" element={<UploadLeads />} />
                 <Route path="/buyer-guide" element={<BuyerGuide />} />
                 <Route path="/seller-guide" element={<SellerGuide />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </UserRoleProvider>
