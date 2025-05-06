@@ -7,9 +7,10 @@ interface ChatMessageProps {
   content: string;
   sender: 'user' | 'rep';
   timestamp: string | Date;
+  senderName?: string;
 }
 
-export const ChatMessage = ({ content, sender, timestamp }: ChatMessageProps) => {
+export const ChatMessage = ({ content, sender, timestamp, senderName }: ChatMessageProps) => {
   const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
   
   return (
@@ -27,6 +28,14 @@ export const ChatMessage = ({ content, sender, timestamp }: ChatMessageProps) =>
             : "bg-gray-100 text-gray-800 rounded-tl-none"
         )}
       >
+        {senderName && (
+          <div className={cn(
+            "text-xs font-semibold mb-1",
+            sender === 'user' ? "text-brand-100" : "text-gray-500"
+          )}>
+            {senderName}
+          </div>
+        )}
         <p>{content}</p>
         <span className={cn(
           "text-xs block mt-1",

@@ -9,6 +9,7 @@ interface Message {
   content: string;
   sender_type: 'user' | 'rep';
   created_at: string;
+  sender_name?: string; // Add sender name field
 }
 
 export const useChatWidget = () => {
@@ -20,6 +21,7 @@ export const useChatWidget = () => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const processingLocalMessageIds = useRef<Set<string>>(new Set()); // Track locally added message IDs
 
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
@@ -49,10 +51,20 @@ export const useChatWidget = () => {
         table: 'messages',
         filter: `chat_id=eq.${currentChatId}`
       }, (payload) => {
-        // Ensure the payload has the correct shape before adding it to messages
+        // Only add message if it's not from our local optimistic updates
         if (payload.new && 
             typeof payload.new.sender_type === 'string' && 
             (payload.new.sender_type === 'user' || payload.new.sender_type === 'rep')) {
+          
+          // Check if this is a message we just added locally
+          const messageId = payload.new.id;
+          if (processingLocalMessageIds.current.has(messageId)) {
+            // This is our own message that we already added optimistically
+            // Remove from the processing set but don't add to messages again
+            processingLocalMessageIds.current.delete(messageId);
+            return;
+          }
+          
           setMessages(prev => [...prev, payload.new as Message]);
         }
       })
@@ -139,18 +151,28 @@ export const useChatWidget = () => {
       const chatId = chatData.id;
       setCurrentChatId(chatId);
 
+      // Generate a temporary ID for local tracking
+      const tempId = `temp-${Date.now()}`;
+      processingLocalMessageIds.current.add(tempId);
+
       // Add the first message
       const { data: messageData, error: messageError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
           sender_type: 'user',
-          content: message
+          content: message,
+          sender_name: name // Add sender name
         })
         .select()
         .single();
 
       if (messageError) throw messageError;
+
+      // Track the actual message ID to prevent duplicate display
+      if (messageData?.id) {
+        processingLocalMessageIds.current.add(messageData.id);
+      }
 
       // Send notification to representative
       await supabase.functions.invoke('send-chat-notification', {
@@ -163,7 +185,7 @@ export const useChatWidget = () => {
       });
 
       setChatStarted(true);
-      setMessages([messageData as Message]);
+      setMessages([{...messageData, sender_name: name} as Message]);
 
       // Show success message
       toast.success('Message sent! Our team will respond shortly.');
@@ -179,12 +201,14 @@ export const useChatWidget = () => {
     if (!currentChatId || !content) return;
 
     try {
-      // Optimistically update UI
+      // Optimistically update UI with temporary ID
+      const tempId = `temp-${Date.now()}`;
       const tempMessage = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         content,
         sender_type: 'user' as const,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        sender_name: user?.user_metadata?.full_name || 'User' // Add sender name
       };
       
       setMessages(prev => [...prev, tempMessage]);
@@ -195,12 +219,18 @@ export const useChatWidget = () => {
         .insert({
           chat_id: currentChatId,
           sender_type: 'user',
-          content
+          content,
+          sender_name: user?.user_metadata?.full_name || 'User' // Add sender name
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Track this message ID to prevent duplicate display when the realtime event arrives
+      if (data?.id) {
+        processingLocalMessageIds.current.add(data.id);
+      }
 
       // Send notification for new message
       await supabase.functions.invoke('send-chat-notification', {
@@ -214,7 +244,7 @@ export const useChatWidget = () => {
 
       // Replace temp message with real message
       setMessages(prev => prev.map(msg => 
-        msg.id === tempMessage.id ? (data as Message) : msg
+        msg.id === tempId ? ({...data, sender_name: user?.user_metadata?.full_name || 'User'} as Message) : msg
       ));
     } catch (error) {
       console.error('Error sending message:', error);

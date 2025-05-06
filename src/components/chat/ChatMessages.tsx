@@ -31,6 +31,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             content={message.content}
             sender={message.sender_type}
             timestamp={message.created_at}
+            senderName={message.sender_name}
           />
         ))
       )}

@@ -26,11 +26,12 @@ serve(async (req) => {
       throw new Error('RESEND_API_KEY environment variable is not set');
     }
 
-    // Prepare email content
-    const subject = `New chat message from ${userName || 'a visitor'}`;
+    // Prepare email content with sender name
+    const senderName = userName || 'Anonymous';
+    const subject = `New chat message from ${senderName}`;
     const emailContent = `
       <h2>New Chat Message</h2>
-      <p><strong>From:</strong> ${userName || 'Anonymous'} ${userEmail ? `(${userEmail})` : ''}</p>
+      <p><strong>From:</strong> ${senderName} ${userEmail ? `(${userEmail})` : ''}</p>
       <p><strong>Message:</strong> ${message}</p>
       <p><strong>Chat ID:</strong> ${chatId}</p>
       <p>
