@@ -15,6 +15,9 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { useLeadUpload } from '@/hooks/use-lead-upload';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 const LeadUploader = () => {
   const [leadType, setLeadType] = useState('');
@@ -28,7 +31,8 @@ const LeadUploader = () => {
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
-  const [zipCode, setZipCode] = useState(''); // Add zip code state
+  const [zipCode, setZipCode] = useState('');
+  const [confirmationStatus, setConfirmationStatus] = useState('confirmed'); // Default to confirmed
   
   const { uploadLead, isUploading } = useLeadUpload();
 
@@ -44,14 +48,25 @@ const LeadUploader = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!leadType || !location || !description || !contactName || !contactEmail || !price || 
-        !appointmentDate || !appointmentTimeSlot || !address || !zipCode) {
+    const requiredFields = [leadType, location, description, contactName, contactEmail, price, address, zipCode];
+    
+    // If confirmed, also require appointment date and time
+    if (confirmationStatus === 'confirmed' && (!appointmentDate || !appointmentTimeSlot)) {
+      toast.error("Appointment date and time are required for confirmed leads");
+      return;
+    }
+    
+    if (requiredFields.some(field => !field)) {
       toast.error("Please fill in all required fields");
       return;
     }
     
     try {
-      const appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
+      // Only include appointment info if the lead is confirmed
+      let appointmentInfo = '';
+      if (confirmationStatus === 'confirmed' && appointmentDate) {
+        appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
+      }
       
       const newLead: Omit<Lead, 'id'> = {
         type: leadType,
@@ -66,7 +81,7 @@ const LeadUploader = () => {
         createdAt: new Date().toISOString(),
         appointmentTime: appointmentInfo,
         address,
-        zipCode, // Include zip code when creating a lead
+        zipCode,
       };
       
       const success = await uploadLead(newLead);
@@ -84,7 +99,8 @@ const LeadUploader = () => {
         setAppointmentDate(undefined);
         setAppointmentTimeSlot('');
         setAddress('');
-        setZipCode(''); // Reset zip code
+        setZipCode('');
+        setConfirmationStatus('confirmed');
       }
     } catch (error) {
       console.error('Error submitting lead:', error);
@@ -156,6 +172,25 @@ const LeadUploader = () => {
             />
           </div>
           
+          {/* Confirmation Status */}
+          <div className="space-y-2">
+            <Label htmlFor="confirmation-status">Confirmation Status *</Label>
+            <RadioGroup 
+              value={confirmationStatus} 
+              onValueChange={setConfirmationStatus} 
+              className="flex space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="confirmed" id="confirmed" />
+                <Label htmlFor="confirmed">Confirmed</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="unconfirmed" id="unconfirmed" />
+                <Label htmlFor="unconfirmed">Unconfirmed</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Property Address field */}
             <div className="space-y-2">
@@ -185,49 +220,52 @@ const LeadUploader = () => {
             </div>
           </div>
           
-          {/* Appointment date and time section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Appointment Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !appointmentDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {appointmentDate ? format(appointmentDate, "PPP") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={appointmentDate}
-                    onSelect={setAppointmentDate}
-                    initialFocus
-                    disabled={(date) => date < new Date()}
-                  />
-                </PopoverContent>
-              </Popover>
+          {/* Appointment date and time section - only show if confirmed */}
+          {confirmationStatus === 'confirmed' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Appointment Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !appointmentDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {appointmentDate ? format(appointmentDate, "PPP") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={appointmentDate}
+                      onSelect={setAppointmentDate}
+                      initialFocus
+                      disabled={(date) => date < new Date()}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Appointment Time *</Label>
+                <Select value={appointmentTimeSlot} onValueChange={setAppointmentTimeSlot}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select time slot" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label>Appointment Time *</Label>
-              <Select value={appointmentTimeSlot} onValueChange={setAppointmentTimeSlot}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select time slot" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>{slot}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
