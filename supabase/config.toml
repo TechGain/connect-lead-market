@@ -26,3 +26,9 @@ port = 54328
 [functions]
 [functions.send-chat-notification]
 verify_jwt = true
+
+[functions.create-lead-checkout]
+verify_jwt = true
+
+[functions.complete-lead-purchase]
+verify_jwt = true
