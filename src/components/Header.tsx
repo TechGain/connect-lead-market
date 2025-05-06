@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -44,8 +43,19 @@ const Header = () => {
   }, [isLoggedIn, role, isLoading, refreshUserRole]);
 
   const handleLogout = () => {
+    console.log("User logging out. Role:", role, "isAdmin:", isAdmin);
+    
+    // Clean up localStorage first
+    Object.keys(localStorage).forEach(key => {
+      if (key.includes('supabase') || key.includes('auth') || key.includes('sb-')) {
+        console.log("Clearing:", key);
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Then call the logout function
     logout();
-    navigate('/');
+    // We don't need to navigate as the logout function already handles the redirect
   };
 
   const handleMarketplaceClick = () => {

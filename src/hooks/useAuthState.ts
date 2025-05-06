@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client'; 
 import { getUserRole } from '@/utils/roleManager';
@@ -15,6 +14,7 @@ export function useAuthState() {
   const refreshRole = useCallback(async () => {
     if (!user?.id) {
       console.log("Cannot refresh role - no user ID available");
+      setUserRole(null);
       return;
     }
     
@@ -30,6 +30,7 @@ export function useAuthState() {
         
       if (profileError) {
         console.error("Error directly fetching profile:", profileError);
+        // Don't set role to null here, keep existing role if there's an error
       } else if (profileData?.role) {
         // Normalize the role value
         const normalizedRole = String(profileData.role).toLowerCase();
