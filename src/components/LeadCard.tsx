@@ -16,19 +16,6 @@ interface LeadCardProps {
   isPurchased?: boolean;
 }
 
-// Enhanced SoldOverlay component with stronger styling
-const SoldOverlay: React.FC = () => {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10 pointer-events-none">
-      <div className="transform rotate-12 bg-red-600 px-6 py-2 rounded-md shadow-lg">
-        <span className="text-4xl font-extrabold text-white drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
-          SOLD
-        </span>
-      </div>
-    </div>
-  );
-};
-
 const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
   const isSold = lead.status === 'sold';
   
@@ -39,10 +26,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
   const isConfirmed = lead.confirmationStatus === 'confirmed';
   
   return (
-    <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'opacity-80 grayscale-[30%] pointer-events-none' : 'hover:shadow-lg'}`}>
-      {/* Render the SOLD overlay when the lead is sold */}
-      {isSold && <SoldOverlay />}
-      
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow relative">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
