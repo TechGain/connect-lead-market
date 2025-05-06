@@ -4,8 +4,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface ConfirmationStatusSelectProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: 'confirmed' | 'unconfirmed'; // Changed from string to specific union type
+  onChange: (value: 'confirmed' | 'unconfirmed') => void; // Changed from string to specific union type
 }
 
 const ConfirmationStatusSelect = ({ value, onChange }: ConfirmationStatusSelectProps) => {

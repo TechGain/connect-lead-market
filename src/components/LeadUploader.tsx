@@ -27,7 +27,8 @@ const LeadUploader = () => {
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
   const [zipCode, setZipCode] = useState('');
-  const [confirmationStatus, setConfirmationStatus] = useState('confirmed'); // Default to confirmed
+  // Fixed: Use the proper union type instead of string
+  const [confirmationStatus, setConfirmationStatus] = useState<'confirmed' | 'unconfirmed'>('confirmed');
   
   const { uploadLead, isUploading } = useLeadUpload();
 
@@ -39,6 +40,11 @@ const LeadUploader = () => {
     '2:00 PM - 4:00 PM',
     '4:00 PM - 6:00 PM',
   ];
+
+  // Fixed: Ensure the confirmationStatus handler uses the proper union type
+  const handleConfirmationStatusChange = (value: 'confirmed' | 'unconfirmed') => {
+    setConfirmationStatus(value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +83,7 @@ const LeadUploader = () => {
         appointmentTime: appointmentInfo,
         address,
         zipCode,
-        confirmationStatus, // Include the confirmation status
+        confirmationStatus, // This is now properly typed
       };
       
       const success = await uploadLead(newLead);
@@ -126,7 +132,7 @@ const LeadUploader = () => {
           
           <ConfirmationStatusSelect 
             value={confirmationStatus} 
-            onChange={setConfirmationStatus}
+            onChange={handleConfirmationStatusChange} // Updated to use our new handler
           />
           
           {confirmationStatus === 'confirmed' && (
