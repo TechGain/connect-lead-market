@@ -6,7 +6,7 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuL
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, User } from 'lucide-react';
+import { Menu, User, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
@@ -19,7 +19,8 @@ const Header = () => {
     logout,
     user,
     isLoading,
-    refreshUserRole
+    refreshUserRole,
+    isAdmin
   } = useUserRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -29,9 +30,10 @@ const Header = () => {
       isLoggedIn, 
       role, 
       userId: user?.id,
-      isLoading
+      isLoading,
+      isAdmin
     });
-  }, [isLoggedIn, role, user, isLoading]);
+  }, [isLoggedIn, role, user, isLoading, isAdmin]);
 
   // Add effect to refresh role if logged in but no role detected
   useEffect(() => {
@@ -88,6 +90,13 @@ const Header = () => {
           </Link>
         </NavigationMenuItem>
       )}
+      {isLoggedIn && isAdmin && (
+        <NavigationMenuItem>
+          <Link to="/admin/chats" className={navigationMenuTriggerStyle()}>
+            Admin Dashboard
+          </Link>
+        </NavigationMenuItem>
+      )}
     </>;
 
   // Make sure the mobile nav has the same role-based conditions:
@@ -115,6 +124,14 @@ const Header = () => {
         <SheetClose asChild>
           <Link to="/purchases" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             My Purchases
+          </Link>
+        </SheetClose>
+      )}
+      {isLoggedIn && isAdmin && (
+        <SheetClose asChild>
+          <Link to="/admin/chats" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Admin Dashboard
           </Link>
         </SheetClose>
       )}
@@ -166,8 +183,8 @@ const Header = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-brand-100 text-brand-800">
-                          {role === 'seller' ? 'S' : 'B'}
+                        <AvatarFallback className={isAdmin ? "bg-purple-100 text-purple-800" : "bg-brand-100 text-brand-800"}>
+                          {isAdmin ? 'A' : role === 'seller' ? 'S' : 'B'}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -193,6 +210,12 @@ const Header = () => {
                     {role === 'buyer' && (
                       <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/purchases')}>
                         My Purchases
+                      </DropdownMenuItem>
+                    )}
+                    {isAdmin && (
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/admin/chats')}>
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Admin Dashboard
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/dashboard')}>

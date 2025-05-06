@@ -142,7 +142,7 @@ export const UserRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setIsAdmin(dbRole === 'admin');
             toast.success(`Your profile has been refreshed: ${dbRole}`);
           } else {
-            toast.warning(`Invalid role found: ${dbRole}`);
+            toast.warning(`Unknown role format: ${dbRole}`);
           }
         } else if (authRole && authRole !== 'admin') {
           // If no role in database but we have one from auth, update the database

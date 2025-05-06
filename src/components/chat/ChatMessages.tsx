@@ -24,7 +24,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
       ) : messages.length === 0 ? (
         <div className="flex justify-center items-center h-full">
-          <p className="text-muted-foreground">No messages yet</p>
+          <p className="text-muted-foreground">
+            {isAdmin ? "No messages in this conversation yet" : "No messages yet"}
+          </p>
         </div>
       ) : (
         messages.map((message) => (
@@ -34,6 +36,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             sender={message.sender_type}
             timestamp={message.created_at}
             senderName={message.sender_name}
+            isAdmin={isAdmin}
           />
         ))
       )}
@@ -41,4 +44,3 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     </div>
   );
 };
-
