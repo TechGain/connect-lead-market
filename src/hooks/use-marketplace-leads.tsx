@@ -19,6 +19,9 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
     try {
       console.log('useMarketplaceLeads: loading ALL leads from Supabase...');
       
+      // Explicitly log the query we're sending to Supabase
+      console.log('Querying Supabase leads table with no filters or status restrictions');
+      
       const { data: leadsData, error } = await supabase
         .from('leads')
         .select('*')
@@ -39,16 +42,22 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
         return;
       }
       
+      // Log each raw lead status before mapping
+      console.log('Lead statuses BEFORE mapping:');
+      leadsData.forEach(lead => {
+        console.log(`Lead ID: ${lead.id}, Raw DB Status: ${lead.status} (${typeof lead.status})`);
+      });
+      
       // Map database leads to app format and do NOT filter out sold ones
       const allLeads = leadsData.map(mapDbLeadToAppLead);
       
-      // Explicitly log each lead's status to debug
-      console.log('Lead statuses after mapping:');
+      // Explicitly log each lead's status after mapping
+      console.log('Lead statuses AFTER mapping:');
       allLeads.forEach(lead => {
-        console.log(`Lead ID: ${lead.id}, Status: ${lead.status}`);
+        console.log(`Lead ID: ${lead.id}, Mapped Status: ${lead.status}`);
       });
       
-      // Count leads by status
+      // Count leads by status with explicit type checking
       const availableCount = allLeads.filter(lead => lead.status === 'new').length;
       const soldCount = allLeads.filter(lead => lead.status === 'sold').length;
       const pendingCount = allLeads.filter(lead => lead.status === 'pending').length;

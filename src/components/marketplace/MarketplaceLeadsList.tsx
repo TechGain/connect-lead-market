@@ -55,16 +55,26 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
     );
   }
 
-  // Debug what leads we're displaying
+  // Enhanced debugging for lead display
   console.log('MarketplaceLeadsList: Displaying leads:', leads.length);
   console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
+  
+  // Detailed breakdown of lead statuses for debugging
+  const statusCounts = {
+    new: leads.filter(l => l.status === 'new').length,
+    sold: leads.filter(l => l.status === 'sold').length,
+    pending: leads.filter(l => l.status === 'pending').length
+  };
+  
+  console.log('Lead status counts in current filtered view:', statusCounts);
   
   // Additional debug information about leadCounts
   console.log('Lead counts from props:', leadCounts);
   console.log('Calculated counts in component:', {
     available: availableLeads,
     sold: soldLeads,
-    pending: pendingLeads
+    pending: pendingLeads,
+    total: leads.length
   });
 
   return (
