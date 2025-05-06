@@ -6,7 +6,7 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuL
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, User, MessageSquare } from 'lucide-react';
+import { Menu, User, MessageSquare, Upload, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
@@ -54,7 +54,7 @@ const Header = () => {
       return;
     }
     
-    if (role !== 'buyer') {
+    if (role !== 'buyer' && !isAdmin) {
       toast.info("Only buyers can access the marketplace");
       return;
     }
@@ -69,17 +69,26 @@ const Header = () => {
           Home
         </Link>
       </NavigationMenuItem>
-      {isLoggedIn && role === 'buyer' && (
+      {isLoggedIn && (role === 'buyer' || isAdmin) && (
         <NavigationMenuItem>
           <Link to="/marketplace" className={navigationMenuTriggerStyle()}>
+            <ShoppingBag className="mr-2 h-4 w-4 inline" />
             Marketplace
           </Link>
         </NavigationMenuItem>
       )}
-      {isLoggedIn && role === 'seller' && (
+      {isLoggedIn && (role === 'seller' || isAdmin) && (
         <NavigationMenuItem>
           <Link to="/my-leads" className={navigationMenuTriggerStyle()}>
             My Leads
+          </Link>
+        </NavigationMenuItem>
+      )}
+      {isLoggedIn && (role === 'seller' || isAdmin) && (
+        <NavigationMenuItem>
+          <Link to="/upload-leads" className={navigationMenuTriggerStyle()}>
+            <Upload className="mr-2 h-4 w-4 inline" />
+            Upload Lead
           </Link>
         </NavigationMenuItem>
       )}
@@ -93,6 +102,7 @@ const Header = () => {
       {isLoggedIn && isAdmin && (
         <NavigationMenuItem>
           <Link to="/admin/chats" className={navigationMenuTriggerStyle()}>
+            <MessageSquare className="mr-2 h-4 w-4 inline" />
             Admin Dashboard
           </Link>
         </NavigationMenuItem>
@@ -106,17 +116,26 @@ const Header = () => {
           Home
         </Link>
       </SheetClose>
-      {isLoggedIn && role === 'buyer' && (
+      {isLoggedIn && (role === 'buyer' || isAdmin) && (
         <SheetClose asChild>
           <Link to="/marketplace" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+            <ShoppingBag className="mr-2 h-4 w-4" />
             Marketplace
           </Link>
         </SheetClose>
       )}
-      {isLoggedIn && role === 'seller' && (
+      {isLoggedIn && (role === 'seller' || isAdmin) && (
         <SheetClose asChild>
           <Link to="/my-leads" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             My Leads
+          </Link>
+        </SheetClose>
+      )}
+      {isLoggedIn && (role === 'seller' || isAdmin) && (
+        <SheetClose asChild>
+          <Link to="/upload-leads" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Lead
           </Link>
         </SheetClose>
       )}

@@ -62,12 +62,13 @@ const AuthStateDisplay: React.FC<AuthStateDisplayProps> = ({
     );
   }
 
-  if (role !== 'buyer') {
+  // Allow both buyers and admins to access the marketplace
+  if (role !== 'buyer' && role !== 'admin') {
     return (
       <div className="py-16 text-center">
         <h1 className="text-3xl font-bold mb-4">Access Restricted</h1>
         <p className="text-gray-600 mb-6">
-          The marketplace is only available to buyers. Your current role: {role || 'not set'}
+          The marketplace is only available to buyers and admins. Your current role: {role || 'not set'}
         </p>
         <Button onClick={() => navigate('/')}>
           Return to Home

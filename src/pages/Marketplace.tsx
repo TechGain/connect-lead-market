@@ -58,6 +58,9 @@ const Marketplace = () => {
     toast.info("Showing marketplace content without authentication");
   };
 
+  // Check if user is buyer or admin
+  const canAccessMarketplace = role === 'buyer' || role === 'admin';
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -74,7 +77,7 @@ const Marketplace = () => {
         )}
         
         {/* Show loader if marketplace data is still loading */}
-        {((isLoggedIn && role === 'buyer' && !authLoading) || forceShowContent) && leadsLoading && (
+        {((isLoggedIn && canAccessMarketplace && !authLoading) || forceShowContent) && leadsLoading && (
           <div className="flex justify-center items-center py-12">
             <p>Loading marketplace data...</p>
           </div>
@@ -90,7 +93,7 @@ const Marketplace = () => {
         )}
         
         {/* Show marketplace content when auth passes OR when forced */}
-        {((isLoggedIn && role === 'buyer' && !authLoading) || forceShowContent) && !leadsLoading && (
+        {((isLoggedIn && canAccessMarketplace && !authLoading) || forceShowContent) && !leadsLoading && (
           <>
             <MarketplaceHeader 
               title="Lead Marketplace" 

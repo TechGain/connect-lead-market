@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 const MyLeads = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isLoggedIn, role, isLoading, user, refreshUserRole } = useUserRole();
+  const { isLoggedIn, role, isAdmin, isLoading, user, refreshUserRole } = useUserRole();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'leads');
   const [hasChecked, setHasChecked] = useState(false);
@@ -26,6 +26,7 @@ const MyLeads = () => {
     console.log("MyLeads component - Current auth state:", { 
       isLoggedIn, 
       role,
+      isAdmin,
       isLoading,
       userId: user?.id,
       hasChecked,
@@ -65,19 +66,19 @@ const MyLeads = () => {
       return;
     }
     
-    // Check if user is a seller or buyer
-    if (role !== 'seller' && role !== 'buyer') {
-      console.log("User is not a seller or buyer, redirecting to home", { actualRole: role });
-      toast.error(`Only sellers and buyers can view this page. Your current role is: ${role}`);
+    // Check if user is a seller, admin or buyer
+    if (role !== 'seller' && role !== 'buyer' && !isAdmin) {
+      console.log("User is not a seller, buyer or admin, redirecting to home", { actualRole: role });
+      toast.error(`Only sellers, buyers and admins can view this page. Your current role is: ${role}`);
       navigate('/');
       return;
     }
     
-    // Load leads if user is a seller
-    if (role === 'seller' && user?.id) {
+    // Load leads if user is a seller or admin
+    if ((role === 'seller' || isAdmin) && user?.id) {
       loadSellerLeads(user.id);
     }
-  }, [isLoggedIn, role, navigate, user?.id, isLoading, hasChecked, loadingTimeout]);
+  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout]);
   
   // New function to fetch seller's leads directly from Supabase
   const loadSellerLeads = async (sellerId: string) => {
@@ -119,7 +120,7 @@ const MyLeads = () => {
   const renderLeadsTab = () => (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">My Leads</h1>
-      {role === 'seller' ? (
+      {(role === 'seller' || isAdmin) ? (
         <LeadTable leads={leads} />
       ) : (
         <p>Only sellers can view their leads here.</p>
@@ -206,10 +207,10 @@ const MyLeads = () => {
       <main className="flex-1">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="container mx-auto px-4 pt-8">
           <TabsList>
-            {role === 'seller' && (
+            {(role === 'seller' || isAdmin) && (
               <TabsTrigger value="leads">My Leads</TabsTrigger>
             )}
-            {role === 'seller' && (
+            {(role === 'seller' || isAdmin) && (
               <TabsTrigger value="upload">Upload Lead</TabsTrigger>
             )}
           </TabsList>

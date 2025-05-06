@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
@@ -8,7 +7,7 @@ import { RefreshCw, AlertCircle } from 'lucide-react';
 
 const UploadLeads = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, role, isLoading, user, refreshUserRole } = useUserRole();
+  const { isLoggedIn, role, isLoading, user, refreshUserRole, isAdmin } = useUserRole();
   const [hasChecked, setHasChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
@@ -19,6 +18,7 @@ const UploadLeads = () => {
       role,
       isLoading,
       userId: user?.id,
+      isAdmin,
       hasChecked,
       loadingTimeout
     });
@@ -57,18 +57,18 @@ const UploadLeads = () => {
       return;
     }
     
-    // Check if user is a seller
-    if (role !== 'seller') {
-      console.log("User is not a seller, redirecting to home", { actualRole: role });
-      toast.error(`Only sellers can upload leads. Your current role is: ${role || 'not set'}`);
+    // Check if user is a seller or admin
+    if (role !== 'seller' && !isAdmin) {
+      console.log("User is not a seller or admin, redirecting to home", { actualRole: role });
+      toast.error(`Only sellers and admins can upload leads. Your current role is: ${role || 'not set'}`);
       navigate('/');
       return;
     }
     
     // Redirect to my-leads with upload tab active if all checks pass
-    console.log("User is a seller, redirecting to upload tab");
+    console.log("User is a seller or admin, redirecting to upload tab");
     navigate('/my-leads?tab=upload');
-  }, [isLoggedIn, role, navigate, isLoading, user?.id, hasChecked, loadingTimeout]);
+  }, [isLoggedIn, role, navigate, isLoading, user?.id, isAdmin, hasChecked, loadingTimeout]);
   
   const handleRefresh = () => {
     refreshUserRole();
