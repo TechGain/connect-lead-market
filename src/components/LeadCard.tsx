@@ -58,8 +58,8 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
             <span>Added: {formattedDate}</span>
           </div>
 
-          {/* Display seller info */}
-          {lead.sellerName && (
+          {/* Only display seller info in full details view, not in marketplace */}
+          {lead.sellerName && showFullDetails && (
             <div className="flex items-center text-sm text-gray-500">
               <User className="h-4 w-4 mr-1" />
               <span>Seller: {lead.sellerName}</span>
