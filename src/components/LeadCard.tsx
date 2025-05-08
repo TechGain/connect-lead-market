@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar, Check, X, User } from 'lucide-react';
+import { MapPin, Calendar, Check, X, User, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -14,9 +14,18 @@ interface LeadCardProps {
   onPurchase?: (lead: Lead) => void;
   showFullDetails?: boolean;
   isPurchased?: boolean;
+  isOwner?: boolean;
+  onEdit?: (lead: Lead) => void;
 }
 
-const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = false }: LeadCardProps) => {
+const LeadCard = ({ 
+  lead, 
+  onPurchase, 
+  showFullDetails = false, 
+  isPurchased = false,
+  isOwner = false,
+  onEdit
+}: LeadCardProps) => {
   // Check if lead is sold explicitly
   const isSold = lead.status === 'sold' || lead.status === 'pending';
   
@@ -44,9 +53,22 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
               </div>
             )}
           </div>
-          <Badge variant={isSold ? 'secondary' : 'default'}>
-            {isSold ? 'Sold' : 'Available'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {isOwner && onEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-1 h-auto"
+                onClick={() => onEdit(lead)}
+                title="Edit Lead"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            <Badge variant={isSold ? 'secondary' : 'default'}>
+              {isSold ? 'Sold' : 'Available'}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       
@@ -133,7 +155,7 @@ const LeadCard = ({ lead, onPurchase, showFullDetails = false, isPurchased = fal
           </div>
           
           {/* Only show the Buy Lead button for new leads */}
-          {lead.status === 'new' && onPurchase && (
+          {lead.status === 'new' && onPurchase && !isOwner && (
             <Button 
               size="sm" 
               onClick={() => onPurchase(lead)}
