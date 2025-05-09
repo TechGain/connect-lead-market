@@ -61,6 +61,8 @@ const LeadDetailsFields = ({
               <SelectItem value="foundation-repair">Foundation Repair</SelectItem>
               <SelectItem value="exterior-paint">Exterior Paint</SelectItem>
               <SelectItem value="interior-paint">Interior Paint</SelectItem>
+              <SelectItem value="air-duct">Air Duct</SelectItem>
+              <SelectItem value="air-dryer">Air Dryer</SelectItem>
             </SelectContent>
           </Select>
         </div>
