@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +49,7 @@ const LeadUploader = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const requiredFields = [leadType, location, description, contactName, contactEmail, price, address, zipCode];
+    const requiredFields = [leadType, location, description, contactName, contactEmail, contactPhone, price, address, zipCode];
     
     // If confirmed, also require appointment date and time
     if (confirmationStatus === 'confirmed' && (!appointmentDate || !appointmentTimeSlot)) {

@@ -46,12 +46,13 @@ const ContactInfoFields = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="contact-phone">Contact Phone</Label>
+        <Label htmlFor="contact-phone">Contact Phone *</Label>
         <Input
           id="contact-phone"
           value={contactPhone}
           onChange={(e) => onContactPhoneChange(e.target.value)}
           placeholder="(123) 456-7890"
+          required
         />
       </div>
     </div>
