@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar, Check, X, User, Pencil } from 'lucide-react';
+import { MapPin, Calendar, Check, X, User, Pencil, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -79,6 +79,14 @@ const LeadCard = ({
             <Calendar className="h-4 w-4 mr-1" />
             <span>Added: {formattedDate}</span>
           </div>
+
+          {/* Display appointment time if it exists and status is confirmed */}
+          {isConfirmed && lead.appointmentTime && (
+            <div className="flex items-center text-sm text-green-600">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>Appointment: {lead.appointmentTime}</span>
+            </div>
+          )}
 
           {/* Only display seller info in full details view, not in marketplace */}
           {lead.sellerName && showFullDetails && (
