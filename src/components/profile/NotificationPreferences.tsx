@@ -19,7 +19,7 @@ export const NotificationPreferences = ({ userId, userPhone }: NotificationPrefe
   };
 
   return (
-    <Card>
+    <Card className="mt-6">
       <CardHeader>
         <CardTitle>Notification Preferences</CardTitle>
         <CardDescription>

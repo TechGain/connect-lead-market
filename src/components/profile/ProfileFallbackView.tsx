@@ -1,21 +1,13 @@
 
 import React from 'react';
-import ProfileHeader from './ProfileHeader';
+import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 import ProfileContent from './ProfileContent';
-
-interface ProfileData {
-  name: string;
-  email: string;
-  company: string;
-  role: 'seller' | 'buyer';
-  rating: number;
-  joinedDate: string;
-  totalLeads: number;
-}
+import NotificationPreferences from './NotificationPreferences';
 
 interface ProfileFallbackViewProps {
-  profileData: ProfileData;
-  userData?: any;
+  profileData: any;
+  userData: any;
   onRetry: () => void;
   error: string | null;
   isOffline?: boolean;
@@ -23,33 +15,55 @@ interface ProfileFallbackViewProps {
 
 const ProfileFallbackView = ({ 
   profileData, 
-  userData, 
+  userData,
   onRetry, 
-  error,
-  isOffline = false
+  error, 
+  isOffline = false 
 }: ProfileFallbackViewProps) => {
-  // Ensure the role is properly typed
-  const safeRole = profileData.role === 'seller' ? 'seller' : 'buyer';
-  
-  console.log("ProfileFallbackView rendering with data:", { 
-    name: profileData.name,
-    company: profileData.company,
-    role: safeRole,
-    error,
-    isOffline
-  });
-  
   return (
-    <>
-      <ProfileHeader error={error} isOffline={isOffline} />
-      <ProfileContent
+    <div className="space-y-6">
+      {error && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 mr-2" />
+            <div>
+              <h3 className="text-sm font-medium text-amber-800">
+                Warning: Using backup data
+              </h3>
+              <p className="text-sm text-amber-700 mt-1">
+                {error}. Showing limited information.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2 bg-white"
+                onClick={onRetry}
+                disabled={isOffline}
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <ProfileContent 
         profileData={profileData}
         userData={userData}
         refreshProfile={onRetry}
         isOffline={isOffline}
-        role={safeRole}
+        role={profileData.role || 'buyer'}
       />
-    </>
+
+      {userData?.id && !isOffline && (
+        <div className="mt-6">
+          <NotificationPreferences 
+            userId={userData.id} 
+            userPhone={profileData.phone} 
+          />
+        </div>
+      )}
+    </div>
   );
 };
 

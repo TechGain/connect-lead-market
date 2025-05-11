@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,6 +102,7 @@ const Register = () => {
               role: userRole,
               company: companyName,
               phone: phoneNumber, // Include phone number in profile
+              sms_notifications_enabled: true, // Enable SMS notifications by default
               created_at: new Date().toISOString()
             }, {
               onConflict: 'id'
@@ -116,7 +116,7 @@ const Register = () => {
               // Double check that the profile was created correctly
               const {
                 data: profileCheck
-              } = await supabase.from('profiles').select('role, company, phone').eq('id', user.id).maybeSingle();
+              } = await supabase.from('profiles').select('role, company, phone, sms_notifications_enabled').eq('id', user.id).maybeSingle();
               console.log("Profile check after creation:", profileCheck);
             }
           } catch (err) {

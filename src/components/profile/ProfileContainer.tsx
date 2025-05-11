@@ -92,7 +92,8 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
           year: 'numeric',
           month: 'long'
         }),
-        totalLeads: 0 // We'll default to 0 for simplicity
+        totalLeads: 0, // We'll default to 0 for simplicity
+        phone: data.phone || null, // Include phone in the profile data
       };
       
       console.log("Formatted profile:", formattedProfile);

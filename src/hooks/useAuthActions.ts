@@ -87,7 +87,8 @@ export function useAuthActions() {
             full_name: fullName,
             role: role,
             company: company,
-            phone: phone // Include phone in the profile
+            phone: phone, // Include phone in the profile
+            sms_notifications_enabled: true // Enable SMS notifications by default for buyers
           };
           
           const { error: profileError } = await supabase
@@ -97,7 +98,7 @@ export function useAuthActions() {
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);
           } else {
-            console.log("Profile successfully created with role, company and phone:", { role, company, phone });
+            console.log("Profile successfully created with role, company, phone, and SMS notifications enabled:", { role, company, phone });
           }
         } catch (err) {
           console.error("Exception creating profile during registration:", err);
