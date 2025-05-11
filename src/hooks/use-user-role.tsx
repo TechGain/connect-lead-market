@@ -1,25 +1,84 @@
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useContext, createContext } from 'react';
 import { useAuthActions } from './useAuthActions';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+
+// Define the context type
+type UserRoleContextType = {
+  user: User | null;
+  isLoggedIn: boolean;
+  session: Session | null;
+  role: string | null;
+  loadingUser: boolean;
+  isAdmin: boolean;
+  isLoading: boolean;
+  register: (
+    email: string, 
+    password: string,
+    role: 'seller' | 'buyer',
+    fullName: string,
+    company?: string,
+    phone?: string
+  ) => Promise<any>;
+  logout: () => Promise<void>;
+  refreshRole: () => Promise<void>;
+  refreshUserRole: () => Promise<void>; // Alias for refreshRole for backward compatibility
+};
+
+// Create the context with a default value
+const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
+
+/**
+ * Provider component that wraps the app and makes auth object available to any
+ * child component that calls useUserRole().
+ */
+export function UserRoleProvider({ children }: { children: React.ReactNode }) {
+  const userRole = useProvideUserRole();
+  
+  return (
+    <UserRoleContext.Provider value={userRole}>
+      {children}
+    </UserRoleContext.Provider>
+  );
+}
+
+/**
+ * Hook for consuming the user role context
+ */
+export function useUserRole() {
+  const context = useContext(UserRoleContext);
+  
+  if (context === undefined) {
+    throw new Error("useUserRole must be used within a UserRoleProvider");
+  }
+  
+  return context;
+}
 
 /**
  * Hook for managing user authentication state and role
  */
-export function useUserRole() {
+function useProvideUserRole() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
-  const supabase = useSupabaseClient();
+  const supabaseClient = supabase;
   const authActions = useAuthActions();
+
+  // Compute isAdmin based on role
+  const isAdmin = role === 'admin';
+
+  // Alias isLoading to loadingUser for consistency with other hooks
+  const isLoading = loadingUser;
 
   useEffect(() => {
     const getSession = async () => {
       try {
         setLoadingUser(true);
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
 
         setSession(session);
         setUser(session?.user || null);
@@ -27,9 +86,9 @@ export function useUserRole() {
 
         if (session?.user) {
           // Fetch the user's role from the profiles table
-          const { data: profile, error } = await supabase
+          const { data: profile, error } = await supabaseClient
             .from('profiles')
-            .select('role')
+            .select('role, phone')
             .eq('id', session.user.id)
             .single();
 
@@ -55,16 +114,16 @@ export function useUserRole() {
     getSession();
 
     // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user || null);
       setIsLoggedIn(!!session?.user);
       
       if (session?.user) {
         // Fetch the user's role from the profiles table
-        supabase
+        supabaseClient
           .from('profiles')
-          .select('role')
+          .select('role, phone')
           .eq('id', session.user.id)
           .single()
           .then(({ data: profile, error }) => {
@@ -83,14 +142,14 @@ export function useUserRole() {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabaseClient]);
 
   const refreshRole = async () => {
     if (user?.id) {
       try {
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await supabaseClient
           .from('profiles')
-          .select('role')
+          .select('role, phone')
           .eq('id', user.id)
           .single();
 
@@ -108,6 +167,9 @@ export function useUserRole() {
       setRole(null);
     }
   };
+
+  // Create an alias for refreshRole for backward compatibility
+  const refreshUserRole = refreshRole;
 
   const register = async (
     email: string, 
@@ -167,8 +229,11 @@ export function useUserRole() {
     session,
     role,
     loadingUser,
+    isAdmin,
+    isLoading,
     register,
     logout,
-    refreshRole
+    refreshRole,
+    refreshUserRole
   };
 }

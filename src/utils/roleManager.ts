@@ -5,14 +5,19 @@ import { toast } from 'sonner';
 /**
  * Directly ensures that a profile exists with the correct role for a given user
  */
-export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer', fullName?: string): Promise<'seller' | 'buyer' | 'admin' | null> {
+export async function ensureUserProfile(
+  userId: string, 
+  role?: 'seller' | 'buyer', 
+  fullName?: string,
+  phone?: string
+): Promise<'seller' | 'buyer' | 'admin' | null> {
   try {
     console.log('ensureUserProfile called for userId:', userId, 'with role:', role);
     
     // First, check if the profile exists
     const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
-      .select('id, role, full_name')
+      .select('id, role, full_name, phone')
       .eq('id', userId)
       .maybeSingle();
     
@@ -34,18 +39,43 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
       // For non-admin roles, proceed as usual
       if (existingProfile.role === 'seller' || existingProfile.role === 'buyer') {
         console.log('Valid role found:', existingProfile.role);
+        
+        // Update phone if needed and provided
+        if (phone && existingProfile.phone !== phone) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              phone,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+          
+          if (updateError) {
+            console.error('Error updating profile phone:', updateError);
+          } else {
+            console.log('Profile phone updated to:', phone);
+          }
+        }
+        
         return existingProfile.role;
       }
       
       // If role is invalid and we have a provided role, update it
       // Only allow updating to seller or buyer
       if (role && (role === 'seller' || role === 'buyer')) {
+        const updateData: any = { 
+          role,
+          updated_at: new Date().toISOString()
+        };
+        
+        // Also update phone if provided
+        if (phone) {
+          updateData.phone = phone;
+        }
+        
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ 
-            role,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', userId);
         
         if (updateError) {
@@ -65,11 +95,16 @@ export async function ensureUserProfile(userId: string, role?: 'seller' | 'buyer
     const defaultRole = role && (role === 'seller' || role === 'buyer') ? role : 'buyer';
     
     // Define profile data according to the expected schema
-    const profileData = {
+    const profileData: any = {
       id: userId,
       full_name: fullName || 'User',
       role: defaultRole
     };
+    
+    // Add phone if provided
+    if (phone) {
+      profileData.phone = phone;
+    }
     
     const { error: createError } = await supabase
       .from('profiles')

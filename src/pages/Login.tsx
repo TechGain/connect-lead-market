@@ -53,7 +53,10 @@ const Login = () => {
             ? metadataRole as 'seller' | 'buyer'
             : 'buyer'; // Default to buyer
           
-          await ensureUserProfile(user.id, validRole);
+          // Get phone from metadata if available
+          const phone = user.user_metadata?.phone;
+          
+          await ensureUserProfile(user.id, validRole, undefined, phone);
           toast.info(`Your profile has been updated with role: ${validRole}`);
         } catch (err) {
           console.error("Error fixing profile after login:", err);
