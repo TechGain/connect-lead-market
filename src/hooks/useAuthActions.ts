@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -56,7 +57,7 @@ export function useAuthActions() {
         throw new Error("Phone number is required");
       }
       
-      // Sign up the user with role and company in metadata
+      // Sign up the user with role, company, and phone in metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -64,7 +65,7 @@ export function useAuthActions() {
           data: {
             full_name: fullName,
             role: role,
-            company: company, // Store company in user metadata
+            company: company,
             phone: phone // Store phone in user metadata
           }
         }
@@ -85,7 +86,7 @@ export function useAuthActions() {
             id: data.user.id,
             full_name: fullName,
             role: role,
-            company: company, // Ensure company is included in the profile
+            company: company,
             phone: phone // Include phone in the profile
           };
           

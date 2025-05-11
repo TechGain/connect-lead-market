@@ -102,7 +102,7 @@ const Register = () => {
               full_name: name,
               role: userRole,
               company: companyName,
-              phone: phoneNumber,
+              phone: phoneNumber, // Include phone number in profile
               created_at: new Date().toISOString()
             }, {
               onConflict: 'id'
