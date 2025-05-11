@@ -1,14 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { UserRound, Users } from "lucide-react";
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+
 const Register = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -22,10 +25,11 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(''); // New state for phone number
+  const [phoneNumber, setPhoneNumber] = useState(''); 
   const [selectedRole, setSelectedRole] = useState<'seller' | 'buyer'>('buyer');
   const [registrationError, setRegistrationError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     // If the user is already logged in, redirect them to the marketplace or my-leads
     if (isLoggedIn) {
@@ -150,6 +154,7 @@ const Register = () => {
       setIsLoading(false); // Reset loading state on error
     }
   };
+
   return <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
         <Card className="w-full max-w-md">
@@ -161,21 +166,37 @@ const Register = () => {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="grid gap-4">
-              <div className="flex flex-row items-center justify-between space-x-2">
+              <div className="space-y-3">
                 <Label>Account Type</Label>
-                <RadioGroup defaultValue={selectedRole} className="flex" value={selectedRole} onValueChange={value => {
-                console.log("Role selected:", value);
-                setSelectedRole(value as 'seller' | 'buyer');
-              }}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="buyer" id="buyer" />
-                    <Label htmlFor="buyer">Buyer</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="seller" id="seller" />
-                    <Label htmlFor="seller">Seller</Label>
-                  </div>
-                </RadioGroup>
+                <ToggleGroup 
+                  type="single" 
+                  value={selectedRole} 
+                  onValueChange={(value) => {
+                    if (value) setSelectedRole(value as 'seller' | 'buyer');
+                  }}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <ToggleGroupItem 
+                    value="buyer" 
+                    className={cn(
+                      "flex flex-col items-center justify-center h-24 data-[state=on]:bg-brand-100 data-[state=on]:border-brand-500 border-2",
+                      selectedRole === "buyer" ? "border-brand-500 bg-brand-100 text-brand-800" : "border-gray-200"
+                    )}
+                  >
+                    <UserRound className="w-8 h-8 mb-2" />
+                    <span className="text-base font-medium">Buyer</span>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem 
+                    value="seller" 
+                    className={cn(
+                      "flex flex-col items-center justify-center h-24 data-[state=on]:bg-brand-100 data-[state=on]:border-brand-500 border-2",
+                      selectedRole === "seller" ? "border-brand-500 bg-brand-100 text-brand-800" : "border-gray-200"
+                    )}
+                  >
+                    <Users className="w-8 h-8 mb-2" />
+                    <span className="text-base font-medium">Seller</span>
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="name">Full Name</Label>
@@ -185,9 +206,8 @@ const Register = () => {
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" placeholder="name@example.com" type="email" autoCapitalize="none" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} />
               </div>
-              {/* Add phone number field */}
               <div className="grid gap-2">
-                <Label htmlFor="phone-number">Phone Number </Label>
+                <Label htmlFor="phone-number">Phone Number </Label>
                 <Input id="phone-number" placeholder="(123) 456-7890" type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} required />
               </div>
               <div className="grid gap-2">
@@ -220,4 +240,5 @@ const Register = () => {
       </div>
     </div>;
 };
+
 export default Register;
