@@ -1,16 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { UserRound, Users } from "lucide-react";
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import RegistrationForm from '@/components/auth/RegistrationForm';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -47,7 +42,7 @@ const Register = () => {
     }
   }, [isLoggedIn, navigate, role, searchParams]);
 
-  // This function now handles the form submission with direct role management
+  // This function handles the form submission with direct role management
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isLoading) return;
@@ -90,8 +85,7 @@ const Register = () => {
         isSeller: userRole === 'seller',
         isBuyer: userRole === 'buyer'
       });
-      const result = await register(email, password, userRole, name, companyName, phoneNumber // Add phone number to registration
-      );
+      const result = await register(email, password, userRole, name, companyName, phoneNumber);
       if (result) {
         // Directly ensure the profile exists with the correct role
         const {
@@ -109,7 +103,6 @@ const Register = () => {
               role: userRole,
               company: companyName,
               phone: phoneNumber,
-              // Store the phone number in profiles table
               created_at: new Date().toISOString()
             }, {
               onConflict: 'id'
@@ -155,8 +148,9 @@ const Register = () => {
     }
   };
 
-  return <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Create an account</CardTitle>
@@ -164,81 +158,29 @@ const Register = () => {
               Choose your account type and enter your details below.
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="grid gap-4">
-              <div className="space-y-3">
-                <Label>Account Type</Label>
-                <ToggleGroup 
-                  type="single" 
-                  value={selectedRole} 
-                  onValueChange={(value) => {
-                    if (value) setSelectedRole(value as 'seller' | 'buyer');
-                  }}
-                  className="grid grid-cols-2 gap-4"
-                >
-                  <ToggleGroupItem 
-                    value="buyer" 
-                    className={cn(
-                      "flex flex-col items-center justify-center h-24 data-[state=on]:bg-brand-100 data-[state=on]:border-brand-500 border-2",
-                      selectedRole === "buyer" ? "border-brand-500 bg-brand-100 text-brand-800" : "border-gray-200"
-                    )}
-                  >
-                    <UserRound className="w-8 h-8 mb-2" />
-                    <span className="text-base font-medium">Buyer</span>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem 
-                    value="seller" 
-                    className={cn(
-                      "flex flex-col items-center justify-center h-24 data-[state=on]:bg-brand-100 data-[state=on]:border-brand-500 border-2",
-                      selectedRole === "seller" ? "border-brand-500 bg-brand-100 text-brand-800" : "border-gray-200"
-                    )}
-                  >
-                    <Users className="w-8 h-8 mb-2" />
-                    <span className="text-base font-medium">Seller</span>
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" type="text" value={name} onChange={e => setName(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" placeholder="name@example.com" type="email" autoCapitalize="none" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phone-number">Phone Number </Label>
-                <Input id="phone-number" placeholder="(123) 456-7890" type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} required />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input id="confirm-password" placeholder="Confirm Password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="company-name">Company Name</Label>
-                <Input id="company-name" placeholder="Company Name" type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} required />
-              </div>
-              {registrationError && <p className="text-red-500 text-sm">{registrationError}</p>}
-            </CardContent>
-            <CardFooter className="flex flex-col gap-2">
-              <Button type="submit" disabled={isLoading} className={cn("w-full", isLoading ? "cursor-not-allowed" : "")}>
-                {isLoading ? "Creating account..." : "Create account"}
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link to="/login" className="text-brand-600 hover:underline">
-                  Log In
-                </Link>
-              </p>
-            </CardFooter>
-          </form>
+          <RegistrationForm
+            onSubmit={handleSubmit}
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
+            name={name}
+            setName={setName}
+            companyName={companyName}
+            setCompanyName={setCompanyName}
+            phoneNumber={phoneNumber}
+            setPhoneNumber={setPhoneNumber}
+            selectedRole={selectedRole}
+            setSelectedRole={setSelectedRole}
+            registrationError={registrationError}
+            isLoading={isLoading}
+          />
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default Register;
