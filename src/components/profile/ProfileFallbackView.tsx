@@ -21,8 +21,11 @@ const ProfileFallbackView = ({
   error, 
   isOffline = false 
 }: ProfileFallbackViewProps) => {
+  // Use phone from either auth.users.phone or profile.phone, preferring the profile value
+  const phoneNumber = profileData?.phone || userData?.phone;
+  
   // Format the phone number for display purposes
-  const formattedPhone = profileData?.phone ? formatPhoneToE164(profileData.phone) : null;
+  const formattedPhone = phoneNumber ? formatPhoneToE164(phoneNumber) : null;
 
   return (
     <div className="space-y-6">
@@ -63,7 +66,7 @@ const ProfileFallbackView = ({
         <div className="mt-6">
           <NotificationPreferences 
             userId={userData.id} 
-            userPhone={formattedPhone || profileData.phone} 
+            userPhone={formattedPhone || phoneNumber} 
           />
         </div>
       )}

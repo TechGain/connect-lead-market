@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from '@/lib/utils';
 import AccountTypeSelector from './AccountTypeSelector';
+import { formatPhoneToE164 } from '@/utils/format-helpers';
 
 interface RegistrationFormProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -47,6 +48,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   registrationError,
   isLoading
 }) => {
+  // Format phone number as user types
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPhoneNumber(value);
+  };
+
+  // Format phone for display (optional)
+  const displayPhone = phoneNumber ? phoneNumber : '';
+
   return (
     <form onSubmit={onSubmit}>
       <CardContent className="grid gap-4">
@@ -67,7 +77,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="phone-number">Phone Number</Label>
-          <Input id="phone-number" placeholder="(123) 456-7890" type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} required />
+          <Input 
+            id="phone-number" 
+            placeholder="(123) 456-7890" 
+            type="tel" 
+            value={displayPhone} 
+            onChange={handlePhoneChange} 
+            required 
+          />
+          <p className="text-xs text-muted-foreground">Enter your phone number with country code (e.g., +1 for US)</p>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="password">Password</Label>

@@ -68,15 +68,17 @@ export function useAuthActions() {
       console.log("Phone formatted for storage:", formattedPhone);
       
       // Sign up the user with role, company, and phone in metadata
+      // AND set the phone number directly in the auth.users.phone field
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        phone: formattedPhone, // This will store phone in auth.users.phone field
         options: {
           data: {
             full_name: fullName,
             role: role,
             company: company,
-            phone: formattedPhone // Store formatted phone in user metadata
+            phone: formattedPhone // Also store formatted phone in user metadata for compatibility
           }
         }
       });

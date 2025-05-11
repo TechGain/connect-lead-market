@@ -19,7 +19,7 @@ export const NotificationPreferences = ({ userId, userPhone }: NotificationPrefe
     await updateSmsPreference(checked);
   };
 
-  // Format phone number for display
+  // Format phone number for display - ensure it's properly formatted for E.164
   const formattedPhone = userPhone ? formatPhoneToE164(userPhone) : null;
   const displayPhone = formattedPhone || userPhone;
 

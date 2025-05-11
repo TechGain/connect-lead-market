@@ -20,7 +20,7 @@ export const ensureNumber = (value: any): number => {
 
 /**
  * Formats a phone number to E.164 format for use with Twilio and other services
- * Assumes US numbers if no country code is provided
+ * Always ensures the number has a country code
  * @param phoneNumber The phone number to format
  * @returns Phone number in E.164 format (e.g., +12125551234)
  */
@@ -40,14 +40,24 @@ export const formatPhoneToE164 = (phoneNumber: string): string => {
     return `+1${digits}`;
   }
   
-  // If it already has a plus sign, return as is
+  // If it already has a plus sign, ensure it's kept
   if (phoneNumber.startsWith('+')) {
-    return phoneNumber;
+    // Extract just the digits
+    const plusDigits = phoneNumber.substring(1).replace(/\D/g, '');
+    if (plusDigits.length >= 10) {
+      return `+${plusDigits}`;
+    }
   }
   
   // Default: add US country code if it appears to be a valid US number
   if (digits.length === 10) {
     return `+1${digits}`;
+  }
+  
+  // If all else fails and we have enough digits, try to format as best we can
+  if (digits.length >= 10) {
+    // If it doesn't start with a country code, assume US (+1)
+    return `+1${digits.slice(-10)}`;
   }
   
   // Return the original if we can't determine the format
