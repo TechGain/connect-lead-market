@@ -80,14 +80,6 @@ const LeadCard = ({
             <span>Added: {formattedDate}</span>
           </div>
 
-          {/* Display appointment time if it exists and status is confirmed - shown to everyone */}
-          {isConfirmed && lead.appointmentTime && (
-            <div className="flex items-center text-sm text-green-600 font-medium">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>Appointment: {lead.appointmentTime}</span>
-            </div>
-          )}
-
           {/* Only display seller info in full details view, not in marketplace */}
           {lead.sellerName && showFullDetails && (
             <div className="flex items-center text-sm text-gray-500">
@@ -147,6 +139,14 @@ const LeadCard = ({
                   </span>
                 )}
               </div>
+              
+              {/* Display appointment time if it exists and status is confirmed - moved here below status */}
+              {isConfirmed && lead.appointmentTime && (
+                <div className="flex items-center text-sm text-green-600 font-medium">
+                  <Clock className="h-4 w-4 mr-1" />
+                  <span>Appointment: {lead.appointmentTime}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
