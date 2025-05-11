@@ -13,6 +13,7 @@ type UserRoleContextType = {
   loadingUser: boolean;
   isAdmin: boolean;
   isLoading: boolean;
+  login: (email: string, password: string) => Promise<any>; // Add login method
   register: (
     email: string, 
     password: string,
@@ -171,6 +172,42 @@ function useProvideUserRole() {
   // Create an alias for refreshRole for backward compatibility
   const refreshUserRole = refreshRole;
 
+  // Add login method using authActions
+  const login = async (email: string, password: string) => {
+    try {
+      setLoadingUser(true);
+      const result = await authActions.login(email, password);
+      
+      if (result?.session) {
+        setIsLoggedIn(true);
+        setSession(result.session);
+        setUser(result.user);
+        
+        // Fetch role after login
+        if (result.user?.id) {
+          const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('role, phone')
+            .eq('id', result.user.id)
+            .single();
+          
+          if (!error && profile) {
+            setRole(profile.role);
+          }
+        }
+        
+        return result;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Login failed:", error);
+      return null;
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
   const register = async (
     email: string, 
     password: string,
@@ -231,6 +268,7 @@ function useProvideUserRole() {
     loadingUser,
     isAdmin,
     isLoading,
+    login,
     register,
     logout,
     refreshRole,
