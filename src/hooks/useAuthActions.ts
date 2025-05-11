@@ -35,10 +35,11 @@ export function useAuthActions() {
     password: string, 
     role: 'seller' | 'buyer',
     fullName: string,
-    company?: string
+    company?: string,
+    phone?: string
   ) => {
     try {
-      console.log("Registration starting with:", { email, role, fullName, company });
+      console.log("Registration starting with:", { email, role, fullName, company, phone });
       setIsLoading(true);
       
       // Validate role input before proceeding - ensure admin can't be set
@@ -51,6 +52,11 @@ export function useAuthActions() {
         throw new Error("Company name is required");
       }
       
+      // Validate phone input
+      if (!phone) {
+        throw new Error("Phone number is required");
+      }
+      
       // Sign up the user with role and company in metadata
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -59,7 +65,8 @@ export function useAuthActions() {
           data: {
             full_name: fullName,
             role: role,
-            company: company // Store company in user metadata
+            company: company, // Store company in user metadata
+            phone: phone // Store phone in user metadata
           }
         }
       });
@@ -79,7 +86,8 @@ export function useAuthActions() {
             id: data.user.id,
             full_name: fullName,
             role: role,
-            company: company // Ensure company is included in the profile
+            company: company, // Ensure company is included in the profile
+            phone: phone // Include phone in the profile
           };
           
           const { error: profileError } = await supabase
@@ -89,7 +97,7 @@ export function useAuthActions() {
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);
           } else {
-            console.log("Profile successfully created with role and company:", { role, company });
+            console.log("Profile successfully created with role, company and phone:", { role, company, phone });
           }
         } catch (err) {
           console.error("Exception creating profile during registration:", err);

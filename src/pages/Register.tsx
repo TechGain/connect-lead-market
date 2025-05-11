@@ -20,6 +20,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(''); // New state for phone number
   const [selectedRole, setSelectedRole] = useState<'seller' | 'buyer'>('buyer');
   const [registrationError, setRegistrationError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +65,13 @@ const Register = () => {
       return;
     }
     
+    // Validate phone number
+    if (!phoneNumber.trim()) {
+      setRegistrationError("Phone number is required");
+      toast.error("Phone number is required");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -87,7 +95,8 @@ const Register = () => {
         password, 
         userRole,
         name,
-        companyName
+        companyName,
+        phoneNumber  // Add phone number to registration
       );
       
       if (result) {
@@ -106,6 +115,7 @@ const Register = () => {
                 full_name: name,
                 role: userRole,
                 company: companyName,
+                phone: phoneNumber,  // Store the phone number in profiles table
                 created_at: new Date().toISOString()
               }, { onConflict: 'id' });
               
@@ -118,7 +128,7 @@ const Register = () => {
               // Double check that the profile was created correctly
               const { data: profileCheck } = await supabase
                 .from('profiles')
-                .select('role, company')
+                .select('role, company, phone')
                 .eq('id', user.id)
                 .maybeSingle();
                 
@@ -209,6 +219,18 @@ const Register = () => {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
+              {/* Add phone number field */}
+              <div className="grid gap-2">
+                <Label htmlFor="phone-number">Phone Number *</Label>
+                <Input
+                  id="phone-number"
+                  placeholder="(123) 456-7890"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  required
+                />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -229,7 +251,6 @@ const Register = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
-              {/* Modified to show company name field as required */}
               <div className="grid gap-2">
                 <Label htmlFor="company-name">Company Name</Label>
                 <Input
