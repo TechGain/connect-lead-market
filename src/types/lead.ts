@@ -1,3 +1,4 @@
+
 export interface Lead {
   id: string;
   type: string;
@@ -55,7 +56,8 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     address: dbLead.address || '', 
     zipCode: zipCode,
     firstName: firstName,
-    confirmationStatus: dbLead.confirmation_status || 'confirmed' // Map the new field with default
+    confirmationStatus: dbLead.confirmation_status || 'confirmed', // Map the new field with default
+    appointmentTime: dbLead.appointment_time || undefined // Add this line to map appointment_time
   };
 };
 
