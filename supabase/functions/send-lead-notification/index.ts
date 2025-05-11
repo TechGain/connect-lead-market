@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
 
@@ -22,6 +21,41 @@ type LeadInfo = {
   seller_name?: string;
   description?: string;
 };
+
+/**
+ * Formats a phone number to E.164 format for use with Twilio
+ * @param phoneNumber The phone number to format
+ * @returns Phone number in E.164 format (e.g., +12125551234)
+ */
+function formatPhoneToE164(phoneNumber: string): string {
+  if (!phoneNumber) return '';
+  
+  // Remove all non-digit characters
+  const digits = phoneNumber.replace(/\D/g, '');
+  
+  // If it already has a plus sign, ensure it's correctly formatted
+  if (phoneNumber.startsWith('+')) {
+    // If it's already in E.164 format, return it
+    if (/^\+\d{10,15}$/.test(phoneNumber)) {
+      return phoneNumber;
+    }
+    // Otherwise, just extract the digits and format properly
+  }
+  
+  // Check if it already has a country code (assuming +1 for US would be 11 digits starting with 1)
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return `+${digits}`;
+  }
+  
+  // If it's a 10-digit number, assume it's a US number and add +1
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  
+  // Default to prefixing with +1 if we can't determine format
+  // This might not work for non-US numbers but ensures Twilio gets a prefixed number
+  return digits.length > 0 ? `+1${digits}` : '';
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -115,20 +149,38 @@ serve(async (req) => {
       );
     }
 
+    console.log(`Found ${buyers.length} buyers eligible for SMS notifications`);
+
     // Send SMS notifications to buyers
     const sendResults = await Promise.allSettled(
       buyers.map(async (buyer) => {
         if (!buyer.phone) return null;
         
+        // Format buyer phone to ensure E.164 format
+        const formattedPhone = formatPhoneToE164(buyer.phone);
+        console.log(`Buyer ${buyer.id} phone: ${buyer.phone} -> Formatted: ${formattedPhone}`);
+        
+        // Skip if we couldn't format to a valid phone number
+        if (!formattedPhone) {
+          console.error(`Could not format phone number for buyer ${buyer.id}: ${buyer.phone}`);
+          return {
+            buyerId: buyer.id,
+            status: 'error',
+            error: 'Invalid phone number format'
+          };
+        }
+        
         // Format message
         const message = `New lead alert! A ${lead.type} lead in ${lead.location} is now available for $${lead.price}. Log in to the marketplace to view details.`;
         
         try {
+          console.log(`Sending SMS to ${formattedPhone} via Twilio`);
+          
           // Call Twilio API to send SMS
           const twilioEndpoint = `https://api.twilio.com/2010-04-01/Accounts/${twilio_account_sid}/Messages.json`;
           
           const formData = new URLSearchParams();
-          formData.append('To', buyer.phone);
+          formData.append('To', formattedPhone);
           formData.append('From', twilio_from_number);
           formData.append('Body', message);
           
@@ -145,17 +197,25 @@ serve(async (req) => {
           
           // Log SMS sending status
           console.log(`SMS notification sent to buyer ${buyer.id}: ${twilioResponse.status}`);
+          if (twilioResponse.status >= 400) {
+            console.error(`Twilio error response: ${JSON.stringify(twilioData)}`);
+          }
           
           return {
             buyerId: buyer.id,
             status: twilioResponse.status,
-            smsId: twilioData.sid || null
+            phoneUsed: formattedPhone,
+            smsId: twilioData.sid || null,
+            error: twilioData.error_code ? 
+              `${twilioData.error_code}: ${twilioData.error_message}` : 
+              null
           };
         } catch (error) {
           console.error(`Error sending SMS to buyer ${buyer.id}:`, error);
           return {
             buyerId: buyer.id,
             status: 'error',
+            phoneUsed: formattedPhone,
             error: error.message
           };
         }
@@ -164,8 +224,12 @@ serve(async (req) => {
 
     // Count successful sends
     const successful = sendResults.filter(
-      result => result.status === 'fulfilled' && result.value?.status >= 200 && result.value?.status < 300
+      result => result.status === 'fulfilled' && 
+        result.value?.status >= 200 && 
+        result.value?.status < 300
     ).length;
+
+    console.log(`SMS notifications sent successfully to ${successful} out of ${buyers.length} buyers`);
 
     return new Response(
       JSON.stringify({

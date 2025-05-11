@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { formatPhoneToE164, isValidPhoneNumber } from '@/utils/format-helpers';
 
 /**
  * Hook for authentication actions (login, register, logout)
@@ -57,6 +58,15 @@ export function useAuthActions() {
         throw new Error("Phone number is required");
       }
       
+      // Validate phone format
+      if (!isValidPhoneNumber(phone)) {
+        throw new Error("Please enter a valid phone number with at least 10 digits");
+      }
+      
+      // Format phone to E.164 format for SMS compatibility
+      const formattedPhone = formatPhoneToE164(phone);
+      console.log("Phone formatted for storage:", formattedPhone);
+      
       // Sign up the user with role, company, and phone in metadata
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -66,7 +76,7 @@ export function useAuthActions() {
             full_name: fullName,
             role: role,
             company: company,
-            phone: phone // Store phone in user metadata
+            phone: formattedPhone // Store formatted phone in user metadata
           }
         }
       });
@@ -87,7 +97,7 @@ export function useAuthActions() {
             full_name: fullName,
             role: role,
             company: company,
-            phone: phone, // Include phone in the profile
+            phone: formattedPhone, // Store formatted phone in the profile
             sms_notifications_enabled: true // Enable SMS notifications by default for buyers
           };
           
@@ -98,7 +108,7 @@ export function useAuthActions() {
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);
           } else {
-            console.log("Profile successfully created with role, company, phone, and SMS notifications enabled:", { role, company, phone });
+            console.log("Profile successfully created with role, company, phone, and SMS notifications enabled:", { role, company, formattedPhone });
           }
         } catch (err) {
           console.error("Exception creating profile during registration:", err);

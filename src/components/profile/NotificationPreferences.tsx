@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatPhoneToE164 } from '@/utils/format-helpers';
 
 interface NotificationPreferencesProps {
   userId?: string;
@@ -17,6 +18,10 @@ export const NotificationPreferences = ({ userId, userPhone }: NotificationPrefe
   const handleSmsToggle = async (checked: boolean) => {
     await updateSmsPreference(checked);
   };
+
+  // Format phone number for display
+  const formattedPhone = userPhone ? formatPhoneToE164(userPhone) : null;
+  const displayPhone = formattedPhone || userPhone;
 
   return (
     <Card className="mt-6">
@@ -41,9 +46,14 @@ export const NotificationPreferences = ({ userId, userPhone }: NotificationPrefe
               <p className="text-sm text-gray-500">
                 Receive text messages when new leads are posted
               </p>
-              {!userPhone && (
+              {!displayPhone && (
                 <p className="text-sm text-amber-600">
                   Add a phone number to your profile to enable SMS notifications
+                </p>
+              )}
+              {displayPhone && (
+                <p className="text-sm text-gray-500">
+                  Notifications will be sent to: {displayPhone}
                 </p>
               )}
             </div>
@@ -51,7 +61,7 @@ export const NotificationPreferences = ({ userId, userPhone }: NotificationPrefe
               id="sms-notifications"
               checked={smsEnabled}
               onCheckedChange={handleSmsToggle}
-              disabled={isSaving || !userPhone}
+              disabled={isSaving || !displayPhone}
             />
           </div>
         )}

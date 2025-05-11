@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import ProfileContent from './ProfileContent';
 import NotificationPreferences from './NotificationPreferences';
+import { formatPhoneToE164 } from '@/utils/format-helpers';
 
 interface ProfileFallbackViewProps {
   profileData: any;
@@ -20,6 +21,9 @@ const ProfileFallbackView = ({
   error, 
   isOffline = false 
 }: ProfileFallbackViewProps) => {
+  // Format the phone number for display purposes
+  const formattedPhone = profileData?.phone ? formatPhoneToE164(profileData.phone) : null;
+
   return (
     <div className="space-y-6">
       {error && (
@@ -59,7 +63,7 @@ const ProfileFallbackView = ({
         <div className="mt-6">
           <NotificationPreferences 
             userId={userData.id} 
-            userPhone={profileData.phone} 
+            userPhone={formattedPhone || profileData.phone} 
           />
         </div>
       )}
