@@ -190,6 +190,7 @@ export type Database = {
           phone: string | null
           rating: number | null
           role: string
+          sms_notifications_enabled: boolean | null
           updated_at: string
         }
         Insert: {
@@ -200,6 +201,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           role: string
+          sms_notifications_enabled?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -210,6 +212,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           role?: string
+          sms_notifications_enabled?: boolean | null
           updated_at?: string
         }
         Relationships: []
