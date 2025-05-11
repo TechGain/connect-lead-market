@@ -80,9 +80,9 @@ const LeadCard = ({
             <span>Added: {formattedDate}</span>
           </div>
 
-          {/* Display appointment time if it exists and status is confirmed */}
+          {/* Display appointment time if it exists and status is confirmed - shown to everyone */}
           {isConfirmed && lead.appointmentTime && (
-            <div className="flex items-center text-sm text-green-600">
+            <div className="flex items-center text-sm text-green-600 font-medium">
               <Clock className="h-4 w-4 mr-1" />
               <span>Appointment: {lead.appointmentTime}</span>
             </div>
@@ -147,14 +147,6 @@ const LeadCard = ({
                   </span>
                 )}
               </div>
-              
-              {/* Display appointment time below status line in marketplace view */}
-              {isConfirmed && lead.appointmentTime && (
-                <div className="flex items-center text-sm text-green-600 mt-1">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>Appointment: {lead.appointmentTime}</span>
-                </div>
-              )}
             </div>
           )}
         </div>
