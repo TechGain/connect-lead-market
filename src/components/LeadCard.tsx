@@ -126,7 +126,7 @@ const LeadCard = ({
               )}
             </>
           ) : (
-            // Limited view - only show firstName and confirmation status for marketplace
+            // Limited view for marketplace - show firstName and confirmation status
             <div className="space-y-2">
               <p className="text-gray-700"><span className="font-medium">First Name:</span> {lead.firstName || 'Unknown'}</p>
               <p className="text-gray-700"><span className="font-medium">Lead Type:</span> {formatLeadType(lead.type)}</p>
@@ -147,6 +147,14 @@ const LeadCard = ({
                   </span>
                 )}
               </div>
+              
+              {/* Display appointment time below status line in marketplace view */}
+              {isConfirmed && lead.appointmentTime && (
+                <div className="flex items-center text-sm text-green-600 mt-1">
+                  <Clock className="h-4 w-4 mr-1" />
+                  <span>Appointment: {lead.appointmentTime}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
