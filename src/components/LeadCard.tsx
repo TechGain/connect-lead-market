@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar, Check, X, User, Pencil, Clock } from 'lucide-react';
+import { MapPin, Calendar, Check, X, User, Pencil, Clock, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -16,6 +16,7 @@ interface LeadCardProps {
   isPurchased?: boolean;
   isOwner?: boolean;
   onEdit?: (lead: Lead) => void;
+  onDelete?: (lead: Lead) => void;
 }
 
 const LeadCard = ({ 
@@ -24,10 +25,17 @@ const LeadCard = ({
   showFullDetails = false, 
   isPurchased = false,
   isOwner = false,
-  onEdit
+  onEdit,
+  onDelete
 }: LeadCardProps) => {
-  // Check if lead is sold explicitly
+  // Check if lead is sold explicitly or erased
   const isSold = lead.status === 'sold' || lead.status === 'pending';
+  const isErased = lead.status === 'erased';
+  
+  // Don't render the card at all if it's erased
+  if (isErased) {
+    return null;
+  }
   
   // Format date for display
   const formattedDate = lead.createdAt ? format(new Date(lead.createdAt), 'MMM d, yyyy h:mm a') : 'Unknown date';
@@ -54,16 +62,31 @@ const LeadCard = ({
             )}
           </div>
           <div className="flex items-center gap-2">
-            {isOwner && onEdit && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1 h-auto"
-                onClick={() => onEdit(lead)}
-                title="Edit Lead"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
+            {isOwner && (
+              <>
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto"
+                    onClick={() => onEdit(lead)}
+                    title="Edit Lead"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => onDelete(lead)}
+                    title="Delete Lead"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
             )}
             <Badge variant={isSold ? 'secondary' : 'default'}>
               {isSold ? 'Sold' : 'Available'}

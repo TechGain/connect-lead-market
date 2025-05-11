@@ -1,7 +1,9 @@
 
 import React from 'react';
-import LeadTable from '@/components/LeadTable';
 import { Lead } from '@/types/lead';
+import LeadTable from '@/components/LeadTable';
+import { useSellerLeads } from '@/hooks/use-seller-leads';
+import { useUserRole } from '@/hooks/use-user-role';
 
 interface LeadsListTabProps {
   leads: Lead[];
@@ -9,15 +11,31 @@ interface LeadsListTabProps {
   isAdmin: boolean;
 }
 
-const LeadsListTab = ({ leads, role, isAdmin }: LeadsListTabProps) => {
+const LeadsListTab: React.FC<LeadsListTabProps> = ({ leads, role, isAdmin }) => {
+  const { user } = useUserRole();
+  const { refreshLeads } = useSellerLeads(user?.id);
+  
+  const handleLeadUpdated = () => {
+    if (user?.id) {
+      refreshLeads(user.id);
+    }
+  };
+  
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">My Leads</h1>
-      {(role === 'seller' || isAdmin) ? (
-        <LeadTable leads={leads} />
-      ) : (
-        <p>Only sellers can view their leads here.</p>
-      )}
+    <div className="py-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">My Leads</h2>
+        <p className="text-gray-600">
+          {role === 'seller' || isAdmin ? 
+            'Here are the leads that you have uploaded.' : 
+            'You need to be a seller to upload leads.'}
+        </p>
+      </div>
+      
+      <LeadTable 
+        leads={leads} 
+        onLeadUpdated={handleLeadUpdated}
+      />
     </div>
   );
 };

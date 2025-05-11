@@ -6,11 +6,11 @@ export interface Lead {
   description?: string;
   price: number;
   qualityRating: number | null;
-  status: 'new' | 'pending' | 'sold';
+  status: 'new' | 'pending' | 'sold' | 'erased';  // Added 'erased' status
   sellerId: string;
-  sellerName?: string; // Added field
+  sellerName?: string;
   buyerId?: string | null;
-  buyerName?: string | null; // Added field
+  buyerName?: string | null;
   createdAt: string;
   purchasedAt?: string | null;
   contactName?: string;
@@ -45,9 +45,9 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     qualityRating: dbLead.quality_rating,
     status: dbLead.status,
     sellerId: dbLead.seller_id,
-    sellerName: dbLead.seller_name, // Map the new field
+    sellerName: dbLead.seller_name,
     buyerId: dbLead.buyer_id,
-    buyerName: dbLead.buyer_name, // Map the new field
+    buyerName: dbLead.buyer_name,
     createdAt: dbLead.created_at,
     purchasedAt: dbLead.purchased_at,
     contactName: dbLead.contact_name || '',
@@ -56,8 +56,8 @@ export const mapDbLeadToAppLead = (dbLead: any): Lead => {
     address: dbLead.address || '', 
     zipCode: zipCode,
     firstName: firstName,
-    confirmationStatus: dbLead.confirmation_status || 'confirmed', // Map the new field with default
-    appointmentTime: dbLead.appointment_time || undefined // Add this line to map appointment_time
+    confirmationStatus: dbLead.confirmation_status || 'confirmed',
+    appointmentTime: dbLead.appointment_time || undefined
   };
 };
 
