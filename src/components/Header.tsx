@@ -5,7 +5,7 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuL
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, User, MessageSquare, Upload, ShoppingBag } from 'lucide-react';
+import { Menu, User, MessageSquare, Upload, ShoppingBag, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
@@ -164,6 +164,14 @@ const Header = () => {
           </Link>
         </SheetClose>
       )}
+      {isLoggedIn && isAdmin && (
+        <SheetClose asChild>
+          <Link to="/admin/leads" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+            <FileText className="mr-2 h-4 w-4" />
+            All Leads
+          </Link>
+        </SheetClose>
+      )}
       {isLoggedIn && (
         <SheetClose asChild>
           <Link to="/dashboard" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
@@ -242,14 +250,17 @@ const Header = () => {
                       </DropdownMenuItem>
                     )}
                     {isAdmin && (
-                      <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/admin/chats')}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Admin Dashboard
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/admin/chats')}>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Chat Dashboard
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/admin/leads')}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          All Leads
+                        </DropdownMenuItem>
+                      </>
                     )}
-                    <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/dashboard')}>
-                      Dashboard
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                       Log out

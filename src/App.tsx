@@ -28,6 +28,7 @@ import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AdminChatDashboardPage from "./pages/AdminChatDashboard";
+import AdminLeadsPage from "./pages/AdminLeads";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -192,6 +193,15 @@ const App = () => {
                   element={
                     <AdminRoute>
                       <AdminChatDashboardPage />
+                    </AdminRoute>
+                  } 
+                />
+                {/* New Admin Leads Route */}
+                <Route 
+                  path="/admin/leads" 
+                  element={
+                    <AdminRoute>
+                      <AdminLeadsPage />
                     </AdminRoute>
                   } 
                 />
