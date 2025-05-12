@@ -32,20 +32,29 @@ export const useAdminLeads = () => {
       } else if (statusFilter === 'erased') {
         query = query.eq('status', 'erased');
       }
-      // Note: 'all' filter does not add any constraints, so it will return ALL leads
+      // 'all' filter does not add any constraints, returns ALL leads
 
-      const { data, error } = await query;
+      const { data, error: fetchError } = await query;
 
-      if (error) {
-        console.error('Error fetching leads:', error);
-        setError(error.message);
+      if (fetchError) {
+        console.error('Error fetching leads:', fetchError);
+        setError(fetchError.message);
         toast.error('Failed to load leads');
         return;
       }
 
-      console.log(`Fetched ${data?.length || 0} leads with status filter:`, statusFilter);
-      const mappedLeads = data?.map(mapDbLeadToAppLead) || [];
-      setLeads(mappedLeads);
+      console.log(`Fetched ${data?.length || 0} leads with status filter: ${statusFilter}`);
+      
+      if (data) {
+        // Log the statuses to debug
+        const statuses = data.map(lead => lead.status);
+        console.log('Lead statuses in fetched data:', statuses);
+        
+        const mappedLeads = data.map(mapDbLeadToAppLead);
+        setLeads(mappedLeads);
+      } else {
+        setLeads([]);
+      }
       
     } catch (err: any) {
       console.error('Exception when fetching leads:', err);

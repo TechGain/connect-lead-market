@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Check, Trash2, Circle, CircleCheck, FileText } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,7 +8,13 @@ import AdminLeadTable from '@/components/admin/AdminLeadTable';
 import { Helmet } from 'react-helmet-async';
 
 const AdminLeadsPage: React.FC = () => {
-  const { leads, isLoading, error, statusFilter, setStatusFilter } = useAdminLeads();
+  const { leads, isLoading, error, statusFilter, setStatusFilter, refreshLeads } = useAdminLeads();
+  
+  // Force a refresh when the component mounts
+  useEffect(() => {
+    refreshLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const handleTabChange = (value: string) => {
     setStatusFilter(value as LeadStatusFilter);
@@ -18,6 +24,24 @@ const AdminLeadsPage: React.FC = () => {
   const activeLeasCount = leads.filter(lead => lead.status === 'new' || lead.status === 'pending').length;
   const soldLeadsCount = leads.filter(lead => lead.status === 'sold').length;
   const erasedLeadsCount = leads.filter(lead => lead.status === 'erased').length;
+  
+  // Log counts for debugging
+  useEffect(() => {
+    console.log('Current lead counts:', {
+      total: leads.length,
+      active: activeLeasCount,
+      sold: soldLeadsCount,
+      erased: erasedLeadsCount
+    });
+    
+    // Log status distribution
+    const statusCounts = leads.reduce((acc, lead) => {
+      acc[lead.status] = (acc[lead.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    console.log('Status distribution:', statusCounts);
+  }, [leads, activeLeasCount, soldLeadsCount, erasedLeadsCount]);
   
   return (
     <PageLayout>
@@ -38,6 +62,12 @@ const AdminLeadsPage: React.FC = () => {
         ) : error ? (
           <div className="p-4 border border-red-300 bg-red-50 text-red-700 rounded-md">
             <p>Error loading leads: {error}</p>
+            <button 
+              onClick={refreshLeads} 
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -68,17 +98,19 @@ const AdminLeadsPage: React.FC = () => {
               
               <TabsContent value="active" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">Active Leads ({activeLeasCount})</h2>
-                <AdminLeadTable leads={leads} />
+                <AdminLeadTable leads={leads.filter(lead => 
+                  lead.status === 'new' || lead.status === 'pending'
+                )} />
               </TabsContent>
               
               <TabsContent value="sold" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">Sold Leads ({soldLeadsCount})</h2>
-                <AdminLeadTable leads={leads} />
+                <AdminLeadTable leads={leads.filter(lead => lead.status === 'sold')} />
               </TabsContent>
               
               <TabsContent value="erased" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">Erased Leads ({erasedLeadsCount})</h2>
-                <AdminLeadTable leads={leads} />
+                <AdminLeadTable leads={leads.filter(lead => lead.status === 'erased')} />
               </TabsContent>
             </Tabs>
             

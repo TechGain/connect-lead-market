@@ -33,6 +33,11 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads }) => {
     }
   };
 
+  // Debug leads data
+  console.log("Rendering leads in AdminLeadTable:", 
+    leads.map(lead => ({ id: lead.id, status: lead.status, type: lead.type }))
+  );
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -50,7 +55,16 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads }) => {
         </TableHeader>
         <TableBody>
           {leads.map((lead) => (
-            <TableRow key={lead.id} className={lead.status === 'erased' ? 'opacity-70' : ''}>
+            <TableRow 
+              key={lead.id} 
+              className={
+                lead.status === 'erased' 
+                  ? 'opacity-70 bg-red-50' 
+                  : lead.status === 'sold'
+                    ? 'bg-blue-50'
+                    : ''
+              }
+            >
               <TableCell>{lead.type}</TableCell>
               <TableCell>{lead.location}</TableCell>
               <TableCell>${formatCurrency(lead.price)}</TableCell>
