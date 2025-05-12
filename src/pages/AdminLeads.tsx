@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Check, Trash2, Circle, CircleCheck, CircleX, CircleSlash, FileText } from 'lucide-react';
+import React from 'react';
+import { Check, Trash2, Circle, CircleCheck, FileText } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminLeads, LeadStatusFilter } from '@/hooks/use-admin-leads';
@@ -13,6 +13,11 @@ const AdminLeadsPage: React.FC = () => {
   const handleTabChange = (value: string) => {
     setStatusFilter(value as LeadStatusFilter);
   };
+
+  // Count leads by status
+  const activeLeasCount = leads.filter(lead => lead.status === 'new' || lead.status === 'pending').length;
+  const soldLeadsCount = leads.filter(lead => lead.status === 'sold').length;
+  const erasedLeadsCount = leads.filter(lead => lead.status === 'erased').length;
   
   return (
     <PageLayout>
@@ -40,39 +45,39 @@ const AdminLeadsPage: React.FC = () => {
               <TabsList className="grid grid-cols-4 w-full max-w-md">
                 <TabsTrigger value="all">
                   <Circle className="mr-2 h-4 w-4" />
-                  All
+                  All ({leads.length})
                 </TabsTrigger>
                 <TabsTrigger value="active">
                   <CircleCheck className="mr-2 h-4 w-4" />
-                  Active
+                  Active ({activeLeasCount})
                 </TabsTrigger>
                 <TabsTrigger value="sold">
                   <Check className="mr-2 h-4 w-4" />
-                  Sold
+                  Sold ({soldLeadsCount})
                 </TabsTrigger>
                 <TabsTrigger value="erased">
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Erased
+                  Erased ({erasedLeadsCount})
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="all" className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">All Leads</h2>
+                <h2 className="text-xl font-semibold mb-4">All Leads ({leads.length})</h2>
                 <AdminLeadTable leads={leads} />
               </TabsContent>
               
               <TabsContent value="active" className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">Active Leads</h2>
+                <h2 className="text-xl font-semibold mb-4">Active Leads ({activeLeasCount})</h2>
                 <AdminLeadTable leads={leads} />
               </TabsContent>
               
               <TabsContent value="sold" className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">Sold Leads</h2>
+                <h2 className="text-xl font-semibold mb-4">Sold Leads ({soldLeadsCount})</h2>
                 <AdminLeadTable leads={leads} />
               </TabsContent>
               
               <TabsContent value="erased" className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">Erased Leads</h2>
+                <h2 className="text-xl font-semibold mb-4">Erased Leads ({erasedLeadsCount})</h2>
                 <AdminLeadTable leads={leads} />
               </TabsContent>
             </Tabs>

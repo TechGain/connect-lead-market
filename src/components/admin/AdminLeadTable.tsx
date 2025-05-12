@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Lead } from '@/types/lead';
-import LeadCard from '@/components/LeadCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/utils/format-helpers';
@@ -51,7 +50,7 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads }) => {
         </TableHeader>
         <TableBody>
           {leads.map((lead) => (
-            <TableRow key={lead.id}>
+            <TableRow key={lead.id} className={lead.status === 'erased' ? 'opacity-70' : ''}>
               <TableCell>{lead.type}</TableCell>
               <TableCell>{lead.location}</TableCell>
               <TableCell>${formatCurrency(lead.price)}</TableCell>

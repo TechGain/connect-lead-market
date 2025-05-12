@@ -27,9 +27,12 @@ export const useAdminLeads = () => {
       // Apply status filters
       if (statusFilter === 'active') {
         query = query.in('status', ['new', 'pending']);
-      } else if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+      } else if (statusFilter === 'sold') {
+        query = query.eq('status', 'sold');
+      } else if (statusFilter === 'erased') {
+        query = query.eq('status', 'erased');
       }
+      // Note: 'all' filter does not add any constraints, so it will return ALL leads
 
       const { data, error } = await query;
 
@@ -40,8 +43,8 @@ export const useAdminLeads = () => {
         return;
       }
 
-      console.log('Fetched leads:', data);
-      const mappedLeads = data.map(mapDbLeadToAppLead);
+      console.log(`Fetched ${data?.length || 0} leads with status filter:`, statusFilter);
+      const mappedLeads = data?.map(mapDbLeadToAppLead) || [];
       setLeads(mappedLeads);
       
     } catch (err: any) {
