@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -18,7 +17,7 @@ export interface Database {
           description: string
           price: number
           quality_rating: number
-          status: 'new' | 'pending' | 'sold'
+          status: 'new' | 'pending' | 'sold' | 'erased'  // Updated to include 'erased'
           seller_id: string
           buyer_id: string | null
           created_at: string
@@ -34,7 +33,7 @@ export interface Database {
           description: string
           price: number
           quality_rating: number
-          status: 'new' | 'pending' | 'sold'
+          status: 'new' | 'pending' | 'sold' | 'erased'  // Updated to include 'erased'
           seller_id: string
           buyer_id?: string | null
           created_at?: string
@@ -50,7 +49,7 @@ export interface Database {
           description?: string
           price?: number
           quality_rating?: number
-          status?: 'new' | 'pending' | 'sold'
+          status?: 'new' | 'pending' | 'sold' | 'erased'  // Updated to include 'erased'
           seller_id?: string
           buyer_id?: string | null
           created_at?: string

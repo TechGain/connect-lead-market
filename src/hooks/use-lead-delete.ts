@@ -34,6 +34,7 @@ export const useLeadDelete = () => {
         .single();
         
       if (error) {
+        console.error('Supabase error when deleting lead:', error);
         throw error;
       }
       
