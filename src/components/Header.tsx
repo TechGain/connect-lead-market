@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -114,6 +115,14 @@ const Header = () => {
           <Link to="/admin/chats" className={navigationMenuTriggerStyle()}>
             <MessageSquare className="mr-2 h-4 w-4 inline" />
             Admin Dashboard
+          </Link>
+        </NavigationMenuItem>
+      )}
+      {isLoggedIn && isAdmin && (
+        <NavigationMenuItem>
+          <Link to="/admin/leads" className={navigationMenuTriggerStyle()}>
+            <FileText className="mr-2 h-4 w-4 inline" />
+            All Leads
           </Link>
         </NavigationMenuItem>
       )}
