@@ -226,6 +226,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_buyer: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_owner: {
+        Args: { record_user_id: string }
+        Returns: boolean
+      }
+      is_seller: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      user_has_role: {
+        Args: { role_to_check: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
