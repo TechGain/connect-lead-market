@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,58 +5,47 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
-
 const Index = () => {
   const {
     isLoggedIn,
     role
   } = useUserRole();
-  
   const getActionButton = () => {
     if (!isLoggedIn) {
-      return (
-        <Link to="/register">
+      return <Link to="/register">
           <Button className="bg-white text-brand-600 hover:bg-gray-100">
             Get Started
           </Button>
-        </Link>
-      );
+        </Link>;
     }
-    
     if (role === 'seller') {
-      return (
-        <Link to="/upload-leads">
+      return <Link to="/upload-leads">
           <Button className="bg-white text-brand-600 hover:bg-gray-100">
             Upload Leads
           </Button>
-        </Link>
-      );
+        </Link>;
     }
-    
+
     // Default for buyers and any other role
-    return (
-      <Link to="/marketplace">
+    return <Link to="/marketplace">
         <Button className="bg-white text-brand-600 hover:bg-gray-100">
           Browse Marketplace
         </Button>
-      </Link>
-    );
+      </Link>;
   };
-  
+
   // Function to conditionally render the guarantee text based on user role
   const getGuaranteeText = () => {
     if (!isLoggedIn) {
       return null; // Don't show any guarantee text for logged out users
     }
-    
     if (role === 'seller') {
       return <p className="text-lg mb-6"><strong>100% RETURN ON QUALIFIED SOLD LEADS!</strong></p>;
     }
-    
+
     // Default for buyers or admin
     return <p className="text-lg mb-6"><strong>100% MONEY BACK GUARANTEED FOR UNQUALIFIED LEADS!</strong></p>;
   };
-  
   return <div className="flex flex-col min-h-screen">
       <Header />
       
@@ -80,7 +68,7 @@ const Index = () => {
                 </div>
               </div>
               <div className="md:w-1/2">
-                <img alt="StayConnect Logo" className="rounded-lg shadow-lg w-full" src="/lovable-uploads/318ae4bc-6abd-49a8-b1ce-6debffe38792.jpg" />
+                <img alt="StayConnect Logo" className="rounded-lg shadow-lg w-full" src="/lovable-uploads/59402280-411f-4078-8ad4-6388cbe94c0e.jpg" />
               </div>
             </div>
           </div>
