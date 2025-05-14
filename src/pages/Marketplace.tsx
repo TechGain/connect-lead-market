@@ -10,6 +10,7 @@ import { useCheckoutUrlParams } from '@/hooks/use-checkout-url-params';
 import MarketplaceHeader from '@/components/marketplace/MarketplaceHeader';
 import MarketplaceLeadsList from '@/components/marketplace/MarketplaceLeadsList';
 import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
+import MarketplaceStats from '@/components/marketplace/MarketplaceStats';
 import LeadPurchaseDialog from '@/components/marketplace/LeadPurchaseDialog';
 import AuthStateDisplay from '@/components/marketplace/AuthStateDisplay';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,11 @@ const Marketplace = () => {
 
   // Check if user is buyer or admin
   const canAccessMarketplace = role === 'buyer' || role === 'admin';
+  
+  // Calculate lead statistics
+  const totalLeads = filteredLeads.length;
+  const availableLeads = filteredLeads.filter(lead => lead.status === 'new').length;
+  const soldLeads = filteredLeads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
 
   // Handle view mode change
   const handleViewModeChange = (mode: ViewMode) => {
@@ -155,6 +161,13 @@ const Marketplace = () => {
                 onViewModeChange={handleViewModeChange}
               />
             </div>
+            
+            {/* Add MarketplaceStats component here */}
+            <MarketplaceStats 
+              totalLeads={totalLeads}
+              availableLeads={availableLeads}
+              soldLeads={soldLeads}
+            />
             
             <MarketplaceLeadsList 
               leads={filteredLeads}
