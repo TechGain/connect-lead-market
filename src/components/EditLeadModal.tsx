@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -182,8 +181,8 @@ const EditLeadModal = ({ lead, open, onOpenChange, onLeadUpdated }: EditLeadModa
             onLeadTypeChange={setLeadType}
             onLocationChange={setLocation}
             onDescriptionChange={setDescription}
-            onAddressChange={setAddress}
-            onZipCodeChange={setZipCode}
+            onAddressSelect={setAddress}
+            onZipCodeFound={setZipCode}
           />
           
           <ConfirmationStatusSelect 
