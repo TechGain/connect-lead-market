@@ -13,6 +13,15 @@ import RoleErrorState from '@/components/my-leads/RoleErrorState';
 import LeadsListTab from '@/components/my-leads/LeadsListTab';
 import UploadLeadTab from '@/components/my-leads/UploadLeadTab';
 
+// Check if we're running inside Lovable iframe
+const isInLovableIframe = () => {
+  try {
+    return window.self !== window.top && window.location.hostname.includes('lovableproject.com');
+  } catch (e) {
+    return true; // If we can't access parent, we're probably in an iframe
+  }
+};
+
 const MyLeads = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,6 +32,27 @@ const MyLeads = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
   const { leads } = useSellerLeads(user?.id);
+
+  // Prevent default behavior for links and forms in Lovable environment
+  useEffect(() => {
+    if (isInLovableIframe()) {
+      console.log("MyLeads component - Running in Lovable environment, adding event preventions");
+      
+      const preventDefaultForEvent = (e: Event) => {
+        if (e.target && (e.target as HTMLElement).tagName === 'FORM') {
+          console.log("Preventing form submission default behavior in Lovable");
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      };
+
+      document.addEventListener('submit', preventDefaultForEvent, true);
+      
+      return () => {
+        document.removeEventListener('submit', preventDefaultForEvent, true);
+      };
+    }
+  }, []);
   
   useEffect(() => {
     // Log the current authentication state for debugging
@@ -35,7 +65,8 @@ const MyLeads = () => {
       hasChecked,
       loadingTimeout,
       activeTab,
-      currentPath: location.pathname + location.search
+      currentPath: location.pathname + location.search,
+      isInLovableEnv: isInLovableIframe()
     });
     
     // Force check to complete after a reasonable timeout to prevent infinite loading
@@ -60,7 +91,11 @@ const MyLeads = () => {
     if (!isLoggedIn) {
       console.log("User is not logged in, redirecting to login");
       toast.error("Please log in to view your leads");
-      navigate('/login');
+      
+      if (!isInLovableIframe()) {
+        // Only redirect if not in Lovable iframe
+        navigate('/login');
+      }
       return;
     }
     
@@ -75,7 +110,11 @@ const MyLeads = () => {
     if (role !== 'seller' && role !== 'buyer' && !isAdmin) {
       console.log("User is not a seller, buyer or admin, redirecting to home", { actualRole: role });
       toast.error(`Only sellers, buyers and admins can view this page. Your current role is: ${role}`);
-      navigate('/');
+      
+      if (!isInLovableIframe()) {
+        // Only redirect if not in Lovable iframe
+        navigate('/');
+      }
       return;
     }
     
@@ -92,11 +131,17 @@ const MyLeads = () => {
     setActiveTab(value);
     
     // Update URL without causing a full page reload - use replace: true
-    const newUrl = `/my-leads?tab=${value}`;
-    navigate(newUrl, { replace: true });
+    // In Lovable environment, don't use navigate as it might cause issues
+    if (!isInLovableIframe()) {
+      const newUrl = `/my-leads?tab=${value}`;
+      navigate(newUrl, { replace: true });
+    }
   };
   
-  const handleRefresh = () => {
+  const handleRefresh = (e: React.MouseEvent) => {
+    // Prevent default browser behavior
+    e.preventDefault();
+    
     refreshUserRole();
     toast.info("Refreshing user role...");
     setLoadingTimeout(false);
