@@ -34,13 +34,23 @@ export function AddressAutocompleteInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<HTMLDivElement>(null);
   const scriptLoadingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const mapDiv = useRef<HTMLDivElement | null>(null);
 
   // Load the Google Maps script
   useEffect(() => {
+    // Create a reference div for the PlacesService
+    if (!mapDiv.current) {
+      const div = document.createElement('div');
+      div.style.display = 'none';
+      document.body.appendChild(div);
+      mapDiv.current = div;
+    }
+
     // Check if script is already loaded
     if (window.google?.maps?.places) {
       console.log('Google Maps API already loaded');
       setIsScriptLoaded(true);
+      initializeServices();
       return;
     }
 
@@ -60,6 +70,7 @@ export function AddressAutocompleteInput({
     script.onload = () => {
       console.log('Google Maps script loaded successfully');
       setIsScriptLoaded(true);
+      initializeServices();
       if (scriptLoadingTimeout.current) {
         clearTimeout(scriptLoadingTimeout.current);
       }
@@ -86,10 +97,10 @@ export function AddressAutocompleteInput({
     };
   }, []);
 
-  // Initialize Google Maps services when the script is loaded
-  useEffect(() => {
-    if (!isScriptLoaded || !window.google) {
-      console.log('Google Maps script not loaded yet, waiting...');
+  // Initialize Google Maps services
+  const initializeServices = () => {
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+      console.log('Google Maps API not available');
       return;
     }
     
@@ -97,9 +108,10 @@ export function AddressAutocompleteInput({
       console.log('Initializing Google Maps services...');
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       
-      // Create a dummy div for PlacesService (it needs a DOM element)
-      const dummyDiv = document.createElement('div');
-      placesService.current = new window.google.maps.places.PlacesService(dummyDiv);
+      // Create a PlacesService with the mapDiv reference
+      if (mapDiv.current) {
+        placesService.current = new window.google.maps.places.PlacesService(mapDiv.current);
+      }
       
       // Create a session token for better pricing
       autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
@@ -108,7 +120,7 @@ export function AddressAutocompleteInput({
     } catch (error) {
       console.error('Error initializing Google Maps services:', error);
     }
-  }, [isScriptLoaded]);
+  };
 
   // Update internal state when prop value changes
   useEffect(() => {
@@ -256,7 +268,7 @@ export function AddressAutocompleteInput({
         className={className}
         value={inputValue}
         onChange={handleInputChange}
-        onFocus={() => inputValue && setShowSuggestions(true)}
+        onFocus={() => inputValue && predictions.length > 0 && setShowSuggestions(true)}
         {...props}
       />
       
