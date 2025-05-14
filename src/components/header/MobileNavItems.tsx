@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Upload, ShoppingBag, FileText } from 'lucide-react';
@@ -18,6 +18,18 @@ export const MobileNavItems: React.FC<MobileNavItemsProps> = ({
   isAdmin, 
   handleLogout 
 }) => {
+  const navigate = useNavigate();
+  
+  const handleUploadLeadClick = () => {
+    // We need to setTimeout to allow the sheet to close first
+    setTimeout(() => {
+      navigate('/my-leads?tab=upload', { 
+        replace: true,
+        state: { preventRefresh: true } 
+      });
+    }, 10);
+  };
+  
   return (
     <>
       <SheetClose asChild>
@@ -45,10 +57,16 @@ export const MobileNavItems: React.FC<MobileNavItemsProps> = ({
       
       {isLoggedIn && (role === 'seller' || isAdmin) && (
         <SheetClose asChild>
-          <Link to="/my-leads?tab=upload" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Lead
-          </Link>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start p-0 m-0 h-auto font-normal"
+            onClick={handleUploadLeadClick}
+          >
+            <span className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100 w-full">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Lead
+            </span>
+          </Button>
         </SheetClose>
       )}
       

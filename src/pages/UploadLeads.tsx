@@ -12,7 +12,6 @@ const UploadLeads = () => {
     // Log the current authentication state for debugging
     console.log("UploadLeads component - redirecting to my-leads with upload tab");
     
-    // Simple redirect to my-leads with upload tab
     if (!isLoggedIn) {
       toast.error("Please log in to upload leads");
       navigate('/login', { replace: true });
@@ -25,8 +24,11 @@ const UploadLeads = () => {
       return;
     }
     
-    // Navigate to my-leads with upload tab - using replace to avoid adding to history stack
-    navigate('/my-leads?tab=upload', { replace: true });
+    // Navigate to my-leads with upload tab using the state to prevent refresh
+    navigate('/my-leads?tab=upload', { 
+      replace: true,
+      state: { preventRefresh: true }
+    });
   }, [isLoggedIn, role, navigate, isAdmin]);
   
   // This component doesn't render anything as it's just for redirection

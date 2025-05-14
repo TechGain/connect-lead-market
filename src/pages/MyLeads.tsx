@@ -79,21 +79,26 @@ const MyLeads = () => {
       return;
     }
     
-    // Set active tab based on URL parameter
+    // Extract the tab parameter from URL and set it only on initial load
+    // This prevents overriding the activeTab state during tab changes
     const tabParam = searchParams.get('tab');
-    if (tabParam && (tabParam === 'leads' || tabParam === 'upload')) {
+    if (tabParam && (tabParam === 'leads' || tabParam === 'upload') && activeTab !== tabParam) {
+      console.log("Setting active tab from URL parameter:", tabParam);
       setActiveTab(tabParam);
     }
     
-  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, searchParams, location]);
+  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, searchParams, location, activeTab]);
   
   const handleTabChange = (value: string) => {
     console.log("Tab changed to:", value);
     setActiveTab(value);
     
-    // Update URL without causing a full page reload - use replace: true
+    // Update URL without causing navigation/refresh - use replace: true and state to prevent history issues
     const newUrl = `/my-leads?tab=${value}`;
-    navigate(newUrl, { replace: true });
+    navigate(newUrl, { 
+      replace: true,
+      state: { preventRefresh: true }
+    });
   };
   
   const handleRefresh = () => {
