@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import UploadLeads from "./pages/UploadLeads";
 import BuyerGuide from "./pages/BuyerGuide";
 import SellerGuide from "./pages/SellerGuide";
 import Contact from "./pages/Contact";
@@ -165,6 +166,15 @@ const App = () => {
                   element={
                     <SellerOrAdminRoute>
                       <MyLeads />
+                    </SellerOrAdminRoute>
+                  } 
+                />
+                {/* Keep only one instance of the upload-leads route */}
+                <Route 
+                  path="/upload-leads" 
+                  element={
+                    <SellerOrAdminRoute>
+                      <UploadLeads />
                     </SellerOrAdminRoute>
                   } 
                 />

@@ -68,11 +68,7 @@ const Login = () => {
   }, [isLoggedIn, user?.id, role]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    // Adding both preventDefault and stopPropagation for maximum prevention
     e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('[LOGIN] Form submission intercepted and prevented default behavior');
     setError('');
     setIsLoading(true);
     
@@ -98,18 +94,6 @@ const Login = () => {
     }
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Stop event propagation to prevent refreshes in Lovable interface
-    e.stopPropagation();
-    setEmail(e.target.value);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Stop event propagation to prevent refreshes in Lovable interface
-    e.stopPropagation();
-    setPassword(e.target.value);
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -133,9 +117,8 @@ const Login = () => {
                     type="email"
                     placeholder="johndoe@example.com"
                     value={email}
-                    onChange={handleEmailChange}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    autoComplete="email"
                   />
                 </div>
                 
@@ -150,16 +133,15 @@ const Login = () => {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={handlePasswordChange}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
-                    autoComplete="current-password"
                   />
                 </div>
               </CardContent>
               
               <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Logging in...' : 'Log In'}
+                <Button type="submit" className="w-full">
+                  Log In
                 </Button>
                 <div className="text-center text-sm">
                   Don't have an account?{' '}

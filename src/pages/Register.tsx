@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,11 +43,7 @@ const Register = () => {
 
   // This function handles the form submission with direct role management
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    // Adding both preventDefault and stopPropagation
     e.preventDefault();
-    e.stopPropagation();
-    console.log("Registration form submission intercepted");
-    
     if (isLoading) return;
 
     // Reset previous errors

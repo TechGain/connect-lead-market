@@ -17,12 +17,6 @@ const PriceQualityFields = ({
   onPriceChange,
   onQualityChange,
 }: PriceQualityFieldsProps) => {
-  // Enhanced handler that stops propagation
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation(); // Stop event propagation to prevent refreshes
-    onPriceChange(e.target.value);
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -33,7 +27,7 @@ const PriceQualityFields = ({
           min="1"
           step="0.01"
           value={price}
-          onChange={handlePriceChange}
+          onChange={(e) => onPriceChange(e.target.value)}
           placeholder="49.99"
           required
         />

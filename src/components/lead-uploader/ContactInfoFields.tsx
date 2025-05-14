@@ -20,22 +20,6 @@ const ContactInfoFields = ({
   onContactEmailChange,
   onContactPhoneChange,
 }: ContactInfoFieldsProps) => {
-  // Enhanced handlers that stop propagation
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation(); // Stop event propagation to prevent refreshes
-    onContactNameChange(e.target.value);
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation(); // Stop event propagation to prevent refreshes
-    onContactEmailChange(e.target.value);
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation(); // Stop event propagation to prevent refreshes
-    onContactPhoneChange(e.target.value);
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="space-y-2">
@@ -43,7 +27,7 @@ const ContactInfoFields = ({
         <Input
           id="contact-name"
           value={contactName}
-          onChange={handleNameChange}
+          onChange={(e) => onContactNameChange(e.target.value)}
           placeholder="John Doe"
           required
         />
@@ -55,7 +39,7 @@ const ContactInfoFields = ({
           id="contact-email"
           type="email"
           value={contactEmail}
-          onChange={handleEmailChange}
+          onChange={(e) => onContactEmailChange(e.target.value)}
           placeholder="example@email.com"
           required
         />
@@ -66,7 +50,7 @@ const ContactInfoFields = ({
         <Input
           id="contact-phone"
           value={contactPhone}
-          onChange={handlePhoneChange}
+          onChange={(e) => onContactPhoneChange(e.target.value)}
           placeholder="(123) 456-7890"
           required
         />

@@ -3,60 +3,36 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
-import { usePreventRefresh } from '@/hooks/use-prevent-refresh';
 
 const UploadLeads = () => {
   const navigate = useNavigate();
   const { isLoggedIn, role, isAdmin } = useUserRole();
   
-  // Use our custom hook to prevent refreshes
-  usePreventRefresh();
-  
   useEffect(() => {
-    console.log('UploadLeads component - Checking authentication');
+    // Log the current authentication state for debugging
+    console.log("UploadLeads component - redirecting to my-leads with upload tab");
     
-    // We don't want to navigate immediately to avoid potential race conditions
-    const timer = setTimeout(() => {
-      if (!isLoggedIn) {
-        console.log('UploadLeads - User not logged in, redirecting to login');
-        toast.error("Please log in to upload leads");
-        navigate('/login', { 
-          replace: true,
-          state: { 
-            returnTo: '/my-leads',
-            returnToTab: 'upload'
-          }
-        });
-        return;
-      }
-      
-      if (role !== 'seller' && !isAdmin) {
-        console.log(`UploadLeads - User role ${role || 'not set'} not authorized, redirecting to home`);
-        toast.error(`Only sellers and admins can upload leads. Your current role is: ${role || 'not set'}`);
-        navigate('/', { replace: true });
-        return;
-      }
-      
-      console.log('UploadLeads - Authorization passed, navigating to /my-leads with upload tab');
-      
-      // Navigate to the MyLeads page with the upload tab
-      navigate('/my-leads', { 
-        replace: true,
-        state: { 
-          initialTab: 'upload',
-          preventTabChange: false,
-          source: 'direct-upload-link'
-        }
-      });
-    }, 100);
+    // Simple redirect to my-leads with upload tab
+    if (!isLoggedIn) {
+      toast.error("Please log in to upload leads");
+      navigate('/login', { replace: true });
+      return;
+    }
     
-    return () => clearTimeout(timer);
+    if (role !== 'seller' && !isAdmin) {
+      toast.error(`Only sellers and admins can upload leads. Your current role is: ${role || 'not set'}`);
+      navigate('/', { replace: true });
+      return;
+    }
+    
+    // Navigate to my-leads with upload tab - using replace to avoid adding to history stack
+    navigate('/my-leads?tab=upload', { replace: true });
   }, [isLoggedIn, role, navigate, isAdmin]);
   
-  // Return a minimal component that won't cause navigation issues
+  // This component doesn't render anything as it's just for redirection
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p>Preparing upload environment...</p>
+      <p>Redirecting to Lead Upload...</p>
     </div>
   );
 };

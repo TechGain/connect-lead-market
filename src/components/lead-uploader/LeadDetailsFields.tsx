@@ -31,19 +31,6 @@ const LeadDetailsFields = ({
   onAddressChange,
   onZipCodeChange,
 }: LeadDetailsFieldsProps) => {
-  // Fix: Ensure input handlers don't prevent default behavior
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onLocationChange(e.target.value);
-  };
-
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onDescriptionChange(e.target.value);
-  };
-
-  const handleZipCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onZipCodeChange(e.target.value);
-  };
-
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -86,7 +73,7 @@ const LeadDetailsFields = ({
           <Input 
             id="location"
             value={location}
-            onChange={handleLocationChange}
+            onChange={(e) => onLocationChange(e.target.value)}
             placeholder="City, State"
             required
           />
@@ -98,7 +85,7 @@ const LeadDetailsFields = ({
         <Textarea
           id="description"
           value={description}
-          onChange={handleDescriptionChange}
+          onChange={(e) => onDescriptionChange(e.target.value)}
           placeholder="Provide details about the job..."
           rows={3}
           required
@@ -114,11 +101,11 @@ const LeadDetailsFields = ({
             placeholder="Start typing to search for an address..."
             required
             onAddressSelect={(selectedAddress) => {
-              console.log("Address selected in LeadDetailsFields:", selectedAddress);
+              console.log("Address selected:", selectedAddress);
               onAddressChange(selectedAddress);
             }}
             onZipCodeFound={(foundZipCode) => {
-              console.log("Zip code found in LeadDetailsFields:", foundZipCode);
+              console.log("Zip code found:", foundZipCode);
               onZipCodeChange(foundZipCode);
             }}
           />
@@ -130,7 +117,7 @@ const LeadDetailsFields = ({
           <Input
             id="zipCode"
             value={zipCode}
-            onChange={handleZipCodeChange}
+            onChange={(e) => onZipCodeChange(e.target.value)}
             placeholder="12345"
             required
             maxLength={10}

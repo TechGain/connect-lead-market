@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -13,18 +14,6 @@ export function useAuthActions() {
     try {
       console.log("Attempting login with:", { email });
       setIsLoading(true);
-      
-      // Clean up any existing auth state first
-      try {
-        Object.keys(localStorage).forEach(key => {
-          if (key.includes('supabase.auth.') || key.includes('sb-')) {
-            localStorage.removeItem(key);
-          }
-        });
-      } catch (e) {
-        console.error("Error clearing localStorage:", e);
-      }
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

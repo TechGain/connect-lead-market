@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { NavigationMenuItem, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { MessageSquare, Upload, ShoppingBag, FileText } from 'lucide-react';
 
@@ -10,17 +11,6 @@ type NavItemsProps = {
 };
 
 export const NavItems: React.FC<NavItemsProps> = ({ isLoggedIn, role, isAdmin }) => {
-  const navigate = useNavigate();
-  
-  const handleUploadLeadClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Navigate directly without changing URL structure
-    navigate('/my-leads?tab=upload', { 
-      replace: true,
-      state: { preventTabChange: false } 
-    });
-  };
-  
   return (
     <>
       <NavigationMenuItem>
@@ -48,14 +38,10 @@ export const NavItems: React.FC<NavItemsProps> = ({ isLoggedIn, role, isAdmin })
       
       {isLoggedIn && (role === 'seller' || isAdmin) && (
         <NavigationMenuItem>
-          <button 
-            className={navigationMenuTriggerStyle()}
-            onClick={handleUploadLeadClick}
-            type="button"
-          >
+          <Link to="/my-leads?tab=upload" className={navigationMenuTriggerStyle()}>
             <Upload className="mr-2 h-4 w-4 inline" />
             Upload Lead
-          </button>
+          </Link>
         </NavigationMenuItem>
       )}
       

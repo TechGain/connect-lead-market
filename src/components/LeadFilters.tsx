@@ -1,12 +1,10 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from '@/components/ui/label';
 import { Search, Filter, X } from 'lucide-react';
-import { usePreventRefresh } from '@/hooks/use-prevent-refresh';
 
 interface LeadFiltersProps {
   onFilterChange: (filters: {
@@ -27,17 +25,7 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
   const [minRating, setMinRating] = React.useState(0);
   const [isExpanded, setIsExpanded] = React.useState(false);
   
-  // Use our new hook to prevent refreshes
-  usePreventRefresh();
-  
-  const applyFilters = (e?: React.MouseEvent) => {
-    // Prevent default for any event
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Preventing refresh in applyFilters');
-    }
-    
+  const applyFilters = () => {
     onFilterChange({
       search,
       type,
@@ -48,14 +36,7 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
     });
   };
   
-  const resetFilters = (e?: React.MouseEvent) => {
-    // Prevent default for any event
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Preventing refresh in resetFilters');
-    }
-    
+  const resetFilters = () => {
     setSearch('');
     setType('');
     setLocation('');
@@ -72,44 +53,23 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
     });
   };
 
-  // Handle search input specifically to prevent refreshes
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSearch(e.target.value);
-  };
-  
-  // Apply filters on mount and whenever filters change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      applyFilters();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, type, location, priceRange, minRating]);
-
   return (
-    <div className="bg-white rounded-lg border p-4 mb-6" onClick={(e) => e.stopPropagation()}>
+    <div className="bg-white rounded-lg border p-4 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <Input
             placeholder="Search leads by keyword..."
             value={search}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
-            onClick={(e) => e.stopPropagation()}
           />
         </div>
         <Button 
           variant="outline"
           size="icon"
           className="ml-2"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsExpanded(!isExpanded);
-          }}
-          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
         >
           <Filter size={18} />
         </Button>
@@ -119,14 +79,8 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div className="space-y-2">
             <Label>Lead Type</Label>
-            <Select 
-              value={type} 
-              onValueChange={(val) => {
-                console.log('Type selected:', val);
-                setType(val);
-              }}
-            >
-              <SelectTrigger onClick={(e) => e.stopPropagation()}>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger>
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
@@ -158,14 +112,8 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
           
           <div className="space-y-2">
             <Label>Location</Label>
-            <Select 
-              value={location} 
-              onValueChange={(val) => {
-                console.log('Location selected:', val);
-                setLocation(val);
-              }}
-            >
-              <SelectTrigger onClick={(e) => e.stopPropagation()}>
+            <Select value={location} onValueChange={setLocation}>
+              <SelectTrigger>
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
               <SelectContent>
@@ -181,14 +129,8 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
           
           <div className="space-y-2">
             <Label>Minimum Rating</Label>
-            <Select 
-              value={minRating.toString()} 
-              onValueChange={(val) => {
-                console.log('Rating selected:', val);
-                setMinRating(Number(val));
-              }}
-            >
-              <SelectTrigger onClick={(e) => e.stopPropagation()}>
+            <Select value={minRating.toString()} onValueChange={(value) => setMinRating(Number(value))}>
+              <SelectTrigger>
                 <SelectValue placeholder="Any Rating" />
               </SelectTrigger>
               <SelectContent>
@@ -215,34 +157,19 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
               max={500}
               step={5}
               value={priceRange}
-              onValueChange={(val) => {
-                console.log('Price range changed:', val);
-                setPriceRange(val);
-              }}
+              onValueChange={setPriceRange}
               className="py-4"
-              onClick={(e) => e.stopPropagation()}
             />
           </div>
           
           <div className="flex gap-2 md:col-span-3">
-            <Button 
-              onClick={(e) => {
-                console.log('Apply filters clicked');
-                applyFilters(e);
-              }}
-              className="flex-1"
-              type="button"
-            >
+            <Button onClick={applyFilters} className="flex-1">
               Apply Filters
             </Button>
             <Button 
-              onClick={(e) => {
-                console.log('Reset filters clicked');
-                resetFilters(e);
-              }}
+              onClick={resetFilters} 
               variant="outline" 
               size="icon"
-              type="button"
             >
               <X size={16} />
             </Button>
