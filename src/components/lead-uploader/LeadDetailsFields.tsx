@@ -95,21 +95,15 @@ const LeadDetailsFields = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="address">Property Address *</Label>
-          <AddressAutocompleteInput
+          {/* Modified this part to make it more reliable */}
+          <Input
             id="address"
             value={address}
-            placeholder="Start typing to search for an address..."
+            onChange={(e) => onAddressChange(e.target.value)}
+            placeholder="Enter property address"
             required
-            onAddressSelect={(selectedAddress) => {
-              console.log("Address selected:", selectedAddress);
-              onAddressChange(selectedAddress);
-            }}
-            onZipCodeFound={(foundZipCode) => {
-              console.log("Zip code found:", foundZipCode);
-              onZipCodeChange(foundZipCode);
-            }}
           />
-          <p className="text-xs text-muted-foreground">Start typing to see address suggestions</p>
+          <p className="text-xs text-muted-foreground">Enter the complete property address</p>
         </div>
         
         <div className="space-y-2">

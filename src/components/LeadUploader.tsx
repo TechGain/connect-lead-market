@@ -41,16 +41,14 @@ const LeadUploader = () => {
     '4:00 PM - 6:00 PM',
   ];
 
-  // Handle address selection from autocomplete
-  const handleAddressSelect = (selectedAddress: string) => {
-    console.log("Address selected in LeadUploader:", selectedAddress);
-    setAddress(selectedAddress);
+  // Handle address change
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
   };
 
-  // Handle ZIP code found from autocomplete
-  const handleZipCodeFound = (foundZipCode: string) => {
-    console.log("ZIP code found in LeadUploader:", foundZipCode);
-    setZipCode(foundZipCode);
+  // Handle ZIP code change
+  const handleZipCodeChange = (value: string) => {
+    setZipCode(value);
   };
 
   // Fixed: Ensure the confirmationStatus handler uses the proper union type
@@ -141,8 +139,8 @@ const LeadUploader = () => {
             onLeadTypeChange={setLeadType}
             onLocationChange={setLocation}
             onDescriptionChange={setDescription}
-            onAddressChange={handleAddressSelect}
-            onZipCodeChange={handleZipCodeFound}
+            onAddressChange={handleAddressChange}
+            onZipCodeChange={handleZipCodeChange}
           />
           
           <ConfirmationStatusSelect 
