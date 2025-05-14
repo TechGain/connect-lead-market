@@ -51,13 +51,6 @@ export function AddressAutocompleteInput({
     };
   }, [setShowSuggestions]);
 
-  // Debug console log for predictions
-  useEffect(() => {
-    if (predictions.length > 0) {
-      console.log('Address predictions available:', predictions.length);
-    }
-  }, [predictions]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     console.log('Address input changed to:', value);
@@ -68,7 +61,9 @@ export function AddressAutocompleteInput({
       onAddressSelect(value);
     }
     
-    if (value) {
+    // Get predictions if we have at least 3 characters
+    if (value && value.length >= 3) {
+      console.log('Fetching predictions for:', value);
       getPlacePredictions(value);
     } else {
       setShowSuggestions(false);
@@ -77,9 +72,14 @@ export function AddressAutocompleteInput({
 
   const handleInputFocus = () => {
     console.log('Input focused, current value:', inputValue);
-    if (inputValue && predictions.length > 0) {
-      console.log('Showing suggestions on focus');
-      setShowSuggestions(true);
+    // Show predictions if we have input and predictions
+    if (inputValue && inputValue.length >= 3) {
+      console.log('Showing suggestions or fetching on focus');
+      if (predictions.length > 0) {
+        setShowSuggestions(true);
+      } else {
+        getPlacePredictions(inputValue);
+      }
     }
   };
 
@@ -98,7 +98,7 @@ export function AddressAutocompleteInput({
         value={inputValue}
         onChange={handleInputChange}
         onFocus={handleInputFocus}
-        onClick={() => inputValue && predictions.length > 0 && setShowSuggestions(true)}
+        onClick={handleInputFocus}
         {...props}
       />
       

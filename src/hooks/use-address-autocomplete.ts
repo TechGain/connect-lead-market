@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useGoogleMaps } from './use-google-maps';
 
 // Define the type for place predictions
@@ -29,6 +29,7 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [inputValue, setInputValue] = useState('');
   
   const { 
     isScriptLoaded, 
@@ -40,10 +41,42 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
     createNewSessionToken 
   } = useGoogleMaps();
 
+  // Debug effect to track state changes
+  useEffect(() => {
+    console.log('Address Autocomplete State:', {
+      isScriptLoaded,
+      isGoogleLoading,
+      googleError,
+      hasAutocompleteService: !!autocompleteService.current,
+      hasPlacesService: !!placesService.current,
+      hasSessionToken: !!autocompleteSessionToken.current,
+      predictionsCount: predictions.length,
+      showSuggestions,
+      apiStatus
+    });
+  }, [
+    isScriptLoaded, 
+    isGoogleLoading, 
+    googleError, 
+    autocompleteService.current, 
+    placesService.current,
+    predictions, 
+    showSuggestions,
+    apiStatus
+  ]);
+
   // Get predictions from Google Places API
   const getPlacePredictions = useCallback((input: string) => {
     // Reset error state on new request
     setError(null);
+    setInputValue(input);
+    
+    if (!input || input.length < 3) {
+      console.log('Input too short, minimum 3 characters required');
+      setPredictions([]);
+      setShowSuggestions(false);
+      return;
+    }
     
     if (isGoogleLoading) {
       console.log('Google Maps is still loading, waiting...');
@@ -59,12 +92,6 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
     if (!autocompleteService.current) {
       console.error('Autocomplete service not initialized');
       setError('Address autocomplete service not available');
-      return;
-    }
-    
-    if (input.length < 3) {
-      console.log('Input too short, minimum 3 characters required');
-      setPredictions([]);
       return;
     }
     
@@ -97,8 +124,16 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
           if (status !== window.google?.maps.places.PlacesServiceStatus.OK) {
             console.error('Autocomplete API error status:', status);
             setApiStatus('error');
-            setError(`Address lookup failed: ${status}`);
-            setPredictions([]);
+            
+            if (status === window.google?.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+              console.log('No predictions found for input:', input);
+              setPredictions([]);
+              setShowSuggestions(true); // Show the "no results" message
+            } else {
+              setError(`Address lookup failed: ${status}`);
+              setPredictions([]);
+              setShowSuggestions(false);
+            }
             return;
           }
 
@@ -106,6 +141,7 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
             console.log('No predictions found');
             setApiStatus('success');
             setPredictions([]);
+            setShowSuggestions(false);
             return;
           }
 
@@ -121,6 +157,7 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
       setApiStatus('error');
       setError(`Error searching for addresses: ${error}`);
       setPredictions([]);
+      setShowSuggestions(false);
     }
   }, [isGoogleLoading, googleError, autocompleteService, createNewSessionToken]);
 

@@ -1,4 +1,4 @@
 
-// We're now recommending using the client from integrations folder directly
+// Export the supabase client from the integrations folder
 import { supabase } from '@/integrations/supabase/client';
 export { supabase };

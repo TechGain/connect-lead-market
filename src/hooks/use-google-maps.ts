@@ -34,22 +34,28 @@ export function useGoogleMaps(): GoogleMapsServices {
     
     try {
       console.log('Initializing Google Maps services...');
+      
+      // Create the autocomplete service
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       console.log('AutocompleteService created:', !!autocompleteService.current);
       
       // Create a PlacesService with the mapDiv reference
-      if (mapDiv.current) {
-        placesService.current = new window.google.maps.places.PlacesService(mapDiv.current);
-        console.log('PlacesService created:', !!placesService.current);
-      } else {
-        console.error('mapDiv reference not available for PlacesService');
-        setError('Failed to create PlacesService - mapDiv not available');
+      if (!mapDiv.current) {
+        const div = document.createElement('div');
+        div.style.display = 'none';
+        document.body.appendChild(div);
+        mapDiv.current = div;
+        console.log('Created mapDiv for PlacesService');
       }
+      
+      placesService.current = new window.google.maps.places.PlacesService(mapDiv.current);
+      console.log('PlacesService created:', !!placesService.current);
       
       // Create a session token for better pricing
       createNewSessionToken();
       
       console.log('Google Maps services initialized successfully');
+      setIsScriptLoaded(true);
       setIsLoading(false);
     } catch (error) {
       console.error('Error initializing Google Maps services:', error);
@@ -75,15 +81,6 @@ export function useGoogleMaps(): GoogleMapsServices {
   useEffect(() => {
     setIsLoading(true);
     
-    // Create a reference div for the PlacesService
-    if (!mapDiv.current) {
-      const div = document.createElement('div');
-      div.style.display = 'none';
-      document.body.appendChild(div);
-      mapDiv.current = div;
-      console.log('Created mapDiv for PlacesService');
-    }
-
     // Check if script is already loaded
     if (window.google?.maps?.places) {
       console.log('Google Maps API already loaded');
@@ -108,8 +105,6 @@ export function useGoogleMaps(): GoogleMapsServices {
     // Define callback for when script loads
     window.googleMapsCallback = () => {
       console.log('Google Maps script loaded via callback');
-      setIsScriptLoaded(true);
-      setIsLoading(false);
       initializeServices();
       
       if (scriptLoadingTimeout.current) {
@@ -145,7 +140,9 @@ export function useGoogleMaps(): GoogleMapsServices {
       }
       
       // Clean up the global callback
-      delete window.googleMapsCallback;
+      if (window.googleMapsCallback) {
+        delete window.googleMapsCallback;
+      }
     };
   }, []);
 
