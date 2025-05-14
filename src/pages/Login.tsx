@@ -68,7 +68,7 @@ const Login = () => {
   }, [isLoggedIn, user?.id, role]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Ensure we prevent the default form submission
     setError('');
     setIsLoading(true);
     
@@ -94,6 +94,17 @@ const Login = () => {
     }
   };
 
+  // Prevent form submission on input changes
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // This prevents any potential form submission
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // This prevents any potential form submission
+    setPassword(e.target.value);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -108,7 +119,7 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -117,8 +128,9 @@ const Login = () => {
                     type="email"
                     placeholder="johndoe@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     required
+                    autoComplete="email"
                   />
                 </div>
                 
@@ -133,15 +145,16 @@ const Login = () => {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={handlePasswordChange}
                     required
+                    autoComplete="current-password"
                   />
                 </div>
               </CardContent>
               
               <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full">
-                  Log In
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Logging in...' : 'Log In'}
                 </Button>
                 <div className="text-center text-sm">
                   Don't have an account?{' '}
