@@ -138,14 +138,19 @@ const MyLeads = () => {
     }
   };
   
-  const handleRefresh = (e: React.MouseEvent) => {
-    // Prevent default browser behavior
-    e.preventDefault();
-    
+  // Fix: Modify the handleRefresh function to work with components that expect no parameters
+  const handleRefresh = () => {
     refreshUserRole();
     toast.info("Refreshing user role...");
     setLoadingTimeout(false);
     setHasChecked(false);
+  };
+  
+  // Create a version that accepts the event parameter for event handlers
+  const handleRefreshWithEvent = (e: React.MouseEvent) => {
+    // Prevent default browser behavior
+    e.preventDefault();
+    handleRefresh();
   };
   
   // Show a loading state with a timeout message
