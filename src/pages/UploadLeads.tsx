@@ -9,7 +9,7 @@ const UploadLeads = () => {
   const navigate = useNavigate();
   const { isLoggedIn, role, isAdmin } = useUserRole();
   
-  // Use our new hook to prevent refreshes
+  // Use our custom hook to prevent refreshes
   usePreventRefresh();
   
   useEffect(() => {
@@ -39,18 +39,7 @@ const UploadLeads = () => {
       
       console.log('UploadLeads - Authorization passed, navigating to /my-leads with upload tab');
       
-      // Use replaceState instead of navigate to modify history without causing navigation
-      window.history.replaceState(
-        { 
-          initialTab: 'upload',
-          preventTabChange: false,
-          source: 'direct-upload-link'
-        }, 
-        '', 
-        '/my-leads?tab=upload'
-      );
-      
-      // Then use navigate with replace to avoid adding to history stack
+      // Navigate to the MyLeads page with the upload tab
       navigate('/my-leads', { 
         replace: true,
         state: { 
