@@ -37,14 +37,26 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
         return;
       }
       
-      // Map database leads to app format and do NOT filter out sold ones
+      // Map database leads to app format
       const allLeads = leadsData.map(mapDbLeadToAppLead);
       
-      console.log('useMarketplaceLeads: loaded leads count:', allLeads.length);
-      console.log('Lead statuses:', allLeads.map(l => l.status).join(', '));
+      // Sort leads - first by status (new leads first), then by creation date
+      const sortedLeads = [...allLeads].sort((a, b) => {
+        // First sort by status - 'new' comes before other statuses
+        if (a.status === 'new' && b.status !== 'new') return -1;
+        if (a.status !== 'new' && b.status === 'new') return 1;
+        
+        // If statuses are the same, sort by creation date (newest first)
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
       
-      setLeads(allLeads);
-      setFilteredLeads(allLeads);
+      console.log('useMarketplaceLeads: loaded leads count:', sortedLeads.length);
+      console.log('Lead statuses after sorting:', sortedLeads.map(l => l.status).join(', '));
+      
+      setLeads(sortedLeads);
+      setFilteredLeads(sortedLeads);
       // Update last refreshed timestamp
       setLastRefreshed(new Date());
       toast.success('Marketplace data refreshed');
@@ -103,6 +115,18 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
     if (filters.minRating > 0) {
       filtered = filtered.filter(lead => lead.qualityRating >= filters.minRating);
     }
+    
+    // After applying all filters, re-sort to maintain the order (available first, then sold)
+    filtered = filtered.sort((a, b) => {
+      // First sort by status - 'new' comes before other statuses
+      if (a.status === 'new' && b.status !== 'new') return -1;
+      if (a.status !== 'new' && b.status === 'new') return 1;
+      
+      // If statuses are the same, sort by creation date (newest first)
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
     
     setFilteredLeads(filtered);
   };
