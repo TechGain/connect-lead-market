@@ -39,15 +39,18 @@ export function AddressAutocompleteInput({
   useEffect(() => {
     // Check if script is already loaded
     if (window.google?.maps?.places) {
+      console.log('Google Maps API already loaded');
       setIsScriptLoaded(true);
       return;
     }
 
     // Don't reload if already attempting to load
     if (document.getElementById('google-maps-script')) {
+      console.log('Google Maps script is already being loaded');
       return;
     }
 
+    console.log('Loading Google Maps API script...');
     const script = document.createElement('script');
     script.id = 'google-maps-script';
     script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
@@ -85,9 +88,13 @@ export function AddressAutocompleteInput({
 
   // Initialize Google Maps services when the script is loaded
   useEffect(() => {
-    if (!isScriptLoaded || !window.google) return;
+    if (!isScriptLoaded || !window.google) {
+      console.log('Google Maps script not loaded yet, waiting...');
+      return;
+    }
     
     try {
+      console.log('Initializing Google Maps services...');
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       
       // Create a dummy div for PlacesService (it needs a DOM element)
@@ -106,6 +113,7 @@ export function AddressAutocompleteInput({
   // Update internal state when prop value changes
   useEffect(() => {
     if (props.value !== undefined && props.value !== inputValue) {
+      console.log('Updating input value from props:', props.value);
       setInputValue(props.value as string);
     }
   }, [props.value]);
@@ -127,10 +135,14 @@ export function AddressAutocompleteInput({
   // Get predictions from Google Places API
   const getPlacePredictions = (input: string) => {
     if (!autocompleteService.current || input.length < 3 || !window.google) {
+      console.log('Cannot get place predictions:', 
+                  !autocompleteService.current ? 'autocomplete service not initialized' : 
+                  input.length < 3 ? 'input too short' : 'Google Maps not loaded');
       setPredictions([]);
       return;
     }
 
+    console.log('Getting place predictions for:', input);
     setIsLoading(true);
 
     try {
@@ -150,6 +162,7 @@ export function AddressAutocompleteInput({
             return;
           }
 
+          console.log('Predictions found:', results.length);
           setPredictions(results);
         }
       );
@@ -163,10 +176,12 @@ export function AddressAutocompleteInput({
   // Get place details including ZIP code when a prediction is selected
   const getPlaceDetails = (placeId: string, description: string) => {
     if (!placesService.current || !window.google) {
+      console.log('Cannot get place details: service not initialized or Google Maps not loaded');
       onAddressSelect(description);
       return;
     }
 
+    console.log('Getting place details for:', description, 'with ID:', placeId);
     try {
       placesService.current.getDetails(
         {
@@ -180,6 +195,8 @@ export function AddressAutocompleteInput({
             onAddressSelect(description, placeId);
             return;
           }
+
+          console.log('Place details found:', result);
 
           // Find ZIP code in address components
           const zipComponent = result.address_components?.find(
@@ -208,7 +225,13 @@ export function AddressAutocompleteInput({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    console.log('Input changed to:', value);
     setInputValue(value);
+    
+    // Always pass the current value to parent even before autocomplete selection
+    if (onAddressSelect) {
+      onAddressSelect(value);
+    }
     
     if (value) {
       setShowSuggestions(true);
@@ -220,6 +243,7 @@ export function AddressAutocompleteInput({
   };
 
   const handleSelectPrediction = (prediction: Prediction) => {
+    console.log('Prediction selected:', prediction.description);
     setInputValue(prediction.description);
     setShowSuggestions(false);
     getPlaceDetails(prediction.place_id, prediction.description);

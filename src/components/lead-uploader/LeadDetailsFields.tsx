@@ -15,8 +15,8 @@ interface LeadDetailsFieldsProps {
   onLeadTypeChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
-  onAddressChange: (value: string) => void;
-  onZipCodeChange: (value: string) => void;
+  onAddressSelect: (address: string) => void;
+  onZipCodeFound: (zipCode: string) => void;
 }
 
 const LeadDetailsFields = ({
@@ -28,8 +28,8 @@ const LeadDetailsFields = ({
   onLeadTypeChange,
   onLocationChange,
   onDescriptionChange,
-  onAddressChange,
-  onZipCodeChange,
+  onAddressSelect,
+  onZipCodeFound,
 }: LeadDetailsFieldsProps) => {
   return (
     <>
@@ -95,15 +95,15 @@ const LeadDetailsFields = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="address">Property Address *</Label>
-          {/* Modified this part to make it more reliable */}
-          <Input
+          <AddressAutocompleteInput
             id="address"
             value={address}
-            onChange={(e) => onAddressChange(e.target.value)}
-            placeholder="Enter property address"
+            placeholder="Start typing to search for an address..."
             required
+            onAddressSelect={onAddressSelect}
+            onZipCodeFound={onZipCodeFound}
           />
-          <p className="text-xs text-muted-foreground">Enter the complete property address</p>
+          <p className="text-xs text-muted-foreground">Start typing to see address suggestions</p>
         </div>
         
         <div className="space-y-2">
@@ -111,7 +111,7 @@ const LeadDetailsFields = ({
           <Input
             id="zipCode"
             value={zipCode}
-            onChange={(e) => onZipCodeChange(e.target.value)}
+            onChange={(e) => onZipCodeFound(e.target.value)}
             placeholder="12345"
             required
             maxLength={10}
