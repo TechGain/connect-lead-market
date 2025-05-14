@@ -9,6 +9,7 @@ import { useLeadCheckout } from '@/hooks/use-lead-checkout';
 import { useCheckoutUrlParams } from '@/hooks/use-checkout-url-params';
 import MarketplaceHeader from '@/components/marketplace/MarketplaceHeader';
 import MarketplaceLeadsList from '@/components/marketplace/MarketplaceLeadsList';
+import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
 import LeadPurchaseDialog from '@/components/marketplace/LeadPurchaseDialog';
 import AuthStateDisplay from '@/components/marketplace/AuthStateDisplay';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { format } from 'date-fns';
 
 const Marketplace = () => {
   const [forceShowContent, setForceShowContent] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('largeCards');
   
   // Use the simplified auth check hook
   const {
@@ -84,6 +86,12 @@ const Marketplace = () => {
   // Check if user is buyer or admin
   const canAccessMarketplace = role === 'buyer' || role === 'admin';
 
+  // Handle view mode change
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    toast.success(`View changed to ${mode} mode`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -140,13 +148,20 @@ const Marketplace = () => {
               </div>
             </div>
             
-            <LeadFilters onFilterChange={handleFilterChange} />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <LeadFilters onFilterChange={handleFilterChange} />
+              <MarketplaceViewSelector 
+                viewMode={viewMode} 
+                onViewModeChange={handleViewModeChange}
+              />
+            </div>
             
             <MarketplaceLeadsList 
               leads={filteredLeads}
               isLoading={leadsLoading}
               onPurchase={handlePurchaseLead}
               onResetFilters={resetFilters}
+              viewMode={viewMode}
             />
             
             <LeadPurchaseDialog 
