@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
@@ -12,6 +11,7 @@ import TimeoutState from '@/components/my-leads/TimeoutState';
 import RoleErrorState from '@/components/my-leads/RoleErrorState';
 import LeadsListTab from '@/components/my-leads/LeadsListTab';
 import UploadLeadTab from '@/components/my-leads/UploadLeadTab';
+import { usePreventRefresh } from '@/hooks/use-prevent-refresh';
 
 const MyLeads = () => {
   const navigate = useNavigate();
@@ -20,15 +20,20 @@ const MyLeads = () => {
   const [hasChecked, setHasChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
-  // Get initial tab from location state if available, or from URL
-  const initialTabFromState = location.state?.initialTab;
+  // Use our custom hook to prevent refreshes
+  usePreventRefresh();
+  
+  // Extract state safely with fallbacks to avoid issues
+  const locationState = location.state || {};
+  const initialTabFromState = locationState.initialTab;
   const initialTabFromURL = new URLSearchParams(location.search).get('tab');
   const initialTab = initialTabFromState || initialTabFromURL || 'leads';
   
   console.log("MyLeads initial tab determination:", {
     initialTabFromState,
     initialTabFromURL,
-    resultingInitialTab: initialTab
+    resultingInitialTab: initialTab,
+    locationState
   });
   
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -47,7 +52,7 @@ const MyLeads = () => {
       loadingTimeout,
       activeTab,
       currentPath: location.pathname + location.search,
-      locationState: location.state
+      locationState
     });
     
     // Force check to complete after a reasonable timeout to prevent infinite loading
@@ -72,7 +77,10 @@ const MyLeads = () => {
     if (!isLoggedIn) {
       console.log("User is not logged in, redirecting to login");
       toast.error("Please log in to view your leads");
-      navigate('/login');
+      navigate('/login', { 
+        replace: true,
+        state: { returnTo: '/my-leads' }
+      });
       return;
     }
     
@@ -87,45 +95,35 @@ const MyLeads = () => {
     if (role !== 'seller' && role !== 'buyer' && !isAdmin) {
       console.log("User is not a seller, buyer or admin, redirecting to home", { actualRole: role });
       toast.error(`Only sellers, buyers and admins can view this page. Your current role is: ${role}`);
-      navigate('/');
+      navigate('/', { replace: true });
       return;
     }
     
-    // Set tab from URL parameter or location state on initial load
-    if (location.state?.initialTab && !location.state?.preventTabChange) {
-      console.log("Setting active tab from state:", location.state.initialTab);
-      setActiveTab(location.state.initialTab);
-      
-      // Clean up the state so future navigations don't override user tab selection
-      const newState = {...location.state};
-      delete newState.initialTab;
-      navigate(location.pathname + location.search, { 
-        replace: true, 
-        state: newState 
-      });
+    // Set tab from state if it exists
+    if (locationState.initialTab) {
+      console.log("Setting active tab from state:", locationState.initialTab);
+      setActiveTab(locationState.initialTab);
     }
-    else if (initialTabFromURL && !location.state?.preventTabChange) {
+    // Otherwise try URL parameter
+    else if (initialTabFromURL) {
       console.log("Setting active tab from URL parameter:", initialTabFromURL);
       setActiveTab(initialTabFromURL);
     }
     
-  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, location, initialTabFromURL]);
+  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, location, initialTabFromURL, locationState]);
   
-  // Fix: Ensure tab change doesn't cause page refresh
+  // Handle tab change without causing page refresh
   const handleTabChange = (value: string) => {
     console.log("Tab changed to:", value);
     setActiveTab(value);
     
-    // Update URL without causing navigation/refresh
-    // Use history.replaceState directly to avoid potential refresh issues in iframe
-    if (value !== activeTab) {
-      const newUrl = `/my-leads?tab=${value}`;
-      window.history.replaceState(
-        { ...window.history.state, preventTabChange: true }, 
-        '', 
-        newUrl
-      );
-    }
+    // Update URL without causing navigation/refresh by directly manipulating history
+    const newUrl = `/my-leads?tab=${value}`;
+    window.history.replaceState(
+      { ...locationState, initialTab: value }, 
+      '', 
+      newUrl
+    );
   };
   
   const handleRefresh = () => {
@@ -151,26 +149,46 @@ const MyLeads = () => {
   }
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div 
+      className="flex flex-col min-h-screen"
+      onClick={(e) => e.stopPropagation()}
+    >
       <Header />
       <main className="flex-1">
         <Tabs 
           value={activeTab} 
           onValueChange={handleTabChange} 
           className="container mx-auto px-4 pt-8"
+          onClick={(e) => e.stopPropagation()}
         >
           <TabsList>
             {(role === 'seller' || isAdmin) && (
-              <TabsTrigger value="leads">My Leads</TabsTrigger>
+              <TabsTrigger 
+                value="leads"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log("Leads tab clicked");
+                }}
+              >
+                My Leads
+              </TabsTrigger>
             )}
             {(role === 'seller' || isAdmin) && (
-              <TabsTrigger value="upload">Upload Lead</TabsTrigger>
+              <TabsTrigger 
+                value="upload"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log("Upload tab clicked");
+                }}
+              >
+                Upload Lead
+              </TabsTrigger>
             )}
           </TabsList>
-          <TabsContent value="leads">
+          <TabsContent value="leads" onClick={(e) => e.stopPropagation()}>
             <LeadsListTab leads={leads} role={role} isAdmin={isAdmin} />
           </TabsContent>
-          <TabsContent value="upload">
+          <TabsContent value="upload" onClick={(e) => e.stopPropagation()}>
             <UploadLeadTab />
           </TabsContent>
         </Tabs>

@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
 import { useLeadUpload } from '@/hooks/use-lead-upload';
 import { format } from "date-fns";
+import { usePreventRefresh } from '@/hooks/use-prevent-refresh';
 
 // Import our components
 import LeadDetailsFields from './lead-uploader/LeadDetailsFields';
@@ -30,6 +31,9 @@ const LeadUploader = () => {
   const [confirmationStatus, setConfirmationStatus] = useState<'confirmed' | 'unconfirmed'>('confirmed');
   
   const { uploadLead, isUploading } = useLeadUpload();
+  
+  // Use our custom hook to prevent refreshes
+  usePreventRefresh();
 
   // Generate time slots in 2-hour windows (8 AM to 6 PM)
   const timeSlots = [
@@ -55,10 +59,34 @@ const LeadUploader = () => {
     setConfirmationStatus(value);
   };
 
+  // Disable all form submission default behavior when component mounts
+  useEffect(() => {
+    // Find the form element and apply prevention
+    const form = document.querySelector('form');
+    if (form) {
+      console.log('Adding submit prevention to upload form');
+      const preventFormSubmit = (e: Event) => {
+        console.log('Form submission prevented');
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      };
+      
+      form.addEventListener('submit', preventFormSubmit, true);
+      
+      return () => {
+        form.removeEventListener('submit', preventFormSubmit, true);
+      };
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
-    // Adding both preventDefault and stopPropagation
-    e.preventDefault(); 
-    e.stopPropagation();
+    // Using both preventDefault and stopPropagation
+    if (e) {
+      e.preventDefault(); 
+      e.stopPropagation();
+    }
+    
     console.log("Lead uploader form submission intercepted");
     
     const requiredFields = [leadType, location, description, contactName, contactEmail, contactPhone, price, address, zipCode];
@@ -99,6 +127,7 @@ const LeadUploader = () => {
         sellerId: '',
       };
       
+      console.log('Submitting lead:', newLead);
       const success = await uploadLead(newLead);
       
       if (success) {
@@ -130,7 +159,16 @@ const LeadUploader = () => {
       <CardHeader>
         <CardTitle>Upload New Lead</CardTitle>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form 
+        onSubmit={(e) => {
+          console.log("Form onSubmit triggered");
+          e.preventDefault();
+          e.stopPropagation();
+          handleSubmit(e);
+          return false;
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <CardContent className="space-y-4">
           <LeadDetailsFields
             leadType={leadType}
@@ -179,12 +217,15 @@ const LeadUploader = () => {
         
         <CardFooter>
           <Button 
-            type="submit" 
+            type="button" 
             className="w-full"
             disabled={isUploading}
             onClick={(e) => {
               // Extra protection on the button click
+              e.preventDefault();
               e.stopPropagation();
+              console.log('Upload button clicked, handling submit manually');
+              handleSubmit(e);
             }}
           >
             {isUploading ? 'Uploading...' : 'Upload Lead'}

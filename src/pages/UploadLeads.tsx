@@ -3,44 +3,71 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
+import { usePreventRefresh } from '@/hooks/use-prevent-refresh';
 
 const UploadLeads = () => {
   const navigate = useNavigate();
   const { isLoggedIn, role, isAdmin } = useUserRole();
   
+  // Use our new hook to prevent refreshes
+  usePreventRefresh();
+  
   useEffect(() => {
-    // Log the current authentication state for debugging
-    console.log("UploadLeads component - preparing to navigate to my-leads with upload tab");
+    console.log('UploadLeads component - Checking authentication');
     
-    if (!isLoggedIn) {
-      toast.error("Please log in to upload leads");
-      navigate('/login', { replace: true });
-      return;
-    }
-    
-    if (role !== 'seller' && !isAdmin) {
-      toast.error(`Only sellers and admins can upload leads. Your current role is: ${role || 'not set'}`);
-      navigate('/', { replace: true });
-      return;
-    }
-    
-    // Fix: Use proper navigation state to prevent full page refresh
-    console.log("Navigating to /my-leads?tab=upload without page refresh");
-    
-    // Ensure we use the navigate function in a way that doesn't trigger refreshes in the Lovable iframe
-    navigate('/my-leads', { 
-      replace: true,
-      state: { 
-        initialTab: 'upload',
-        preventTabChange: false 
+    // We don't want to navigate immediately to avoid potential race conditions
+    const timer = setTimeout(() => {
+      if (!isLoggedIn) {
+        console.log('UploadLeads - User not logged in, redirecting to login');
+        toast.error("Please log in to upload leads");
+        navigate('/login', { 
+          replace: true,
+          state: { 
+            returnTo: '/my-leads',
+            returnToTab: 'upload'
+          }
+        });
+        return;
       }
-    });
+      
+      if (role !== 'seller' && !isAdmin) {
+        console.log(`UploadLeads - User role ${role || 'not set'} not authorized, redirecting to home`);
+        toast.error(`Only sellers and admins can upload leads. Your current role is: ${role || 'not set'}`);
+        navigate('/', { replace: true });
+        return;
+      }
+      
+      console.log('UploadLeads - Authorization passed, navigating to /my-leads with upload tab');
+      
+      // Use replaceState instead of navigate to modify history without causing navigation
+      window.history.replaceState(
+        { 
+          initialTab: 'upload',
+          preventTabChange: false,
+          source: 'direct-upload-link'
+        }, 
+        '', 
+        '/my-leads?tab=upload'
+      );
+      
+      // Then use navigate with replace to avoid adding to history stack
+      navigate('/my-leads', { 
+        replace: true,
+        state: { 
+          initialTab: 'upload',
+          preventTabChange: false,
+          source: 'direct-upload-link'
+        }
+      });
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [isLoggedIn, role, navigate, isAdmin]);
   
-  // This component doesn't render anything as it's just for redirection
+  // Return a minimal component that won't cause navigation issues
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p>Redirecting to Lead Upload...</p>
+      <p>Preparing upload environment...</p>
     </div>
   );
 };
