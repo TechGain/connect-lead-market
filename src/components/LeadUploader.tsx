@@ -27,7 +27,6 @@ const LeadUploader = () => {
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
   const [zipCode, setZipCode] = useState('');
-  // Fixed: Use the proper union type instead of string
   const [confirmationStatus, setConfirmationStatus] = useState<'confirmed' | 'unconfirmed'>('confirmed');
   
   const { uploadLead, isUploading } = useLeadUpload();
@@ -59,7 +58,7 @@ const LeadUploader = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Keep this to prevent form submission refresh
     
     const requiredFields = [leadType, location, description, contactName, contactEmail, contactPhone, price, address, zipCode];
     
@@ -95,8 +94,8 @@ const LeadUploader = () => {
         appointmentTime: appointmentInfo,
         address,
         zipCode,
-        confirmationStatus, // This is now properly typed
-        sellerId: '', // Initialize with empty string, will be set by the upload function
+        confirmationStatus,
+        sellerId: '',
       };
       
       const success = await uploadLead(newLead);
@@ -125,6 +124,9 @@ const LeadUploader = () => {
     }
   };
 
+  // Now let's check the underlying files for each form component to make sure they don't have problematic event handlers
+  // Let's fix the LeadDetailsFields component:
+  
   return (
     <Card className="w-full">
       <CardHeader>

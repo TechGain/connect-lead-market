@@ -24,8 +24,11 @@ const UploadLeads = () => {
       return;
     }
     
-    // Navigate directly to /my-leads with upload tab without going through state changes
-    window.location.replace('/my-leads?tab=upload');
+    // Fix: Use navigate instead of window.location.replace to prevent full page refresh
+    navigate('/my-leads?tab=upload', { 
+      replace: true,
+      state: { preventTabChange: false } 
+    });
   }, [isLoggedIn, role, navigate, isAdmin]);
   
   // This component doesn't render anything as it's just for redirection

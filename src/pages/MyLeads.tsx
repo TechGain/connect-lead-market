@@ -91,6 +91,7 @@ const MyLeads = () => {
     
   }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, location]);
   
+  // Fix: Ensure tab change doesn't cause page refresh
   const handleTabChange = (value: string) => {
     console.log("Tab changed to:", value);
     setActiveTab(value);

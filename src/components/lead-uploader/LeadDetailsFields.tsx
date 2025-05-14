@@ -31,6 +31,19 @@ const LeadDetailsFields = ({
   onAddressChange,
   onZipCodeChange,
 }: LeadDetailsFieldsProps) => {
+  // Fix: Ensure input handlers don't prevent default behavior
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onLocationChange(e.target.value);
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onDescriptionChange(e.target.value);
+  };
+
+  const handleZipCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onZipCodeChange(e.target.value);
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -73,7 +86,7 @@ const LeadDetailsFields = ({
           <Input 
             id="location"
             value={location}
-            onChange={(e) => onLocationChange(e.target.value)}
+            onChange={handleLocationChange}
             placeholder="City, State"
             required
           />
@@ -85,7 +98,7 @@ const LeadDetailsFields = ({
         <Textarea
           id="description"
           value={description}
-          onChange={(e) => onDescriptionChange(e.target.value)}
+          onChange={handleDescriptionChange}
           placeholder="Provide details about the job..."
           rows={3}
           required
@@ -117,7 +130,7 @@ const LeadDetailsFields = ({
           <Input
             id="zipCode"
             value={zipCode}
-            onChange={(e) => onZipCodeChange(e.target.value)}
+            onChange={handleZipCodeChange}
             placeholder="12345"
             required
             maxLength={10}

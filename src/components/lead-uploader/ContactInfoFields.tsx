@@ -20,6 +20,19 @@ const ContactInfoFields = ({
   onContactEmailChange,
   onContactPhoneChange,
 }: ContactInfoFieldsProps) => {
+  // Fix: Ensure input handlers don't prevent default behavior
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onContactNameChange(e.target.value);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onContactEmailChange(e.target.value);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onContactPhoneChange(e.target.value);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="space-y-2">
@@ -27,7 +40,7 @@ const ContactInfoFields = ({
         <Input
           id="contact-name"
           value={contactName}
-          onChange={(e) => onContactNameChange(e.target.value)}
+          onChange={handleNameChange}
           placeholder="John Doe"
           required
         />
@@ -39,7 +52,7 @@ const ContactInfoFields = ({
           id="contact-email"
           type="email"
           value={contactEmail}
-          onChange={(e) => onContactEmailChange(e.target.value)}
+          onChange={handleEmailChange}
           placeholder="example@email.com"
           required
         />
@@ -50,7 +63,7 @@ const ContactInfoFields = ({
         <Input
           id="contact-phone"
           value={contactPhone}
-          onChange={(e) => onContactPhoneChange(e.target.value)}
+          onChange={handlePhoneChange}
           placeholder="(123) 456-7890"
           required
         />

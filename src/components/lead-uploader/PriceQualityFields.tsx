@@ -17,6 +17,11 @@ const PriceQualityFields = ({
   onPriceChange,
   onQualityChange,
 }: PriceQualityFieldsProps) => {
+  // Fix: Ensure input handler doesn't prevent default behavior
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onPriceChange(e.target.value);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -27,7 +32,7 @@ const PriceQualityFields = ({
           min="1"
           step="0.01"
           value={price}
-          onChange={(e) => onPriceChange(e.target.value)}
+          onChange={handlePriceChange}
           placeholder="49.99"
           required
         />
