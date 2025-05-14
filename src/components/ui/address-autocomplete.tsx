@@ -29,7 +29,7 @@ export function AddressAutocompleteInput({
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const autocompleteSessionToken = useRef<any>(null);
+  const autocompleteSessionToken = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,14 +63,14 @@ export function AddressAutocompleteInput({
   useEffect(() => {
     if (!isScriptLoaded || !window.google) return;
 
-    autocompleteService.current = new google.maps.places.AutocompleteService();
+    autocompleteService.current = new window.google.maps.places.AutocompleteService();
     
     // Create a dummy div for PlacesService (it needs a DOM element)
     const dummyDiv = document.createElement('div');
-    placesService.current = new google.maps.places.PlacesService(dummyDiv);
+    placesService.current = new window.google.maps.places.PlacesService(dummyDiv);
     
     // Create a session token for better pricing
-    autocompleteSessionToken.current = new google.maps.places.AutocompleteSessionToken();
+    autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
   }, [isScriptLoaded]);
 
   // Handle click outside to close the suggestions dropdown
@@ -89,7 +89,7 @@ export function AddressAutocompleteInput({
 
   // Get predictions from Google Places API
   const getPlacePredictions = (input: string) => {
-    if (!autocompleteService.current || input.length < 3) {
+    if (!autocompleteService.current || input.length < 3 || !window.google) {
       setPredictions([]);
       return;
     }
@@ -106,7 +106,7 @@ export function AddressAutocompleteInput({
       (results, status) => {
         setIsLoading(false);
 
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
+        if (status !== window.google?.maps.places.PlacesServiceStatus.OK || !results) {
           setPredictions([]);
           return;
         }
@@ -118,7 +118,7 @@ export function AddressAutocompleteInput({
 
   // Get place details including ZIP code when a prediction is selected
   const getPlaceDetails = (placeId: string, description: string) => {
-    if (!placesService.current) return;
+    if (!placesService.current || !window.google) return;
 
     placesService.current.getDetails(
       {
@@ -127,7 +127,7 @@ export function AddressAutocompleteInput({
         sessionToken: autocompleteSessionToken.current,
       },
       (result, status) => {
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !result) {
+        if (status !== window.google?.maps.places.PlacesServiceStatus.OK || !result) {
           onAddressSelect(description, placeId);
           return;
         }
@@ -145,7 +145,9 @@ export function AddressAutocompleteInput({
         onAddressSelect(description, placeId);
         
         // Create a new session token for the next search
-        autocompleteSessionToken.current = new google.maps.places.AutocompleteSessionToken();
+        if (window.google) {
+          autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
+        }
       }
     );
   };
