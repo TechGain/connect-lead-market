@@ -94,14 +94,12 @@ const Login = () => {
     }
   };
 
-  // Prevent form submission on input changes
+  // Fix: Remove preventDefault from input handlers which was causing the form to refresh
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // This prevents any potential form submission
     setEmail(e.target.value);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // This prevents any potential form submission
     setPassword(e.target.value);
   };
 
