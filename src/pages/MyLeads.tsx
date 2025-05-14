@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -15,6 +15,7 @@ import UploadLeadTab from '@/components/my-leads/UploadLeadTab';
 
 const MyLeads = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { isLoggedIn, role, isAdmin, isLoading, user, refreshUserRole } = useUserRole();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'leads');
@@ -33,7 +34,8 @@ const MyLeads = () => {
       userId: user?.id,
       hasChecked,
       loadingTimeout,
-      activeTab
+      activeTab,
+      currentPath: location.pathname + location.search
     });
     
     // Force check to complete after a reasonable timeout to prevent infinite loading
@@ -83,13 +85,15 @@ const MyLeads = () => {
       setActiveTab(tabParam);
     }
     
-  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, searchParams]);
+  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, searchParams, location]);
   
   const handleTabChange = (value: string) => {
     console.log("Tab changed to:", value);
     setActiveTab(value);
-    // Update URL without causing a full page reload
-    navigate(`/my-leads?tab=${value}`, { replace: true });
+    
+    // Update URL without causing a full page reload - use replace: true
+    const newUrl = `/my-leads?tab=${value}`;
+    navigate(newUrl, { replace: true });
   };
   
   const handleRefresh = () => {

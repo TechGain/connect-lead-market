@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -170,6 +169,7 @@ const App = () => {
                     </SellerOrAdminRoute>
                   } 
                 />
+                {/* Keep only one instance of the upload-leads route */}
                 <Route 
                   path="/upload-leads" 
                   element={
@@ -182,7 +182,6 @@ const App = () => {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/upload-leads" element={<UploadLeads />} />
                 <Route path="/buyer-guide" element={<BuyerGuide />} />
                 <Route path="/seller-guide" element={<SellerGuide />} />
                 <Route path="/contact" element={<Contact />} />
@@ -196,7 +195,7 @@ const App = () => {
                     </AdminRoute>
                   } 
                 />
-                {/* New Admin Leads Route */}
+                {/* Admin Leads Route */}
                 <Route 
                   path="/admin/leads" 
                   element={
