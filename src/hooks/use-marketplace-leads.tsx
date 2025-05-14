@@ -21,6 +21,7 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       const { data: leadsData, error } = await supabase
         .from('leads')
         .select('*')
+        .neq('status', 'erased') // Exclude erased leads from marketplace
         .order('created_at', { ascending: false });
         
       if (error) {

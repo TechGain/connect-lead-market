@@ -20,6 +20,11 @@ const AdminLeadsPage: React.FC = () => {
     setStatusFilter(value as LeadStatusFilter);
   };
 
+  // Handle lead deletion by refreshing the leads list
+  const handleLeadDeleted = () => {
+    refreshLeads();
+  };
+
   // Count leads by status
   const activeLeasCount = leads.filter(lead => lead.status === 'new' || lead.status === 'pending').length;
   const soldLeadsCount = leads.filter(lead => lead.status === 'sold').length;
@@ -93,24 +98,33 @@ const AdminLeadsPage: React.FC = () => {
 
               <TabsContent value="all" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">All Leads ({leads.length})</h2>
-                <AdminLeadTable leads={leads} />
+                <AdminLeadTable leads={leads} onLeadDeleted={handleLeadDeleted} />
               </TabsContent>
               
               <TabsContent value="active" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">Active Leads ({activeLeasCount})</h2>
-                <AdminLeadTable leads={leads.filter(lead => 
-                  lead.status === 'new' || lead.status === 'pending'
-                )} />
+                <AdminLeadTable 
+                  leads={leads.filter(lead => 
+                    lead.status === 'new' || lead.status === 'pending'
+                  )} 
+                  onLeadDeleted={handleLeadDeleted}
+                />
               </TabsContent>
               
               <TabsContent value="sold" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">Sold Leads ({soldLeadsCount})</h2>
-                <AdminLeadTable leads={leads.filter(lead => lead.status === 'sold')} />
+                <AdminLeadTable 
+                  leads={leads.filter(lead => lead.status === 'sold')} 
+                  onLeadDeleted={handleLeadDeleted}
+                />
               </TabsContent>
               
               <TabsContent value="erased" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">Erased Leads ({erasedLeadsCount})</h2>
-                <AdminLeadTable leads={leads.filter(lead => lead.status === 'erased')} />
+                <AdminLeadTable 
+                  leads={leads.filter(lead => lead.status === 'erased')} 
+                  onLeadDeleted={handleLeadDeleted}
+                />
               </TabsContent>
             </Tabs>
             
@@ -119,7 +133,7 @@ const AdminLeadsPage: React.FC = () => {
               <ul className="list-disc ml-5 mt-2 space-y-1">
                 <li><span className="font-semibold">Active:</span> New or pending leads that are available for purchase</li>
                 <li><span className="font-semibold">Sold:</span> Leads that have been purchased by buyers</li>
-                <li><span className="font-semibold">Erased:</span> Leads that have been deleted by sellers</li>
+                <li><span className="font-semibold">Erased:</span> Leads that have been deleted by sellers or admins</li>
               </ul>
             </div>
           </div>
