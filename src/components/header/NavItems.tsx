@@ -38,7 +38,7 @@ export const NavItems: React.FC<NavItemsProps> = ({ isLoggedIn, role, isAdmin })
       
       {isLoggedIn && (role === 'seller' || isAdmin) && (
         <NavigationMenuItem>
-          <Link to="/upload-leads" className={navigationMenuTriggerStyle()}>
+          <Link to="/my-leads?tab=upload" className={navigationMenuTriggerStyle()}>
             <Upload className="mr-2 h-4 w-4 inline" />
             Upload Lead
           </Link>

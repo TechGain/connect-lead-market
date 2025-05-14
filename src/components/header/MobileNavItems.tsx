@@ -45,7 +45,7 @@ export const MobileNavItems: React.FC<MobileNavItemsProps> = ({
       
       {isLoggedIn && (role === 'seller' || isAdmin) && (
         <SheetClose asChild>
-          <Link to="/upload-leads" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
+          <Link to="/my-leads?tab=upload" className="flex items-center py-2 px-3 rounded-md hover:bg-gray-100">
             <Upload className="mr-2 h-4 w-4" />
             Upload Lead
           </Link>
