@@ -39,6 +39,7 @@ export function AddressAutocompleteInput({
   useEffect(() => {
     // Check if script is already loaded
     if (window.google?.maps?.places) {
+      console.log("Google Maps already loaded");
       setIsScriptLoaded(true);
       return;
     }
@@ -106,6 +107,7 @@ export function AddressAutocompleteInput({
   // Update internal state when prop value changes
   useEffect(() => {
     if (props.value !== undefined && props.value !== inputValue) {
+      console.log("Updating input value from props:", props.value);
       setInputValue(props.value as string);
     }
   }, [props.value]);
@@ -206,13 +208,20 @@ export function AddressAutocompleteInput({
     }
   };
 
+  // Fixed: Don't prevent default to allow typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    console.log("Address input change:", value);
+    
+    // Update the input value immediately to ensure typing works
     setInputValue(value);
     
     if (value) {
       setShowSuggestions(true);
-      getPlacePredictions(value);
+      // Only get predictions if value is long enough
+      if (value.length >= 3) {
+        getPlacePredictions(value);
+      }
     } else {
       setShowSuggestions(false);
       setPredictions([]);
@@ -220,6 +229,7 @@ export function AddressAutocompleteInput({
   };
 
   const handleSelectPrediction = (prediction: Prediction) => {
+    console.log("Selected prediction:", prediction);
     setInputValue(prediction.description);
     setShowSuggestions(false);
     getPlaceDetails(prediction.place_id, prediction.description);
@@ -232,7 +242,7 @@ export function AddressAutocompleteInput({
         className={className}
         value={inputValue}
         onChange={handleInputChange}
-        onFocus={() => inputValue && setShowSuggestions(true)}
+        onFocus={() => inputValue && inputValue.length >= 3 && setShowSuggestions(true)}
         {...props}
       />
       

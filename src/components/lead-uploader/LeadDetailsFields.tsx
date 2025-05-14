@@ -101,11 +101,11 @@ const LeadDetailsFields = ({
             placeholder="Start typing to search for an address..."
             required
             onAddressSelect={(selectedAddress) => {
-              console.log("Address selected:", selectedAddress);
+              console.log("Address selected in LeadDetailsFields:", selectedAddress);
               onAddressChange(selectedAddress);
             }}
             onZipCodeFound={(foundZipCode) => {
-              console.log("Zip code found:", foundZipCode);
+              console.log("Zip code found in LeadDetailsFields:", foundZipCode);
               onZipCodeChange(foundZipCode);
             }}
           />
