@@ -17,8 +17,9 @@ const PriceQualityFields = ({
   onPriceChange,
   onQualityChange,
 }: PriceQualityFieldsProps) => {
-  // Fix: Ensure input handler doesn't prevent default behavior
+  // Enhanced handler that stops propagation
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Stop event propagation to prevent refreshes
     onPriceChange(e.target.value);
   };
 

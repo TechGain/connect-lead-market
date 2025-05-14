@@ -68,7 +68,11 @@ const Login = () => {
   }, [isLoggedIn, user?.id, role]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Ensure we prevent the default form submission
+    // Adding both preventDefault and stopPropagation for maximum prevention
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('[LOGIN] Form submission intercepted and prevented default behavior');
     setError('');
     setIsLoading(true);
     
@@ -94,12 +98,15 @@ const Login = () => {
     }
   };
 
-  // Fix: Remove preventDefault from input handlers which was causing the form to refresh
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Stop event propagation to prevent refreshes in Lovable interface
+    e.stopPropagation();
     setEmail(e.target.value);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Stop event propagation to prevent refreshes in Lovable interface
+    e.stopPropagation();
     setPassword(e.target.value);
   };
 
@@ -117,7 +124,7 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             
-            <form onSubmit={handleSubmit} noValidate>
+            <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>

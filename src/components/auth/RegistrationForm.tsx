@@ -50,15 +50,31 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 }) => {
   // Format phone number as user types
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Stop event propagation
     const value = e.target.value;
     setPhoneNumber(value);
   };
 
+  // Handle input changes with propagation stopping
+  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => 
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      setter(e.target.value);
+    };
+
   // Format phone for display (optional)
   const displayPhone = phoneNumber ? phoneNumber : '';
 
+  // Enhanced submit handler
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Registration form submit intercepted");
+    onSubmit(e);
+  };
+
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={handleFormSubmit}>
       <CardContent className="grid gap-4">
         <div className="space-y-3">
           <Label>Account Type</Label>
@@ -69,11 +85,25 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="name">Full Name</Label>
-          <Input id="name" placeholder="John Doe" type="text" value={name} onChange={e => setName(e.target.value)} />
+          <Input 
+            id="name" 
+            placeholder="John Doe" 
+            type="text" 
+            value={name} 
+            onChange={handleInputChange(setName)} 
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" placeholder="name@example.com" type="email" autoCapitalize="none" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} />
+          <Input 
+            id="email" 
+            placeholder="name@example.com" 
+            type="email" 
+            autoCapitalize="none" 
+            autoComplete="email" 
+            value={email} 
+            onChange={handleInputChange(setEmail)} 
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="phone-number">Phone Number</Label>
@@ -89,15 +119,34 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+          <Input 
+            id="password" 
+            placeholder="Password" 
+            type="password" 
+            value={password} 
+            onChange={handleInputChange(setPassword)} 
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="confirm-password">Confirm Password</Label>
-          <Input id="confirm-password" placeholder="Confirm Password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+          <Input 
+            id="confirm-password" 
+            placeholder="Confirm Password" 
+            type="password" 
+            value={confirmPassword} 
+            onChange={handleInputChange(setConfirmPassword)} 
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="company-name">Company Name</Label>
-          <Input id="company-name" placeholder="Company Name" type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} required />
+          <Input 
+            id="company-name" 
+            placeholder="Company Name" 
+            type="text" 
+            value={companyName} 
+            onChange={handleInputChange(setCompanyName)} 
+            required 
+          />
         </div>
         {registrationError && <p className="text-red-500 text-sm">{registrationError}</p>}
       </CardContent>

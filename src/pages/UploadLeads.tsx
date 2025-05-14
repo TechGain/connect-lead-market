@@ -10,7 +10,7 @@ const UploadLeads = () => {
   
   useEffect(() => {
     // Log the current authentication state for debugging
-    console.log("UploadLeads component - direct navigation to my-leads with upload tab");
+    console.log("UploadLeads component - preparing to navigate to my-leads with upload tab");
     
     if (!isLoggedIn) {
       toast.error("Please log in to upload leads");
@@ -24,10 +24,16 @@ const UploadLeads = () => {
       return;
     }
     
-    // Fix: Use navigate instead of window.location.replace to prevent full page refresh
-    navigate('/my-leads?tab=upload', { 
+    // Fix: Use proper navigation state to prevent full page refresh
+    console.log("Navigating to /my-leads?tab=upload without page refresh");
+    
+    // Ensure we use the navigate function in a way that doesn't trigger refreshes in the Lovable iframe
+    navigate('/my-leads', { 
       replace: true,
-      state: { preventTabChange: false } 
+      state: { 
+        initialTab: 'upload',
+        preventTabChange: false 
+      }
     });
   }, [isLoggedIn, role, navigate, isAdmin]);
   

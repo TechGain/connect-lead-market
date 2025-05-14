@@ -20,16 +20,19 @@ const ContactInfoFields = ({
   onContactEmailChange,
   onContactPhoneChange,
 }: ContactInfoFieldsProps) => {
-  // Fix: Ensure input handlers don't prevent default behavior
+  // Enhanced handlers that stop propagation
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Stop event propagation to prevent refreshes
     onContactNameChange(e.target.value);
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Stop event propagation to prevent refreshes
     onContactEmailChange(e.target.value);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Stop event propagation to prevent refreshes
     onContactPhoneChange(e.target.value);
   };
 

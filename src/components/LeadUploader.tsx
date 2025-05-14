@@ -7,7 +7,7 @@ import { Lead } from '@/types/lead';
 import { useLeadUpload } from '@/hooks/use-lead-upload';
 import { format } from "date-fns";
 
-// Import our new components
+// Import our components
 import LeadDetailsFields from './lead-uploader/LeadDetailsFields';
 import ConfirmationStatusSelect from './lead-uploader/ConfirmationStatusSelect';
 import AppointmentSelector from './lead-uploader/AppointmentSelector';
@@ -40,25 +40,26 @@ const LeadUploader = () => {
     '4:00 PM - 6:00 PM',
   ];
 
-  // Handle address selection from autocomplete
+  // Enhanced handlers with propagation stopping
   const handleAddressSelect = (selectedAddress: string) => {
     console.log("Address selected in LeadUploader:", selectedAddress);
     setAddress(selectedAddress);
   };
 
-  // Handle ZIP code found from autocomplete
   const handleZipCodeFound = (foundZipCode: string) => {
     console.log("ZIP code found in LeadUploader:", foundZipCode);
     setZipCode(foundZipCode);
   };
 
-  // Fixed: Ensure the confirmationStatus handler uses the proper union type
   const handleConfirmationStatusChange = (value: 'confirmed' | 'unconfirmed') => {
     setConfirmationStatus(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Keep this to prevent form submission refresh
+    // Adding both preventDefault and stopPropagation
+    e.preventDefault(); 
+    e.stopPropagation();
+    console.log("Lead uploader form submission intercepted");
     
     const requiredFields = [leadType, location, description, contactName, contactEmail, contactPhone, price, address, zipCode];
     
@@ -123,9 +124,6 @@ const LeadUploader = () => {
       toast.error('Failed to upload lead');
     }
   };
-
-  // Now let's check the underlying files for each form component to make sure they don't have problematic event handlers
-  // Let's fix the LeadDetailsFields component:
   
   return (
     <Card className="w-full">
@@ -184,6 +182,10 @@ const LeadUploader = () => {
             type="submit" 
             className="w-full"
             disabled={isUploading}
+            onClick={(e) => {
+              // Extra protection on the button click
+              e.stopPropagation();
+            }}
           >
             {isUploading ? 'Uploading...' : 'Upload Lead'}
           </Button>

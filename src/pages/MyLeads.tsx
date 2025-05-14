@@ -20,8 +20,17 @@ const MyLeads = () => {
   const [hasChecked, setHasChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
-  // Extract initial tab from URL but don't depend on it for re-renders
-  const initialTab = new URLSearchParams(location.search).get('tab') || 'leads';
+  // Get initial tab from location state if available, or from URL
+  const initialTabFromState = location.state?.initialTab;
+  const initialTabFromURL = new URLSearchParams(location.search).get('tab');
+  const initialTab = initialTabFromState || initialTabFromURL || 'leads';
+  
+  console.log("MyLeads initial tab determination:", {
+    initialTabFromState,
+    initialTabFromURL,
+    resultingInitialTab: initialTab
+  });
+  
   const [activeTab, setActiveTab] = useState(initialTab);
   
   const { leads } = useSellerLeads(user?.id);
@@ -37,7 +46,8 @@ const MyLeads = () => {
       hasChecked,
       loadingTimeout,
       activeTab,
-      currentPath: location.pathname + location.search
+      currentPath: location.pathname + location.search,
+      locationState: location.state
     });
     
     // Force check to complete after a reasonable timeout to prevent infinite loading
@@ -81,15 +91,25 @@ const MyLeads = () => {
       return;
     }
     
-    // Set tab from URL parameter only on initial load or when URL changes due to direct navigation
-    // Don't automatically update when user manually changes tabs
-    const tabParam = new URLSearchParams(location.search).get('tab');
-    if (tabParam && (tabParam === 'leads' || tabParam === 'upload') && !location.state?.preventTabChange) {
-      console.log("Setting active tab from URL parameter:", tabParam);
-      setActiveTab(tabParam);
+    // Set tab from URL parameter or location state on initial load
+    if (location.state?.initialTab && !location.state?.preventTabChange) {
+      console.log("Setting active tab from state:", location.state.initialTab);
+      setActiveTab(location.state.initialTab);
+      
+      // Clean up the state so future navigations don't override user tab selection
+      const newState = {...location.state};
+      delete newState.initialTab;
+      navigate(location.pathname + location.search, { 
+        replace: true, 
+        state: newState 
+      });
+    }
+    else if (initialTabFromURL && !location.state?.preventTabChange) {
+      console.log("Setting active tab from URL parameter:", initialTabFromURL);
+      setActiveTab(initialTabFromURL);
     }
     
-  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, location]);
+  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, location, initialTabFromURL]);
   
   // Fix: Ensure tab change doesn't cause page refresh
   const handleTabChange = (value: string) => {
@@ -97,7 +117,7 @@ const MyLeads = () => {
     setActiveTab(value);
     
     // Update URL without causing navigation/refresh
-    // Use replaceState directly instead of navigate to avoid triggering location changes
+    // Use history.replaceState directly to avoid potential refresh issues in iframe
     if (value !== activeTab) {
       const newUrl = `/my-leads?tab=${value}`;
       window.history.replaceState(
