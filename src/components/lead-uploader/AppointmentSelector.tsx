@@ -47,7 +47,11 @@ const AppointmentSelector = ({
               selected={date}
               onSelect={onDateChange}
               initialFocus
-              disabled={(date) => date < new Date()}
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
               className="pointer-events-auto"
             />
           </PopoverContent>
