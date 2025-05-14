@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddressAutocompleteInput } from "@/components/ui/address-autocomplete";
 
 interface LeadDetailsFieldsProps {
   leadType: string;
@@ -94,13 +95,15 @@ const LeadDetailsFields = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="address">Property Address *</Label>
-          <Input
+          <AddressAutocompleteInput
             id="address"
             value={address}
-            onChange={(e) => onAddressChange(e.target.value)}
-            placeholder="123 Main St, City, State"
+            placeholder="Start typing to search for an address..."
             required
+            onAddressSelect={(selectedAddress) => onAddressChange(selectedAddress)}
+            onZipCodeFound={onZipCodeChange}
           />
+          <p className="text-xs text-muted-foreground">Start typing to see address suggestions</p>
         </div>
         
         <div className="space-y-2">

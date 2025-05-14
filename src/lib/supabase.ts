@@ -1,4 +1,4 @@
 
-// This file is now deprecated. Please use the client from integrations folder
+// We're now recommending using the client from integrations folder directly
 import { supabase } from '@/integrations/supabase/client';
 export { supabase };
