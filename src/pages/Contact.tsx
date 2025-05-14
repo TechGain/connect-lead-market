@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -8,15 +9,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+
 const Contact = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Message sent",
+    toast("Message sent", {
       description: "Thank you for contacting us. We'll get back to you soon."
     });
     (e.target as HTMLFormElement).reset();
   };
+
   return <div className="flex flex-col min-h-screen">
       <Helmet>
         <title>Contact Us | StayConnect</title>
@@ -138,4 +140,5 @@ const Contact = () => {
       <Footer />
     </div>;
 };
+
 export default Contact;
