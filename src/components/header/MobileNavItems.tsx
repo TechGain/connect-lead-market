@@ -21,11 +21,11 @@ export const MobileNavItems: React.FC<MobileNavItemsProps> = ({
   const navigate = useNavigate();
   
   const handleUploadLeadClick = () => {
-    // We need to setTimeout to allow the sheet to close first
+    // Use a timer to let sheet close first, then navigate without refresh
     setTimeout(() => {
       navigate('/my-leads?tab=upload', { 
         replace: true,
-        state: { preventRefresh: true } 
+        state: { preventTabChange: false } 
       });
     }, 10);
   };

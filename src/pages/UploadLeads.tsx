@@ -10,7 +10,7 @@ const UploadLeads = () => {
   
   useEffect(() => {
     // Log the current authentication state for debugging
-    console.log("UploadLeads component - redirecting to my-leads with upload tab");
+    console.log("UploadLeads component - direct navigation to my-leads with upload tab");
     
     if (!isLoggedIn) {
       toast.error("Please log in to upload leads");
@@ -24,11 +24,8 @@ const UploadLeads = () => {
       return;
     }
     
-    // Navigate to my-leads with upload tab using the state to prevent refresh
-    navigate('/my-leads?tab=upload', { 
-      replace: true,
-      state: { preventRefresh: true }
-    });
+    // Navigate directly to /my-leads with upload tab without going through state changes
+    window.location.replace('/my-leads?tab=upload');
   }, [isLoggedIn, role, navigate, isAdmin]);
   
   // This component doesn't render anything as it's just for redirection

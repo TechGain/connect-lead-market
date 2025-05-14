@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -16,11 +16,13 @@ import UploadLeadTab from '@/components/my-leads/UploadLeadTab';
 const MyLeads = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const { isLoggedIn, role, isAdmin, isLoading, user, refreshUserRole } = useUserRole();
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'leads');
   const [hasChecked, setHasChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  
+  // Extract initial tab from URL but don't depend on it for re-renders
+  const initialTab = new URLSearchParams(location.search).get('tab') || 'leads';
+  const [activeTab, setActiveTab] = useState(initialTab);
   
   const { leads } = useSellerLeads(user?.id);
   
@@ -79,26 +81,30 @@ const MyLeads = () => {
       return;
     }
     
-    // Extract the tab parameter from URL and set it only on initial load
-    // This prevents overriding the activeTab state during tab changes
-    const tabParam = searchParams.get('tab');
-    if (tabParam && (tabParam === 'leads' || tabParam === 'upload') && activeTab !== tabParam) {
+    // Set tab from URL parameter only on initial load or when URL changes due to direct navigation
+    // Don't automatically update when user manually changes tabs
+    const tabParam = new URLSearchParams(location.search).get('tab');
+    if (tabParam && (tabParam === 'leads' || tabParam === 'upload') && !location.state?.preventTabChange) {
       console.log("Setting active tab from URL parameter:", tabParam);
       setActiveTab(tabParam);
     }
     
-  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, searchParams, location, activeTab]);
+  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, location]);
   
   const handleTabChange = (value: string) => {
     console.log("Tab changed to:", value);
     setActiveTab(value);
     
-    // Update URL without causing navigation/refresh - use replace: true and state to prevent history issues
-    const newUrl = `/my-leads?tab=${value}`;
-    navigate(newUrl, { 
-      replace: true,
-      state: { preventRefresh: true }
-    });
+    // Update URL without causing navigation/refresh
+    // Use replaceState directly instead of navigate to avoid triggering location changes
+    if (value !== activeTab) {
+      const newUrl = `/my-leads?tab=${value}`;
+      window.history.replaceState(
+        { ...window.history.state, preventTabChange: true }, 
+        '', 
+        newUrl
+      );
+    }
   };
   
   const handleRefresh = () => {
@@ -127,7 +133,11 @@ const MyLeads = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="container mx-auto px-4 pt-8">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={handleTabChange} 
+          className="container mx-auto px-4 pt-8"
+        >
           <TabsList>
             {(role === 'seller' || isAdmin) && (
               <TabsTrigger value="leads">My Leads</TabsTrigger>

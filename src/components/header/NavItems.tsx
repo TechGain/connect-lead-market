@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { NavigationMenuItem, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
@@ -15,9 +14,10 @@ export const NavItems: React.FC<NavItemsProps> = ({ isLoggedIn, role, isAdmin })
   
   const handleUploadLeadClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    // Navigate directly without changing URL structure
     navigate('/my-leads?tab=upload', { 
       replace: true,
-      state: { preventRefresh: true } 
+      state: { preventTabChange: false } 
     });
   };
   
@@ -48,14 +48,14 @@ export const NavItems: React.FC<NavItemsProps> = ({ isLoggedIn, role, isAdmin })
       
       {isLoggedIn && (role === 'seller' || isAdmin) && (
         <NavigationMenuItem>
-          <a 
-            href="#" 
+          <button 
             className={navigationMenuTriggerStyle()}
             onClick={handleUploadLeadClick}
+            type="button"
           >
             <Upload className="mr-2 h-4 w-4 inline" />
             Upload Lead
-          </a>
+          </button>
         </NavigationMenuItem>
       )}
       
