@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
-import { Loader } from 'lucide-react';
+import { Loader, AlertCircle } from 'lucide-react';
 import { useAddressAutocomplete, Prediction } from '@/hooks/use-address-autocomplete';
 
 interface AddressAutocompleteInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -22,6 +22,7 @@ export function AddressAutocompleteInput({
   const {
     predictions,
     isLoading,
+    error,
     showSuggestions,
     setShowSuggestions,
     getPlacePredictions,
@@ -48,11 +49,18 @@ export function AddressAutocompleteInput({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [setShowSuggestions]);
+
+  // Debug console log for predictions
+  useEffect(() => {
+    if (predictions.length > 0) {
+      console.log('Address predictions available:', predictions.length);
+    }
+  }, [predictions]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log('Input changed to:', value);
+    console.log('Address input changed to:', value);
     setInputValue(value);
     
     // Always pass the current value to parent even before autocomplete selection
@@ -61,10 +69,17 @@ export function AddressAutocompleteInput({
     }
     
     if (value) {
-      setShowSuggestions(true);
       getPlacePredictions(value);
     } else {
       setShowSuggestions(false);
+    }
+  };
+
+  const handleInputFocus = () => {
+    console.log('Input focused, current value:', inputValue);
+    if (inputValue && predictions.length > 0) {
+      console.log('Showing suggestions on focus');
+      setShowSuggestions(true);
     }
   };
 
@@ -82,7 +97,8 @@ export function AddressAutocompleteInput({
         className={className}
         value={inputValue}
         onChange={handleInputChange}
-        onFocus={() => inputValue && predictions.length > 0 && setShowSuggestions(true)}
+        onFocus={handleInputFocus}
+        onClick={() => inputValue && predictions.length > 0 && setShowSuggestions(true)}
         {...props}
       />
       
@@ -90,6 +106,14 @@ export function AddressAutocompleteInput({
       {isLoading && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {/* Show error state */}
+      {error && (
+        <div className="text-destructive text-xs mt-1 flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" />
+          <span>{error}</span>
         </div>
       )}
       
@@ -103,10 +127,26 @@ export function AddressAutocompleteInput({
                 onClick={() => selectPrediction(prediction)}
                 className="px-3 py-2 hover:bg-accent cursor-pointer truncate text-sm"
               >
-                {prediction.description}
+                {prediction.structured_formatting ? (
+                  <>
+                    <span className="font-medium">{prediction.structured_formatting.main_text}</span>
+                    <span className="text-muted-foreground"> {prediction.structured_formatting.secondary_text}</span>
+                  </>
+                ) : (
+                  prediction.description
+                )}
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Show "no results" message when search is complete but no results found */}
+      {inputValue && !isLoading && predictions.length === 0 && showSuggestions && !error && (
+        <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg">
+          <div className="px-3 py-2 text-sm text-muted-foreground">
+            No addresses found. Try a different search.
+          </div>
         </div>
       )}
     </div>

@@ -21,5 +21,5 @@ interface Window {
       };
     };
   };
+  googleMapsCallback?: () => void;
 }
-
