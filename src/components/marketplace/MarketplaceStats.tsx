@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { CircleDot, CircleCheck, CircleX } from 'lucide-react';
+import { CircleCheck, CircleX } from 'lucide-react';
 
 interface MarketplaceStatsProps {
   totalLeads: number;
@@ -10,28 +10,25 @@ interface MarketplaceStatsProps {
 }
 
 const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
-  totalLeads,
   availableLeads,
   soldLeads
 }) => {
   return (
-    <div className="flex flex-wrap gap-3 mb-6 bg-muted/50 p-3 rounded-md">
-      <div className="flex items-center mr-4">
-        <CircleDot className="text-gray-600 mr-1 h-4 w-4" />
-        <span className="text-sm font-medium mr-1">Total Leads:</span>
-        <Badge variant="outline" className="font-mono">{totalLeads}</Badge>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="flex flex-col items-center p-4 bg-green-50/80 rounded-lg border border-green-100 shadow-sm">
+        <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-2">
+          <CircleCheck className="text-green-600 h-6 w-6" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900">Available Leads</h3>
+        <Badge variant="outline" className="mt-2 text-lg px-4 py-1 font-mono bg-white">{availableLeads}</Badge>
       </div>
       
-      <div className="flex items-center mr-4">
-        <CircleCheck className="text-green-600 mr-1 h-4 w-4" />
-        <span className="text-sm font-medium mr-1">Available:</span>
-        <Badge variant="outline" className="bg-green-50 font-mono">{availableLeads}</Badge>
-      </div>
-      
-      <div className="flex items-center">
-        <CircleX className="text-gray-500 mr-1 h-4 w-4" />
-        <span className="text-sm font-medium mr-1">Sold:</span>
-        <Badge variant="outline" className="font-mono">{soldLeads}</Badge>
+      <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-2">
+          <CircleX className="text-gray-500 h-6 w-6" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900">Sold Leads</h3>
+        <Badge variant="outline" className="mt-2 text-lg px-4 py-1 font-mono bg-white">{soldLeads}</Badge>
       </div>
     </div>
   );
