@@ -32,7 +32,8 @@ const MyLeads = () => {
       isLoading,
       userId: user?.id,
       hasChecked,
-      loadingTimeout
+      loadingTimeout,
+      activeTab
     });
     
     // Force check to complete after a reasonable timeout to prevent infinite loading
@@ -75,11 +76,20 @@ const MyLeads = () => {
       navigate('/');
       return;
     }
-  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout]);
+    
+    // Set active tab based on URL parameter
+    const tabParam = searchParams.get('tab');
+    if (tabParam && (tabParam === 'leads' || tabParam === 'upload')) {
+      setActiveTab(tabParam);
+    }
+    
+  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, searchParams]);
   
   const handleTabChange = (value: string) => {
+    console.log("Tab changed to:", value);
     setActiveTab(value);
-    navigate(`/my-leads?tab=${value}`);
+    // Update URL without causing a full page reload
+    navigate(`/my-leads?tab=${value}`, { replace: true });
   };
   
   const handleRefresh = () => {

@@ -100,8 +100,14 @@ const LeadDetailsFields = ({
             value={address}
             placeholder="Start typing to search for an address..."
             required
-            onAddressSelect={(selectedAddress) => onAddressChange(selectedAddress)}
-            onZipCodeFound={onZipCodeChange}
+            onAddressSelect={(selectedAddress) => {
+              console.log("Address selected:", selectedAddress);
+              onAddressChange(selectedAddress);
+            }}
+            onZipCodeFound={(foundZipCode) => {
+              console.log("Zip code found:", foundZipCode);
+              onZipCodeChange(foundZipCode);
+            }}
           />
           <p className="text-xs text-muted-foreground">Start typing to see address suggestions</p>
         </div>

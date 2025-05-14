@@ -41,6 +41,18 @@ const LeadUploader = () => {
     '4:00 PM - 6:00 PM',
   ];
 
+  // Handle address selection from autocomplete
+  const handleAddressSelect = (selectedAddress: string) => {
+    console.log("Address selected in LeadUploader:", selectedAddress);
+    setAddress(selectedAddress);
+  };
+
+  // Handle ZIP code found from autocomplete
+  const handleZipCodeFound = (foundZipCode: string) => {
+    console.log("ZIP code found in LeadUploader:", foundZipCode);
+    setZipCode(foundZipCode);
+  };
+
   // Fixed: Ensure the confirmationStatus handler uses the proper union type
   const handleConfirmationStatusChange = (value: 'confirmed' | 'unconfirmed') => {
     setConfirmationStatus(value);
@@ -90,6 +102,8 @@ const LeadUploader = () => {
       const success = await uploadLead(newLead);
       
       if (success) {
+        toast.success("Lead uploaded successfully");
+        
         // Reset form
         setLeadType('');
         setLocation('');
@@ -127,13 +141,13 @@ const LeadUploader = () => {
             onLeadTypeChange={setLeadType}
             onLocationChange={setLocation}
             onDescriptionChange={setDescription}
-            onAddressChange={setAddress}
-            onZipCodeChange={setZipCode}
+            onAddressChange={handleAddressSelect}
+            onZipCodeChange={handleZipCodeFound}
           />
           
           <ConfirmationStatusSelect 
             value={confirmationStatus} 
-            onChange={handleConfirmationStatusChange} // Updated to use our new handler
+            onChange={handleConfirmationStatusChange}
           />
           
           {confirmationStatus === 'confirmed' && (
