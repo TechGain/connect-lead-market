@@ -77,24 +77,24 @@ export const useChatWidget = () => {
 
   const checkForExistingChat = async () => {
     try {
+      // Fix: Don't use .single() because it causes a 406 error when no chats are found
+      // Instead, we'll use .limit(1) and check if data exists
       const { data, error } = await supabase
         .from('chats')
         .select('id')
         .eq('user_id', user?.id)
         .eq('status', 'open')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
       if (error) {
-        if (error.code !== 'PGRST116') { // No rows returned
-          console.error('Error checking for existing chat:', error);
-        }
+        console.error('Error checking for existing chat:', error);
         return;
       }
 
-      if (data?.id) {
-        setCurrentChatId(data.id);
+      // Check if we have any data
+      if (data && data.length > 0) {
+        setCurrentChatId(data[0].id);
         setChatStarted(true);
       }
     } catch (error) {
