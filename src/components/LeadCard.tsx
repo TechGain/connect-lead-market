@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar, Check, User, Pencil, Clock, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, User, Pencil, Clock, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -147,12 +146,11 @@ const LeadCard = ({
               <p className="text-gray-700"><span className="font-medium">Lead Type:</span> {formatLeadType(lead.type)}</p>
               <p className="text-gray-700"><span className="font-medium">ZIP Code:</span> {lead.zipCode || 'Unknown'}</p>
               
-              {/* Display confirmation status with icon */}
+              {/* Display confirmation status without icon */}
               <div className="flex items-center">
                 <span className="font-medium text-gray-700 mr-2">Status:</span>
                 {isConfirmed ? (
-                  <span className="flex items-center text-green-600">
-                    <Check className="h-4 w-4 mr-1" />
+                  <span className="text-green-600">
                     Confirmed
                   </span>
                 ) : (
