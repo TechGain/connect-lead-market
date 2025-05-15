@@ -32,9 +32,15 @@ export function getRandomInt(min: number, max: number): number {
 /**
  * Formats a lead type from kebab-case to Title Case
  * Example: "full-home-renovation" -> "Full Home Renovation"
+ * Special case for "hvac" -> "HVAC" (all caps)
  */
 export function formatLeadType(type: string): string {
   if (!type) return '';
+  
+  // Special case for "hvac" - return it in all caps
+  if (type.toLowerCase() === 'hvac') {
+    return 'HVAC';
+  }
   
   return type
     .split('-')
