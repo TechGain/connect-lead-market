@@ -11,7 +11,6 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [price, setPrice] = useState('');
-  const [quality, setQuality] = useState(3);
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
@@ -37,7 +36,6 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       setContactEmail(leadData.contactEmail || '');
       setContactPhone(leadData.contactPhone || '');
       setPrice(leadData.price?.toString() || '');
-      setQuality(leadData.qualityRating || 3);
       setAddress(leadData.address || '');
       setZipCode(leadData.zipCode || '');
       setConfirmationStatus(leadData.confirmationStatus || 'confirmed');
@@ -116,7 +114,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
           contact_email: contactEmail,
           contact_phone: contactPhone,
           price: parseFloat(price),
-          quality_rating: quality,
+          quality_rating: null, // Set to null instead of using a number
           address: address,
           zip_code: zipCode,
           confirmation_status: confirmationStatus,
@@ -146,7 +144,6 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
     contactEmail,
     contactPhone,
     price,
-    quality,
     appointmentDate,
     appointmentTimeSlot,
     address,
@@ -160,7 +157,6 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
     setContactEmail,
     setContactPhone,
     setPrice,
-    setQuality,
     setAppointmentDate,
     setAppointmentTimeSlot,
     setAddress,

@@ -23,7 +23,6 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
     contactEmail,
     contactPhone,
     price,
-    quality,
     appointmentDate,
     appointmentTimeSlot,
     address,
@@ -37,7 +36,6 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
     setContactEmail,
     setContactPhone,
     setPrice,
-    setQuality,
     setAppointmentDate,
     setAppointmentTimeSlot,
     setAddress,
@@ -91,9 +89,7 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
       
       <PriceQualityFields
         price={price}
-        quality={quality}
         onPriceChange={setPrice}
-        onQualityChange={setQuality}
       />
       
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
