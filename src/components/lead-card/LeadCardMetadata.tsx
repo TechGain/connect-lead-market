@@ -31,12 +31,6 @@ const LeadCardMetadata: React.FC<LeadCardMetadataProps> = ({
   
   return (
     <div className="space-y-3">
-      {/* Display upload date with calendar icon */}
-      <div className="flex items-center text-sm text-gray-500">
-        <Calendar className="h-4 w-4 mr-1" />
-        <span>Added: {formattedDate}</span>
-      </div>
-
       {/* Only display seller info in full details view, not in marketplace */}
       {sellerName && showFullDetails && (
         <div className="flex items-center text-sm text-gray-500">
