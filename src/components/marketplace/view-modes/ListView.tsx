@@ -2,7 +2,7 @@
 import React from 'react';
 import { Lead } from '@/types/lead';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatLeadType } from '@/lib/utils';
+import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
 
 interface ListViewProps {
   leads: Lead[];
@@ -25,12 +25,9 @@ const ListView: React.FC<ListViewProps> = ({ leads, onPurchase }) => {
               <span className="font-medium">{formatLeadType(lead.type)}</span>
             </div>
             <span className="text-gray-500 text-sm mr-4">{lead.zipCode || 'Unknown ZIP'}</span>
-            <div className="hidden md:block">
-              <span className="text-gray-500 text-sm">Rating: {lead.qualityRating || 0}/5</span>
-            </div>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="font-bold">{formatCurrency(lead.price)}</span>
+            <span className="font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</span>
             {lead.status === 'new' && onPurchase && (
               <button 
                 onClick={() => onPurchase(lead)} 

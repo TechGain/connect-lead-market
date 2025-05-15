@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, applyBuyerPriceMarkup } from '@/lib/utils';
 import { Lead } from '@/types/lead';
 
 interface LeadCardFooterProps {
@@ -15,13 +15,16 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
   onPurchase,
   isOwner
 }) => {
+  // Use original price for owners (sellers), apply markup for buyers
+  const displayPrice = isOwner ? lead.price : applyBuyerPriceMarkup(lead.price);
+
   return (
     <div className="pt-2 border-t flex justify-between items-center">
       <div></div>
       
       <div className="flex items-center">
         <div className="mr-4">
-          <span className="font-bold text-lg">{formatCurrency(lead.price)}</span>
+          <span className="font-bold text-lg">{formatCurrency(displayPrice)}</span>
         </div>
         
         {/* Only show the Buy Lead button for new leads */}

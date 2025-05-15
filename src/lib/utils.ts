@@ -42,3 +42,11 @@ export function formatLeadType(type: string): string {
     .join(' ');
 }
 
+/**
+ * Applies a 10% markup to the lead price for buyers in the marketplace
+ * @param price The base price set by the seller
+ * @returns The price with 10% markup applied
+ */
+export function applyBuyerPriceMarkup(price: number): number {
+  return price * 1.1;  // Apply 10% markup
+}

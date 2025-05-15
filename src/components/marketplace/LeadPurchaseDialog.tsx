@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Lead } from '@/types/lead';
-import { formatCurrency, formatLeadType } from '@/lib/utils';
+import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle, Loader2, ExternalLink } from 'lucide-react';
 import { 
@@ -41,6 +41,8 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
       window.top.location.href = stripeUrl;
     }
   };
+  
+  const displayPrice = selectedLead ? applyBuyerPriceMarkup(selectedLead.price) : 0;
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -86,11 +88,10 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-600">Lead Price:</span>
-                  <span className="font-semibold">{formatCurrency(selectedLead.price)}</span>
+                  <span className="font-semibold">{formatCurrency(displayPrice)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Quality Rating:</span>
-                  <span>{selectedLead.qualityRating} / 5</span>
+                <div className="text-xs text-gray-500 text-right">
+                  Includes 10% platform fee
                 </div>
               </div>
               
@@ -126,7 +127,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing...
                 </>
-              ) : `Purchase for ${selectedLead ? formatCurrency(selectedLead.price) : '$0.00'}`}
+              ) : `Purchase for ${selectedLead ? formatCurrency(displayPrice) : '$0.00'}`}
             </Button>
           </DialogFooter>
         )}

@@ -3,7 +3,7 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatLeadType } from '@/lib/utils';
+import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
 
 interface SmallCardViewProps {
   leads: Lead[];
@@ -27,7 +27,7 @@ const SmallCardView: React.FC<SmallCardViewProps> = ({ leads, onPurchase }) => {
             </div>
             <div className="mt-auto pt-2 flex justify-between items-center">
               <div>
-                <span className="text-sm font-bold">{formatCurrency(lead.price)}</span>
+                <span className="text-sm font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</span>
               </div>
               {lead.status === 'new' && onPurchase && (
                 <button 

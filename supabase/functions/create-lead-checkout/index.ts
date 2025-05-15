@@ -16,6 +16,11 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-LEAD-CHECKOUT] ${step}${detailsStr}`);
 };
 
+// Apply 10% markup for buyers
+const applyBuyerPriceMarkup = (price: number): number => {
+  return price * 1.1; // 10% markup
+};
+
 serve(async (req) => {
   logStep("Function called", { method: req.method, url: req.url });
   
@@ -142,6 +147,12 @@ serve(async (req) => {
 
     logStep("Lead fetched successfully", { leadId: lead.id, price: lead.price, type: lead.type });
 
+    // Apply 10% markup to the price for buyers
+    const originalPrice = lead.price;
+    const markedUpPrice = applyBuyerPriceMarkup(originalPrice);
+    
+    logStep("Applying price markup", { originalPrice, markedUpPrice });
+
     // Initialize Stripe with the secret key
     logStep("Initializing Stripe");
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -162,7 +173,7 @@ serve(async (req) => {
                 name: `${lead.type} Lead in ${lead.location}`,
                 description: `Purchase access to contact information for this ${lead.type} lead`,
               },
-              unit_amount: Math.round(Number(lead.price) * 100), // Convert dollars to cents
+              unit_amount: Math.round(Number(markedUpPrice) * 100), // Convert dollars to cents, with markup applied
             },
             quantity: 1,
           },
@@ -174,6 +185,8 @@ serve(async (req) => {
         metadata: {
           leadId: lead.id,
           buyerId: user.id,
+          originalPrice: originalPrice.toString(),
+          markedUpPrice: markedUpPrice.toString(),
         },
       });
       logStep("Checkout session created", { sessionId: session.id, url: session.url });
