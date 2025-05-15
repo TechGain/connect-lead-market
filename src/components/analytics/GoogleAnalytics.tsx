@@ -22,8 +22,11 @@ export const GoogleAnalytics = () => {
     if (typeof window.gtag !== 'undefined') {
       console.log('Sending pageview to Google Analytics:', location.pathname);
       window.gtag('config', 'G-LECDK9PYVE', {
-        page_path: location.pathname + location.search
+        page_path: location.pathname + location.search,
+        debug_mode: true
       });
+    } else {
+      console.warn('Google Analytics gtag not found. Make sure the script is loaded correctly.');
     }
   }, [location]);
   
