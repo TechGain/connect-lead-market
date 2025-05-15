@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Lead } from '@/types/lead';
@@ -40,6 +39,15 @@ const LeadCard = ({
   
   return (
     <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'bg-gray-50' : ''}`}>
+      {/* Show date at the top of the card */}
+      <div className="px-6 pt-6 pb-0">
+        <LeadCardMetadata
+          createdAt={lead.createdAt}
+          showFullDetails={showFullDetails}
+          showOnlyDate={true}
+        />
+      </div>
+      
       <CardHeader className="pb-2">
         <LeadCardHeader 
           lead={lead}
@@ -53,11 +61,13 @@ const LeadCard = ({
       </CardHeader>
       
       <CardContent className="py-2 flex-grow">
-        <LeadCardMetadata 
-          createdAt={lead.createdAt}
-          sellerName={lead.sellerName}
-          showFullDetails={showFullDetails}
-        />
+        {/* Keep the original LeadCardMetadata but without date (it's moved to top) */}
+        <div className="mb-3">
+          <LeadCardMetadata 
+            sellerName={lead.sellerName}
+            showFullDetails={showFullDetails}
+          />
+        </div>
         
         <LeadCardDetails
           description={lead.description}

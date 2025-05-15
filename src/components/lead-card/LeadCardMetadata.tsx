@@ -7,15 +7,27 @@ interface LeadCardMetadataProps {
   createdAt?: string;
   sellerName?: string;
   showFullDetails: boolean;
+  showOnlyDate?: boolean; // New prop to control what to display
 }
 
 const LeadCardMetadata: React.FC<LeadCardMetadataProps> = ({ 
   createdAt, 
   sellerName,
-  showFullDetails 
+  showFullDetails,
+  showOnlyDate = false // Default to showing all metadata
 }) => {
   // Format date for display
   const formattedDate = createdAt ? format(new Date(createdAt), 'MMM d, yyyy h:mm a') : 'Unknown date';
+  
+  if (showOnlyDate) {
+    // Only return the date component when showOnlyDate is true
+    return (
+      <div className="flex items-center text-sm text-gray-500 mb-2">
+        <Calendar className="h-4 w-4 mr-1" />
+        <span>Added: {formattedDate}</span>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-3">
