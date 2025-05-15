@@ -1,6 +1,5 @@
 
 import React from 'react';
-import StarRating from '@/components/StarRating';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { Lead } from '@/types/lead';
@@ -18,9 +17,7 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
 }) => {
   return (
     <div className="pt-2 border-t flex justify-between items-center">
-      <div className="flex items-center">
-        <StarRating rating={lead.qualityRating || 0} showValue />
-      </div>
+      <div></div>
       
       <div className="flex items-center">
         <div className="mr-4">

@@ -21,7 +21,6 @@ const LeadUploader = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [price, setPrice] = useState('');
-  const [quality, setQuality] = useState(3);
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
@@ -88,7 +87,7 @@ const LeadUploader = () => {
         contactEmail,
         contactPhone,
         price: Number(price),
-        qualityRating: quality,
+        qualityRating: null, // Set to null instead of a number
         status: 'new',
         createdAt: new Date().toISOString(),
         appointmentTime: appointmentInfo,
@@ -110,7 +109,6 @@ const LeadUploader = () => {
         setContactEmail('');
         setContactPhone('');
         setPrice('');
-        setQuality(3);
         setAppointmentDate(undefined);
         setAppointmentTimeSlot('');
         setAddress('');
@@ -167,9 +165,7 @@ const LeadUploader = () => {
           
           <PriceQualityFields
             price={price}
-            quality={quality}
             onPriceChange={setPrice}
-            onQualityChange={setQuality}
           />
         </CardContent>
         
