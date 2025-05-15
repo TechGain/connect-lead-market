@@ -122,6 +122,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <SelectItem value="instagram">Instagram</SelectItem>
               <SelectItem value="twitter">Twitter</SelectItem>
               <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="friend">Friend</SelectItem>
               <SelectItem value="word-of-mouth">Word of Mouth</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>

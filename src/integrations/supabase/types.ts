@@ -192,6 +192,7 @@ export type Database = {
           id: string
           phone: string | null
           rating: number | null
+          referral_source: string | null
           role: string
           sms_notifications_enabled: boolean | null
           updated_at: string
@@ -203,6 +204,7 @@ export type Database = {
           id: string
           phone?: string | null
           rating?: number | null
+          referral_source?: string | null
           role: string
           sms_notifications_enabled?: boolean | null
           updated_at?: string
@@ -214,6 +216,7 @@ export type Database = {
           id?: string
           phone?: string | null
           rating?: number | null
+          referral_source?: string | null
           role?: string
           sms_notifications_enabled?: boolean | null
           updated_at?: string
