@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar, Check, X, User, Pencil, Clock, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, Check, User, Pencil, Clock, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -156,12 +156,16 @@ const LeadCard = ({
                     Confirmed
                   </span>
                 ) : (
-                  <span className="flex items-center text-amber-600">
-                    <X className="h-4 w-4 mr-1" />
-                    Unconfirmed
-                  </span>
+                  <span className="text-amber-600">Unconfirmed</span>
                 )}
               </div>
+              
+              {/* New action prompt for unconfirmed leads */}
+              {!isConfirmed && (
+                <div className="text-sm text-amber-600 ml-[76px]">
+                  Call customer to schedule appointment
+                </div>
+              )}
               
               {/* Display appointment time if it exists and status is confirmed - moved here below status */}
               {isConfirmed && lead.appointmentTime && (
