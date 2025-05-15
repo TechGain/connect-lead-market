@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import StarRating from '@/components/StarRating';
 import { formatCurrency, formatLeadType } from '@/lib/utils';
 import { Lead } from '@/types/lead';
-import { MapPin, Calendar, User, Pencil, Clock, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, User, Pencil, Clock, Trash2, PhoneOutgoing } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LeadCardProps {
@@ -158,14 +159,15 @@ const LeadCard = ({
                 )}
               </div>
               
-              {/* New action prompt for unconfirmed leads */}
+              {/* New action prompt for unconfirmed leads with phone icon */}
               {!isConfirmed && (
-                <div className="text-sm text-amber-600 ml-[76px]">
-                  Call customer to schedule appointment
+                <div className="flex items-center text-sm text-amber-600 mt-1">
+                  <PhoneOutgoing className="h-4 w-4 mr-1" />
+                  <span>Call customer to schedule appointment</span>
                 </div>
               )}
               
-              {/* Display appointment time if it exists and status is confirmed - moved here below status */}
+              {/* Display appointment time if it exists and status is confirmed */}
               {isConfirmed && lead.appointmentTime && (
                 <div className="flex items-center text-sm text-green-600 font-medium">
                   <Clock className="h-4 w-4 mr-1" />
