@@ -18,7 +18,8 @@ export type UserRoleContextType = {
     role: 'seller' | 'buyer',
     fullName: string,
     company?: string,
-    phone?: string
+    phone?: string,
+    referralSource?: string
   ) => Promise<any>;
   logout: () => Promise<void>;
   refreshRole: () => Promise<void>;

@@ -163,7 +163,8 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
     role: 'seller' | 'buyer',
     fullName: string,
     company?: string,
-    phone?: string
+    phone?: string,
+    referralSource?: string
   ) => {
     // If the user is already signed in, log them out first
     if (session) {
@@ -174,7 +175,7 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoadingUser(true);
-      const result = await authActions.register(email, password, role, fullName, company, phone);
+      const result = await authActions.register(email, password, role, fullName, company, phone, referralSource);
       
       if (result?.session) {
         setIsLoggedIn(true);
