@@ -1,22 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import LeadCard from '@/components/LeadCard';
-import StarRating from '@/components/StarRating';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
 import { Lead, mapDbLeadToAppLead } from '@/types/lead';
-import { rateLead } from '@/lib/mock-data';
-import { useUserRole } from '@/hooks/use-user-role';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
 import { useCheckoutUrlParams } from '@/hooks/use-checkout-url-params';
 import { useAuthCheck } from '@/hooks/use-auth-check';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import RatingDialog from '@/components/purchases/RatingDialog';
+import LoadingState from '@/components/purchases/LoadingState';
+import EmptyState from '@/components/purchases/EmptyState';
+import PurchasedLeadsList from '@/components/purchases/PurchasedLeadsList';
 
 const Purchases = () => {
   const navigate = useNavigate();
@@ -28,9 +24,6 @@ const Purchases = () => {
   const [purchasedLeads, setPurchasedLeads] = useState<Lead[]>([]);
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [rating, setRating] = useState(5);
-  const [review, setReview] = useState('');
-  const [successfullySold, setSuccessfullySold] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   // Handle completing a purchase
@@ -161,37 +154,6 @@ const Purchases = () => {
   const handleRateLead = (lead: Lead) => {
     setSelectedLead(lead);
     setRatingDialogOpen(true);
-    setRating(5);
-    setReview('');
-    setSuccessfullySold(false);
-  };
-  
-  const submitRating = async () => {
-    if (!selectedLead || !user?.id) return;
-    
-    try {
-      // Insert rating into lead_ratings table
-      const { error } = await supabase.from('lead_ratings').insert({
-        lead_id: selectedLead.id,
-        buyer_id: user.id,
-        rating: rating,
-        review: review,
-        successful_sale: successfullySold
-      });
-      
-      if (error) throw error;
-      
-      toast.success('Thank you for your feedback!');
-      setRatingDialogOpen(false);
-      
-      // Reset form
-      setRating(5);
-      setReview('');
-      setSuccessfullySold(false);
-    } catch (error) {
-      console.error('[PURCHASE PAGE] Error submitting rating:', error);
-      toast.error('Failed to submit rating');
-    }
   };
 
   return (
@@ -207,94 +169,19 @@ const Purchases = () => {
         </div>
         
         {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin mr-2" />
-            <p>Loading your purchases...</p>
-          </div>
+          <LoadingState />
         ) : purchasedLeads.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {purchasedLeads.map(lead => (
-              <div key={lead.id} className="relative">
-                <LeadCard
-                  lead={lead}
-                  showFullDetails={true}
-                  isPurchased={true}
-                  onRate={handleRateLead}
-                />
-              </div>
-            ))}
-          </div>
+          <PurchasedLeadsList leads={purchasedLeads} onRate={handleRateLead} />
         ) : (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-semibold mb-2">No Purchased Leads</h3>
-            <p className="text-gray-600 mb-4">You haven't purchased any leads yet</p>
-            <Button onClick={() => navigate('/marketplace')}>Browse Marketplace</Button>
-          </div>
+          <EmptyState />
         )}
         
-        <Dialog open={ratingDialogOpen} onOpenChange={setRatingDialogOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Rate this Lead</DialogTitle>
-              <DialogDescription>
-                Please rate the quality of this lead and provide feedback.
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedLead && (
-              <div className="py-4">
-                <div className="border-b pb-3 mb-3">
-                  <h3 className="font-medium">{selectedLead.type} Lead in {selectedLead.location}</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="font-medium">Quality Rating</label>
-                    <div className="flex items-center">
-                      <StarRating 
-                        rating={rating} 
-                        onRatingChange={setRating}
-                        readOnly={false}
-                        size={24} 
-                      />
-                      <span className="ml-2 text-sm text-gray-500">{rating} of 5 stars</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="font-medium">Your Review (Optional)</label>
-                    <Textarea
-                      placeholder="Tell us about your experience with this lead..."
-                      value={review}
-                      onChange={(e) => setReview(e.target.value)}
-                      rows={4}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 pt-2">
-                    <Switch
-                      id="sold-lead"
-                      checked={successfullySold}
-                      onCheckedChange={setSuccessfullySold}
-                    />
-                    <Label htmlFor="sold-lead" className="font-medium">
-                      I successfully sold this lead
-                    </Label>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setRatingDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={submitRating}>
-                Submit Rating
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <RatingDialog 
+          open={ratingDialogOpen}
+          selectedLead={selectedLead}
+          userId={user?.id}
+          onOpenChange={setRatingDialogOpen}
+        />
       </main>
       
       <Footer />
