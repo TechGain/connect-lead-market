@@ -1,163 +1,57 @@
 
-import React, { useState, useEffect } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthActions } from '@/hooks/useAuthActions';
+import React from 'react';
 import { UserRoleContext, UserRoleContextType } from '@/contexts/UserRoleContext';
+import { useUserRoleState } from '@/hooks/useUserRoleState';
+import { useUserRoleActions } from '@/hooks/useUserRoleActions';
 
 /**
  * Provider component that wraps the app and makes auth object available to any
  * child component that calls useUserRole().
  */
 export function UserRoleProvider({ children }: { children: React.ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const supabaseClient = supabase;
-  const authActions = useAuthActions();
+  const {
+    user,
+    isLoggedIn,
+    session,
+    role,
+    loadingUser,
+    isAdmin,
+    isLoading,
+    setIsLoggedIn,
+    setUser,
+    setRole,
+    setSession,
+    refreshRole
+  } = useUserRoleState();
 
-  // Compute isAdmin based on role
-  const isAdmin = role === 'admin';
-
-  // Alias isLoading to loadingUser for consistency with other hooks
-  const isLoading = loadingUser;
-
-  useEffect(() => {
-    const getSession = async () => {
-      try {
-        setLoadingUser(true);
-        const { data: { session } } = await supabaseClient.auth.getSession();
-
-        setSession(session);
-        setUser(session?.user || null);
-        setIsLoggedIn(!!session?.user);
-
-        if (session?.user) {
-          // Fetch the user's role from the profiles table
-          const { data: profile, error } = await supabaseClient
-            .from('profiles')
-            .select('role, phone')
-            .eq('id', session.user.id)
-            .single();
-
-          if (error) {
-            console.error("Error fetching user role:", error);
-            setRole(null); // Set role to null in case of an error
-          } else {
-            setRole(profile?.role || null);
-          }
-        } else {
-          setRole(null); // No user, so no role
-        }
-      } catch (error) {
-        console.error("Error in getSession:", error);
-        setIsLoggedIn(false);
-        setUser(null);
-        setRole(null);
-      } finally {
-        setLoadingUser(false);
-      }
-    };
-
-    getSession();
-
-    // Subscribe to auth state changes
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user || null);
-      setIsLoggedIn(!!session?.user);
-      
-      if (session?.user) {
-        // Fetch the user's role from the profiles table
-        supabaseClient
-          .from('profiles')
-          .select('role, phone')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile, error }) => {
-            if (error) {
-              console.error("Error fetching user role:", error);
-              setRole(null);
-            } else {
-              setRole(profile?.role || null);
-            }
-          });
-      } else {
-        setRole(null);
-      }
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, [supabaseClient]);
-
-  const refreshRole = async () => {
-    if (user?.id) {
-      try {
-        const { data: profile, error } = await supabaseClient
-          .from('profiles')
-          .select('role, phone')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error("Error refreshing user role:", error);
-          setRole(null);
-        } else {
-          setRole(profile?.role || null);
-        }
-      } catch (error) {
-        console.error("Error refreshing role:", error);
-        setRole(null);
-      }
-    } else {
-      setRole(null);
-    }
-  };
+  const {
+    login,
+    register,
+    logout
+  } = useUserRoleActions();
 
   // Create an alias for refreshRole for backward compatibility
   const refreshUserRole = refreshRole;
 
-  // Add login method using authActions
-  const login = async (email: string, password: string) => {
-    try {
-      setLoadingUser(true);
-      const result = await authActions.login(email, password);
+  // Handle login with state updates
+  const handleLogin = async (email: string, password: string) => {
+    const result = await login(email, password);
+    
+    if (result?.session) {
+      setIsLoggedIn(true);
+      setSession(result.session);
+      setUser(result.user);
       
-      if (result?.session) {
-        setIsLoggedIn(true);
-        setSession(result.session);
-        setUser(result.user);
-        
-        // Fetch role after login
-        if (result.user?.id) {
-          const { data: profile, error } = await supabaseClient
-            .from('profiles')
-            .select('role, phone')
-            .eq('id', result.user.id)
-            .single();
-          
-          if (!error && profile) {
-            setRole(profile.role);
-          }
-        }
-        
-        return result;
+      if (result.role) {
+        setRole(result.role);
       }
-      
-      return null;
-    } catch (error) {
-      console.error("Login failed:", error);
-      return null;
-    } finally {
-      setLoadingUser(false);
     }
+    
+    return result;
   };
 
-  const register = async (
+  // Handle registration with state updates
+  const handleRegister = async (
     email: string, 
     password: string,
     role: 'seller' | 'buyer',
@@ -168,46 +62,30 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
   ) => {
     // If the user is already signed in, log them out first
     if (session) {
-      await authActions.logout();
+      await logout();
       // Small delay to ensure logout completes
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    try {
-      setLoadingUser(true);
-      const result = await authActions.register(email, password, role, fullName, company, phone, referralSource);
-      
-      if (result?.session) {
-        setIsLoggedIn(true);
-        setSession(result.session);
-        setUser(result.user);
-        setRole(role); // Use the role explicitly passed to this function
-        
-        console.log("Registration completed, user is now logged in with role:", role);
-        return result;
-      } else {
-        console.error("Registration completed but no session was returned");
-        return null;
-      }
-    } catch (error: any) {
-      console.error("Registration failed:", error.message);
-      return null;
-    } finally {
-      setLoadingUser(false);
+    const result = await register(email, password, role, fullName, company, phone, referralSource);
+    
+    if (result?.session) {
+      setIsLoggedIn(true);
+      setSession(result.session);
+      setUser(result.user);
+      setRole(role);
     }
+    
+    return result;
   };
 
-  const logout = async () => {
-    try {
-      setLoadingUser(true);
-      await authActions.logout();
-      setIsLoggedIn(false);
-      setUser(null);
-      setRole(null);
-      setSession(null);
-    } finally {
-      setLoadingUser(false);
-    }
+  // Handle logout with state updates
+  const handleLogout = async () => {
+    await logout();
+    setIsLoggedIn(false);
+    setUser(null);
+    setRole(null);
+    setSession(null);
   };
 
   const contextValue: UserRoleContextType = {
@@ -218,9 +96,9 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
     loadingUser,
     isAdmin,
     isLoading,
-    login,
-    register,
-    logout,
+    login: handleLogin,
+    register: handleRegister,
+    logout: handleLogout,
     refreshRole,
     refreshUserRole
   };
