@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -15,6 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { useCheckoutUrlParams } from '@/hooks/use-checkout-url-params';
 import { useAuthCheck } from '@/hooks/use-auth-check';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const Purchases = () => {
   const navigate = useNavigate();
@@ -28,12 +31,12 @@ const Purchases = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
+  const [successfullySold, setSuccessfullySold] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   // Handle completing a purchase
   const handleCompletePurchase = async (leadId: string) => {
     try {
-      setIsLoading(true);
       setIsLoading(true);
       
       console.log("[PURCHASE PAGE] Completing purchase for lead:", leadId);
@@ -159,6 +162,9 @@ const Purchases = () => {
   const handleRateLead = (lead: Lead) => {
     setSelectedLead(lead);
     setRatingDialogOpen(true);
+    setRating(5);
+    setReview('');
+    setSuccessfullySold(false);
   };
   
   const submitRating = async () => {
@@ -170,7 +176,8 @@ const Purchases = () => {
         lead_id: selectedLead.id,
         buyer_id: user.id,
         rating: rating,
-        review: review
+        review: review,
+        successful_sale: successfullySold
       });
       
       if (error) throw error;
@@ -181,6 +188,7 @@ const Purchases = () => {
       // Reset form
       setRating(5);
       setReview('');
+      setSuccessfullySold(false);
     } catch (error) {
       console.error('[PURCHASE PAGE] Error submitting rating:', error);
       toast.error('Failed to submit rating');
@@ -270,6 +278,17 @@ const Purchases = () => {
                       onChange={(e) => setReview(e.target.value)}
                       rows={4}
                     />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Switch
+                      id="sold-lead"
+                      checked={successfullySold}
+                      onCheckedChange={setSuccessfullySold}
+                    />
+                    <Label htmlFor="sold-lead" className="font-medium">
+                      I successfully sold this lead
+                    </Label>
                   </div>
                 </div>
               </div>

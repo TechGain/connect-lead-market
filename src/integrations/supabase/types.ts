@@ -47,6 +47,7 @@ export type Database = {
           lead_id: string
           rating: number
           review: string | null
+          successful_sale: boolean | null
         }
         Insert: {
           buyer_id: string
@@ -55,6 +56,7 @@ export type Database = {
           lead_id: string
           rating: number
           review?: string | null
+          successful_sale?: boolean | null
         }
         Update: {
           buyer_id?: string
@@ -63,6 +65,7 @@ export type Database = {
           lead_id?: string
           rating?: number
           review?: string | null
+          successful_sale?: boolean | null
         }
         Relationships: [
           {
