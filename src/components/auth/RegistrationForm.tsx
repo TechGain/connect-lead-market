@@ -8,6 +8,13 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from '@/lib/utils';
 import AccountTypeSelector from './AccountTypeSelector';
 import { formatPhoneToE164 } from '@/utils/format-helpers';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 interface RegistrationFormProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -27,6 +34,8 @@ interface RegistrationFormProps {
   setSelectedRole: (role: 'seller' | 'buyer') => void;
   registrationError: string;
   isLoading: boolean;
+  referralSource: string;
+  setReferralSource: (source: string) => void;
 }
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({
@@ -46,7 +55,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   selectedRole,
   setSelectedRole,
   registrationError,
-  isLoading
+  isLoading,
+  referralSource,
+  setReferralSource
 }) => {
   // Format phone number as user types
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,6 +109,23 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         <div className="grid gap-2">
           <Label htmlFor="company-name">Company Name</Label>
           <Input id="company-name" placeholder="Company Name" type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} required />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="referral-source">How did you hear about us?</Label>
+          <Select value={referralSource} onValueChange={setReferralSource}>
+            <SelectTrigger id="referral-source">
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="google">Google</SelectItem>
+              <SelectItem value="facebook">Facebook</SelectItem>
+              <SelectItem value="instagram">Instagram</SelectItem>
+              <SelectItem value="twitter">Twitter</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="word-of-mouth">Word of Mouth</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         {registrationError && <p className="text-red-500 text-sm">{registrationError}</p>}
       </CardContent>

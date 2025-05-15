@@ -37,10 +37,11 @@ export function useAuthActions() {
     role: 'seller' | 'buyer',
     fullName: string,
     company?: string,
-    phone?: string
+    phone?: string,
+    referralSource?: string
   ) => {
     try {
-      console.log("Registration starting with:", { email, role, fullName, company, phone });
+      console.log("Registration starting with:", { email, role, fullName, company, phone, referralSource });
       setIsLoading(true);
       
       // Validate role input before proceeding - ensure admin can't be set
@@ -78,7 +79,8 @@ export function useAuthActions() {
             full_name: fullName,
             role: role,
             company: company,
-            phone: formattedPhone // Also store formatted phone in user metadata for compatibility
+            phone: formattedPhone, // Also store formatted phone in user metadata for compatibility
+            referral_source: referralSource // Add referral source to metadata
           }
         }
       });
@@ -100,7 +102,8 @@ export function useAuthActions() {
             role: role,
             company: company,
             phone: formattedPhone, // Store formatted phone in the profile
-            sms_notifications_enabled: true // Enable SMS notifications by default for buyers
+            sms_notifications_enabled: true, // Enable SMS notifications by default
+            referral_source: referralSource // Store where the user heard about us
           };
           
           const { error: profileError } = await supabase
@@ -110,7 +113,7 @@ export function useAuthActions() {
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);
           } else {
-            console.log("Profile successfully created with role, company, phone, and SMS notifications enabled:", { role, company, formattedPhone });
+            console.log("Profile successfully created with role, company, phone, and referral:", { role, company, formattedPhone, referralSource });
           }
         } catch (err) {
           console.error("Exception creating profile during registration:", err);

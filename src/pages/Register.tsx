@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +24,7 @@ const Register = () => {
   const [selectedRole, setSelectedRole] = useState<'seller' | 'buyer'>('buyer');
   const [registrationError, setRegistrationError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [referralSource, setReferralSource] = useState('');
 
   useEffect(() => {
     // If the user is already logged in, redirect them to the marketplace or my-leads
@@ -103,6 +105,7 @@ const Register = () => {
               company: companyName,
               phone: phoneNumber, // Include phone number in profile
               sms_notifications_enabled: true, // Enable SMS notifications by default
+              referral_source: referralSource, // Store the referral source
               created_at: new Date().toISOString()
             }, {
               onConflict: 'id'
@@ -116,7 +119,7 @@ const Register = () => {
               // Double check that the profile was created correctly
               const {
                 data: profileCheck
-              } = await supabase.from('profiles').select('role, company, phone, sms_notifications_enabled').eq('id', user.id).maybeSingle();
+              } = await supabase.from('profiles').select('role, company, phone, sms_notifications_enabled, referral_source').eq('id', user.id).maybeSingle();
               console.log("Profile check after creation:", profileCheck);
             }
           } catch (err) {
@@ -176,6 +179,8 @@ const Register = () => {
             setSelectedRole={setSelectedRole}
             registrationError={registrationError}
             isLoading={isLoading}
+            referralSource={referralSource}
+            setReferralSource={setReferralSource}
           />
         </Card>
       </div>
