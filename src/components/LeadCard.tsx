@@ -16,6 +16,7 @@ interface LeadCardProps {
   isOwner?: boolean;
   onEdit?: (lead: Lead) => void;
   onDelete?: (lead: Lead) => void;
+  onRate?: (lead: Lead) => void;
 }
 
 const LeadCard = ({ 
@@ -25,7 +26,8 @@ const LeadCard = ({
   isPurchased = false,
   isOwner = false,
   onEdit,
-  onDelete
+  onDelete,
+  onRate
 }: LeadCardProps) => {
   // Check if lead is sold explicitly or erased
   const isSold = lead.status === 'sold' || lead.status === 'pending';
@@ -77,6 +79,8 @@ const LeadCard = ({
           lead={lead} 
           onPurchase={onPurchase}
           isOwner={isOwner}
+          onRate={onRate}
+          isPurchased={isPurchased}
         />
       </CardFooter>
     </Card>

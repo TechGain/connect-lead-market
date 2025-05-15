@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -220,16 +219,8 @@ const Purchases = () => {
                   lead={lead}
                   showFullDetails={true}
                   isPurchased={true}
+                  onRate={handleRateLead}
                 />
-                <div className="mt-2 flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRateLead(lead)}
-                  >
-                    Rate This Lead
-                  </Button>
-                </div>
               </div>
             ))}
           </div>
