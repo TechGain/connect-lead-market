@@ -159,9 +159,9 @@ const LeadCard = ({
                 )}
               </div>
               
-              {/* New action prompt for unconfirmed leads with phone icon */}
+              {/* New action prompt for unconfirmed leads with phone icon - now with font-medium for bold text */}
               {!isConfirmed && (
-                <div className="flex items-center text-sm text-amber-600 mt-1">
+                <div className="flex items-center text-sm text-amber-600 mt-1 font-medium">
                   <PhoneOutgoing className="h-4 w-4 mr-1" />
                   <span>Call customer to schedule appointment</span>
                 </div>
