@@ -8,7 +8,7 @@ console.log('Main script executing, checking for Google Analytics presence...');
 if (typeof window.gtag !== 'undefined') {
   console.log('Google Analytics detected in main.tsx');
 } else {
-  console.warn('Google Analytics not detected in main.tsx');
+  console.warn('Google Analytics not detected in main.tsx. This is expected during development, but should work in production.');
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
