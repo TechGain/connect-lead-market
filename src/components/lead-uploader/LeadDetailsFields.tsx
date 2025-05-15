@@ -8,12 +8,10 @@ import { AddressAutocompleteInput } from "@/components/ui/address-autocomplete";
 
 interface LeadDetailsFieldsProps {
   leadType: string;
-  location: string;
   description: string;
   address: string;
   zipCode: string;
   onLeadTypeChange: (value: string) => void;
-  onLocationChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onAddressSelect: (address: string) => void;
   onZipCodeFound: (zipCode: string) => void;
@@ -21,63 +19,48 @@ interface LeadDetailsFieldsProps {
 
 const LeadDetailsFields = ({
   leadType,
-  location,
   description,
   address,
   zipCode,
   onLeadTypeChange,
-  onLocationChange,
   onDescriptionChange,
   onAddressSelect,
   onZipCodeFound,
 }: LeadDetailsFieldsProps) => {
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="lead-type">Lead Type *</Label>
-          <Select value={leadType} onValueChange={onLeadTypeChange} required>
-            <SelectTrigger id="lead-type">
-              <SelectValue placeholder="Select lead type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="roofing">Roofing</SelectItem>
-              <SelectItem value="plumbing">Plumbing</SelectItem>
-              <SelectItem value="electrical">Electrical</SelectItem>
-              <SelectItem value="hvac">HVAC</SelectItem>
-              <SelectItem value="landscaping">Landscaping</SelectItem>
-              <SelectItem value="bathroom-remodel">Bathroom Remodel</SelectItem>
-              <SelectItem value="kitchen-remodel">Kitchen Remodel</SelectItem>
-              <SelectItem value="full-home-renovation">Full Home Renovation</SelectItem>
-              <SelectItem value="garage-conversion">Garage Conversion</SelectItem>
-              <SelectItem value="new-construction">New Construction</SelectItem>
-              <SelectItem value="locksmith-services">Locksmith Services</SelectItem>
-              <SelectItem value="garage-doors-repair">Garage Doors Repair</SelectItem>
-              <SelectItem value="sliding-door-repair">Sliding Door Repair</SelectItem>
-              <SelectItem value="flooring-services">Flooring Services</SelectItem>
-              <SelectItem value="home-cleaning">Home Cleaning</SelectItem>
-              <SelectItem value="pool-services">Pool Services</SelectItem>
-              <SelectItem value="insulation-services">Insulation Services</SelectItem>
-              <SelectItem value="smart-home-services">Smart Home Services</SelectItem>
-              <SelectItem value="foundation-repair">Foundation Repair</SelectItem>
-              <SelectItem value="exterior-paint">Exterior Paint</SelectItem>
-              <SelectItem value="interior-paint">Interior Paint</SelectItem>
-              <SelectItem value="air-duct">Air Duct</SelectItem>
-              <SelectItem value="air-dryer">Air Dryer</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="location">Location *</Label>
-          <Input 
-            id="location"
-            value={location}
-            onChange={(e) => onLocationChange(e.target.value)}
-            placeholder="City, State"
-            required
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="lead-type">Lead Type *</Label>
+        <Select value={leadType} onValueChange={onLeadTypeChange} required>
+          <SelectTrigger id="lead-type">
+            <SelectValue placeholder="Select lead type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="roofing">Roofing</SelectItem>
+            <SelectItem value="plumbing">Plumbing</SelectItem>
+            <SelectItem value="electrical">Electrical</SelectItem>
+            <SelectItem value="hvac">HVAC</SelectItem>
+            <SelectItem value="landscaping">Landscaping</SelectItem>
+            <SelectItem value="bathroom-remodel">Bathroom Remodel</SelectItem>
+            <SelectItem value="kitchen-remodel">Kitchen Remodel</SelectItem>
+            <SelectItem value="full-home-renovation">Full Home Renovation</SelectItem>
+            <SelectItem value="garage-conversion">Garage Conversion</SelectItem>
+            <SelectItem value="new-construction">New Construction</SelectItem>
+            <SelectItem value="locksmith-services">Locksmith Services</SelectItem>
+            <SelectItem value="garage-doors-repair">Garage Doors Repair</SelectItem>
+            <SelectItem value="sliding-door-repair">Sliding Door Repair</SelectItem>
+            <SelectItem value="flooring-services">Flooring Services</SelectItem>
+            <SelectItem value="home-cleaning">Home Cleaning</SelectItem>
+            <SelectItem value="pool-services">Pool Services</SelectItem>
+            <SelectItem value="insulation-services">Insulation Services</SelectItem>
+            <SelectItem value="smart-home-services">Smart Home Services</SelectItem>
+            <SelectItem value="foundation-repair">Foundation Repair</SelectItem>
+            <SelectItem value="exterior-paint">Exterior Paint</SelectItem>
+            <SelectItem value="interior-paint">Interior Paint</SelectItem>
+            <SelectItem value="air-duct">Air Duct</SelectItem>
+            <SelectItem value="air-dryer">Air Dryer</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
       <div className="space-y-2">

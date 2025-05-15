@@ -6,7 +6,6 @@ import { Lead } from '@/types/lead';
 
 export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClose: () => void) => {
   const [leadType, setLeadType] = useState('');
-  const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -33,7 +32,6 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
   const updateFormWithLead = (leadData: Lead | null) => {
     if (leadData) {
       setLeadType(leadData.type || '');
-      setLocation(leadData.location || '');
       setDescription(leadData.description || '');
       setContactName(leadData.contactName || '');
       setContactEmail(leadData.contactEmail || '');
@@ -81,7 +79,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       return;
     }
     
-    const requiredFields = [leadType, location, description, contactName, contactEmail, price, address, zipCode];
+    const requiredFields = [leadType, description, contactName, contactEmail, price, address, zipCode];
     
     // If confirmed, also require appointment date and time
     if (confirmationStatus === 'confirmed' && (!appointmentDate || !appointmentTimeSlot)) {
@@ -104,12 +102,15 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
         appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
       }
       
+      // Extract location from address
+      const location = address.split(',').slice(-2).join(',').trim();
+      
       // Update lead in database
       const { error } = await supabase
         .from('leads')
         .update({
           type: leadType,
-          location: location,
+          location: location, // Set location based on address
           description: description,
           contact_name: contactName,
           contact_email: contactEmail,
@@ -140,7 +141,6 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
 
   return {
     leadType,
-    location,
     description,
     contactName, 
     contactEmail,
@@ -155,7 +155,6 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
     isUpdating,
     timeSlots,
     setLeadType,
-    setLocation,
     setDescription,
     setContactName,
     setContactEmail,

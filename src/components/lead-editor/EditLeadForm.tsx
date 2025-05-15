@@ -18,7 +18,6 @@ interface EditLeadFormProps {
 const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
   const {
     leadType,
-    location,
     description,
     contactName,
     contactEmail,
@@ -33,7 +32,6 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
     isUpdating,
     timeSlots,
     setLeadType,
-    setLocation,
     setDescription,
     setContactName,
     setContactEmail,
@@ -58,12 +56,10 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-4 py-4">
       <LeadDetailsFields
         leadType={leadType}
-        location={location}
         description={description}
         address={address}
         zipCode={zipCode}
         onLeadTypeChange={setLeadType}
-        onLocationChange={setLocation}
         onDescriptionChange={setDescription}
         onAddressSelect={setAddress}
         onZipCodeFound={setZipCode}

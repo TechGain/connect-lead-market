@@ -16,7 +16,6 @@ import PriceQualityFields from './lead-uploader/PriceQualityFields';
 
 const LeadUploader = () => {
   const [leadType, setLeadType] = useState('');
-  const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -61,7 +60,7 @@ const LeadUploader = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const requiredFields = [leadType, location, description, contactName, contactEmail, contactPhone, price, address, zipCode];
+    const requiredFields = [leadType, description, contactName, contactEmail, contactPhone, price, address, zipCode];
     
     // If confirmed, also require appointment date and time
     if (confirmationStatus === 'confirmed' && (!appointmentDate || !appointmentTimeSlot)) {
@@ -83,7 +82,7 @@ const LeadUploader = () => {
       
       const newLead: Omit<Lead, 'id'> = {
         type: leadType,
-        location,
+        location: address.split(',').slice(-2).join(',').trim(), // Extract location from address
         description,
         contactName,
         contactEmail,
@@ -106,7 +105,6 @@ const LeadUploader = () => {
         
         // Reset form
         setLeadType('');
-        setLocation('');
         setDescription('');
         setContactName('');
         setContactEmail('');
@@ -134,12 +132,10 @@ const LeadUploader = () => {
         <CardContent className="space-y-4">
           <LeadDetailsFields
             leadType={leadType}
-            location={location}
             description={description}
             address={address}
             zipCode={zipCode}
             onLeadTypeChange={setLeadType}
-            onLocationChange={setLocation}
             onDescriptionChange={setDescription}
             onAddressSelect={handleAddressSelect}
             onZipCodeFound={handleZipCodeFound}
