@@ -1,14 +1,13 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { formatCurrency, applyBuyerPriceMarkup } from '@/lib/utils';
 import { Lead } from '@/types/lead';
+import { applyBuyerPriceMarkup } from '@/lib/utils';
+import LeadCardPrice from './LeadCardPrice';
 
 interface LeadCardFooterProps {
   lead: Lead;
   onPurchase?: (lead: Lead) => void;
   isOwner: boolean;
-  onRate?: (lead: Lead) => void;
   isPurchased?: boolean;
 }
 
@@ -16,7 +15,6 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
   lead, 
   onPurchase,
   isOwner,
-  onRate,
   isPurchased = false
 }) => {
   // Use original price for owners (sellers), apply markup for buyers
@@ -25,32 +23,16 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
   return (
     <div className="pt-2 border-t flex justify-between items-center">
       <div>
-        {isPurchased && onRate && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onRate(lead)}
-          >
-            Rate This Lead
-          </Button>
-        )}
+        {/* This space is now handled in LeadCardActions component */}
       </div>
       
-      <div className="flex items-center">
-        <div className="mr-4">
-          <span className="font-bold text-lg">{formatCurrency(displayPrice)}</span>
-        </div>
-        
-        {/* Only show the Buy Lead button for new leads */}
-        {lead.status === 'new' && onPurchase && !isOwner && !isPurchased && (
-          <Button 
-            size="sm" 
-            onClick={() => onPurchase(lead)}
-          >
-            Buy Lead
-          </Button>
-        )}
-      </div>
+      <LeadCardPrice 
+        lead={lead}
+        displayPrice={displayPrice}
+        onPurchase={onPurchase}
+        isOwner={isOwner}
+        isPurchased={isPurchased}
+      />
     </div>
   );
 };

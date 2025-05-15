@@ -47,6 +47,8 @@ const LeadCard = ({
           isOwner={isOwner}
           onEdit={onEdit}
           onDelete={onDelete}
+          onRate={onRate}
+          isPurchased={isPurchased}
         />
       </CardHeader>
       
@@ -79,7 +81,6 @@ const LeadCard = ({
           lead={lead} 
           onPurchase={onPurchase}
           isOwner={isOwner}
-          onRate={onRate}
           isPurchased={isPurchased}
         />
       </CardFooter>

@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { MapPin, Pencil, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { formatLeadType } from '@/lib/utils';
+import { MapPin } from 'lucide-react';
 import { Lead } from '@/types/lead';
+import { formatLeadType } from '@/lib/utils';
+import LeadCardStatus from './LeadCardStatus';
+import LeadCardActions from './LeadCardActions';
 
 interface LeadCardHeaderProps {
   lead: Lead;
@@ -12,6 +12,8 @@ interface LeadCardHeaderProps {
   isOwner: boolean;
   onEdit?: (lead: Lead) => void;
   onDelete?: (lead: Lead) => void;
+  onRate?: (lead: Lead) => void;
+  isPurchased?: boolean;
 }
 
 const LeadCardHeader: React.FC<LeadCardHeaderProps> = ({ 
@@ -19,11 +21,10 @@ const LeadCardHeader: React.FC<LeadCardHeaderProps> = ({
   showFullDetails, 
   isOwner,
   onEdit,
-  onDelete
+  onDelete,
+  onRate,
+  isPurchased = false
 }) => {
-  // Check if lead is sold
-  const isSold = lead.status === 'sold' || lead.status === 'pending';
-  
   return (
     <div className="flex justify-between items-start">
       <div>
@@ -41,35 +42,15 @@ const LeadCardHeader: React.FC<LeadCardHeaderProps> = ({
         )}
       </div>
       <div className="flex items-center gap-2">
-        {isOwner && (
-          <>
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1 h-auto"
-                onClick={() => onEdit(lead)}
-                title="Edit Lead"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1 h-auto text-red-500 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onDelete(lead)}
-                title="Delete Lead"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </>
-        )}
-        <Badge variant={isSold ? 'secondary' : 'default'}>
-          {isSold ? 'Sold' : 'Available'}
-        </Badge>
+        <LeadCardActions 
+          lead={lead}
+          isOwner={isOwner}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRate={onRate}
+          isPurchased={isPurchased}
+        />
+        <LeadCardStatus status={lead.status} />
       </div>
     </div>
   );
