@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { useEffect } from "react";
 import { ChatWidget } from "./components/chat/ChatWidget";
 import { ScrollToTop } from "./components/ScrollToTop";
+import GoogleAnalytics from "./components/analytics/GoogleAnalytics";
 
 // Pages
 import Index from "./pages/Index";
@@ -145,6 +147,7 @@ const App = () => {
       <HelmetProvider>
         <Router>
           <ScrollToTop />
+          <GoogleAnalytics />
           <TooltipProvider>
             <UserRoleProvider>
               <Toaster />
