@@ -3,7 +3,7 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle, Loader2, ExternalLink, CreditCard } from 'lucide-react';
+import { AlertCircle, Loader2, ExternalLink, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 interface LeadPurchaseDialogProps {
@@ -89,13 +89,19 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                 </h4>
                 <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-1.5 bg-white border rounded px-2 py-1">
-                    <img src="https://js.stripe.com/v3/fingerprinted/img/googlepay-ac58a6c087e76f3280bc2952a4f9ac5e.svg" 
-                         alt="Google Pay" className="h-5" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" className="h-5">
+                      <path fill="#4285F4" d="M24.4 34.7c-5.6 0-10.3-4.5-10.3-10.1 0-5.6 4.7-10.1 10.3-10.1 3.1 0 5.3 1.2 6.9 2.7l-1.9 1.9c-1.2-1.1-2.7-2-5-2-4.1 0-7.3 3.3-7.3 7.5s3.2 7.5 7.3 7.5c2.6 0 4.1-1 5.1-2 0.8-0.8 1.3-1.9 1.5-3.5h-6.6v-2.7h9.3c0.1 0.5 0.2 1.1 0.2 1.7 0 2.1-0.6 4.7-2.4 6.6-1.8 1.9-4.1 2.9-7.1 2.9z"></path>
+                      <path fill="#EA4335" d="M10.3 27.1c-0.4-1.2-0.7-2.5-0.7-3.9 0-1.3 0.2-2.6 0.7-3.8l0.1-0.3-2.7-2.1-0.1 0.1C6.6 18.8 6 21.1 6 23.6c0 2.5 0.6 4.8 1.7 6.7l2.6-3.2"></path>
+                      <path fill="#FBBC05" d="M24.4 13.6c2.9 0 4.9 1.3 6.1 2.3l2.6-2.6c-1.9-1.8-4.4-2.9-7.5-2.9-5.6 0-10.6 3.2-13.2 8l2.7 2.1c1.3-3.1 4.5-6.9 9.3-6.9"></path>
+                      <path fill="#34A853" d="M10.3 20.1l-2.7-2.1c-1.1 1.9-1.7 4.2-1.7 6.7 0 2.4 0.6 4.6 1.7 6.5l2.7-2.1c-0.5-1.2-0.7-2.6-0.7-4 0-1.3 0.2-2.7 0.7-4"></path>
+                    </svg>
                     <span className="text-xs">Google Pay</span>
                   </div>
                   <div className="flex items-center gap-1.5 bg-white border rounded px-2 py-1">
-                    <img src="https://js.stripe.com/v3/fingerprinted/img/applepay-c1bc44bc2e062d67aeb4009e67868eec.svg" 
-                         alt="Apple Pay" className="h-5" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                      <path d="M12 5c-1.6-1-3.5-1-5.3-.2-1.7.8-2.7 2.4-2.7 4.2V16c0 1.8 1 3.4 2.7 4.2 1.8.8 3.7.8 5.3-.2 1.6 1 3.5 1 5.3.2 1.7-.8 2.7-2.4 2.7-4.2V9c0-1.8-1-3.4-2.7-4.2-1.8-.8-3.7-.8-5.3.2z"></path>
+                      <path d="M9 5v16"></path>
+                    </svg>
                     <span className="text-xs">Apple Pay</span>
                   </div>
                   <div className="flex items-center gap-1.5 bg-white border rounded px-2 py-1">
