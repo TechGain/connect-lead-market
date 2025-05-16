@@ -24,7 +24,7 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
   const displayPrice = isOwner ? lead.price : applyBuyerPriceMarkup(lead.price);
 
   return (
-    <div className="pt-2 border-t flex justify-between items-center">
+    <div className="pt-2 border-t flex justify-between items-center w-full">
       <div>
         {/* Place for any left-aligned actions */}
         {isOwner || isPurchased ? (

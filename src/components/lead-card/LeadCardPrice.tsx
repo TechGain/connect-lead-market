@@ -20,7 +20,7 @@ const LeadCardPrice: React.FC<LeadCardPriceProps> = ({
   isPurchased
 }) => {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 ml-auto">
       <div>
         <span className="font-bold text-lg">{formatCurrency(displayPrice)}</span>
       </div>

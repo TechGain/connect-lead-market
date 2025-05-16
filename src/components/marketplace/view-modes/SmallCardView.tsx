@@ -29,7 +29,7 @@ const SmallCardView: React.FC<SmallCardViewProps> = ({ leads, onPurchase }) => {
               <div>
                 {/* Left side empty for consistency with larger cards */}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-auto">
                 <span className="text-sm font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</span>
                 {lead.status === 'new' && onPurchase && (
                   <button 
