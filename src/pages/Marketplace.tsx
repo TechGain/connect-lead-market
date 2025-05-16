@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -98,9 +97,9 @@ const Marketplace = () => {
     toast.success(`View changed to ${mode} mode`);
   };
   
-  // Handle payment and checkout
-  const handlePaymentAndCheckout = (paymentMethod?: string) => {
-    initiateCheckout(paymentMethod);
+  // Handle payment and checkout - simplified, no longer needs payment method
+  const handlePaymentAndCheckout = () => {
+    initiateCheckout();
   };
 
   return (

@@ -1,10 +1,9 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 // Types
 export interface CheckoutRequestData {
   leadId: string;
-  preferredPaymentMethod?: string;
+  preferredPaymentMethod?: string;  // Make this optional
 }
 
 export interface Lead {

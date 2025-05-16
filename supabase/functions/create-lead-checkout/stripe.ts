@@ -4,13 +4,14 @@ import { logStep, applyBuyerPriceMarkup, StripeSessionOptions, Lead } from "./ut
 
 // Get payment method types - always return just 'card'
 // This is the key fix - Stripe Checkout doesn't support directly adding google_pay/apple_pay to payment_method_types
+// but will automatically show them when available in the user's browser
 const getPaymentMethodTypes = () => {
   return ['card'];
 };
 
 // Create Stripe checkout session
-export const createStripeCheckoutSession = async (lead: Lead, user: any, preferredPaymentMethod: string, req: Request) => {
-  logStep("Creating Stripe checkout session", { preferredPaymentMethod });
+export const createStripeCheckoutSession = async (lead: Lead, user: any, req: Request) => {
+  logStep("Creating Stripe checkout session");
   
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -60,26 +61,10 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
         buyerId: user.id,
         originalPrice: originalPrice.toString(),
         markedUpPrice: markedUpPrice.toString(),
-        preferredPaymentMethod, // Store preferred method in metadata for reference
       },
       // Enable automatic tax calculation
       automatic_tax: { enabled: true }
     };
-    
-    // Add payment_intent_data for wallets when Google/Apple Pay is selected
-    // This is the proper way to influence which payment methods are prioritized
-    if (preferredPaymentMethod === 'google_pay' || preferredPaymentMethod === 'apple_pay') {
-      logStep("Adding wallet preference to payment_intent_data", { preferredPaymentMethod });
-      
-      // FIX: Use a simpler payment_intent_data structure that Stripe accepts
-      // Remove the nested payment_method_options object that was causing the error
-      sessionConfig.payment_intent_data = {
-        // Store preferred payment method - Stripe will use this internally
-        metadata: {
-          preferred_payment_method: preferredPaymentMethod
-        }
-      };
-    }
     
     // Create the checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);

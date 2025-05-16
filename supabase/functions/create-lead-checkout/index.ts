@@ -34,14 +34,14 @@ serve(async (req) => {
       throw new Error(error);
     }
     
-    const { leadId, preferredPaymentMethod = 'card' } = requestData;
+    const { leadId } = requestData;
     if (!leadId) {
       const error = "Lead ID is required";
       logStep("ERROR: " + error);
       throw new Error(error);
     }
 
-    logStep("Processing lead checkout", { leadId, preferredPaymentMethod });
+    logStep("Processing lead checkout", { leadId });
 
     // Get auth header for user authentication
     const authHeader = req.headers.get("Authorization");
@@ -61,8 +61,8 @@ serve(async (req) => {
     // Fetch lead data
     const lead = await fetchLead(leadId, supabaseAdmin);
     
-    // Create Stripe checkout session with preferred payment method
-    const session = await createStripeCheckoutSession(lead, user, preferredPaymentMethod, req);
+    // Create Stripe checkout session - no longer passing payment method preference
+    const session = await createStripeCheckoutSession(lead, user, req);
     
     // Return the checkout URL to the client
     return createResponse({ 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
@@ -28,7 +27,7 @@ export const useLeadCheckout = (user: any) => {
     setIsPreviewDialogOpen(true);
   };
   
-  const initiateCheckout = async (paymentMethod: string = 'card') => {
+  const initiateCheckout = async () => {
     if (!selectedLead || !user) {
       setCheckoutError("Missing lead or user data");
       toast.error("Missing required data for checkout");
@@ -44,7 +43,6 @@ export const useLeadCheckout = (user: any) => {
       console.log("[CHECKOUT] Lead ID:", selectedLead.id);
       console.log("[CHECKOUT] User ID:", user.id);
       console.log("[CHECKOUT] User email:", user.email);
-      console.log("[CHECKOUT] Payment method:", paymentMethod);
       
       // Check if user has valid session
       const { data: sessionData } = await supabase.auth.getSession();
@@ -53,12 +51,11 @@ export const useLeadCheckout = (user: any) => {
       }
       console.log("[CHECKOUT] Authentication status:", !!sessionData.session);
       
-      // Invoke the edge function with payment method preference
+      // Invoke the edge function without payment method preference
       console.log("[CHECKOUT] Invoking create-lead-checkout function");
       const { data, error } = await supabase.functions.invoke('create-lead-checkout', {
         body: { 
-          leadId: selectedLead.id,
-          preferredPaymentMethod: paymentMethod 
+          leadId: selectedLead.id
         }
       });
       

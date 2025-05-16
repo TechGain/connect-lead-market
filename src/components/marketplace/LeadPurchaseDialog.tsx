@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Lead } from '@/types/lead';
 import { applyBuyerPriceMarkup } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import LeadSummary from './purchase-dialog/LeadSummary';
-import PaymentMethodSelector, { PAYMENT_METHODS } from './purchase-dialog/PaymentMethodSelector';
+import PaymentMethodSelector from './purchase-dialog/PaymentMethodSelector';
 import ErrorDisplay from './purchase-dialog/ErrorDisplay';
 import RedirectState from './purchase-dialog/RedirectState';
 import PurchaseDialogFooter from './purchase-dialog/DialogFooter';
@@ -16,7 +16,7 @@ interface LeadPurchaseDialogProps {
   redirectingToStripe?: boolean;
   checkoutError?: string | null;
   onClose: () => void;
-  onPurchase: (paymentMethod?: string) => void;
+  onPurchase: () => void;
   stripeUrl?: string | null;
 }
 
@@ -30,19 +30,6 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
   onPurchase,
   stripeUrl
 }) => {
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(PAYMENT_METHODS.CARD);
-  const [isAppleDevice, setIsAppleDevice] = useState(false);
-  
-  // Detect if the user is on an Apple device
-  useEffect(() => {
-    const checkAppleDevice = () => {
-      const isApple = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-      setIsAppleDevice(isApple);
-    };
-    
-    checkAppleDevice();
-  }, []);
-  
   // Function to handle manual redirect if automatic redirect fails
   const handleManualRedirect = () => {
     if (stripeUrl) {
@@ -52,16 +39,6 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
   };
   
   const displayPrice = selectedLead ? applyBuyerPriceMarkup(selectedLead.price) : 0;
-  
-  // Handle payment method selection
-  const handlePaymentMethodChange = (value: string) => {
-    setSelectedPaymentMethod(value);
-  };
-  
-  // Handle purchase with selected payment method
-  const handlePurchase = () => {
-    onPurchase(selectedPaymentMethod);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -90,11 +67,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                 displayPrice={displayPrice}
               />
               
-              <PaymentMethodSelector
-                selectedPaymentMethod={selectedPaymentMethod}
-                onPaymentMethodChange={handlePaymentMethodChange}
-                isAppleDevice={isAppleDevice}
-              />
+              <PaymentMethodSelector />
               
               <ErrorDisplay error={checkoutError || ''} />
             </div>
@@ -105,7 +78,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
         {!redirectingToStripe && (
           <PurchaseDialogFooter
             onCancel={onClose}
-            onPurchase={handlePurchase}
+            onPurchase={onPurchase}
             isProcessing={isProcessing}
             price={selectedLead ? displayPrice : null}
           />
