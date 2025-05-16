@@ -97,6 +97,11 @@ const Marketplace = () => {
     setViewMode(mode);
     toast.success(`View changed to ${mode} mode`);
   };
+  
+  // Handle payment and checkout
+  const handlePaymentAndCheckout = (paymentMethod?: string) => {
+    initiateCheckout(paymentMethod);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -185,7 +190,7 @@ const Marketplace = () => {
               checkoutError={checkoutError}
               stripeUrl={stripeUrl}
               onClose={() => setIsPreviewDialogOpen(false)}
-              onPurchase={initiateCheckout}
+              onPurchase={handlePaymentAndCheckout}
             />
           </>
         )}

@@ -104,9 +104,21 @@ const fetchLead = async (leadId: string, supabaseAdmin: any) => {
   }
 };
 
+// Configure payment method options based on preference
+const getPaymentMethodOptions = (preferredMethod: string) => {
+  // Base payment method options
+  const options: any = {
+    card: {
+      setup_future_usage: 'off_session'
+    }
+  };
+  
+  return options;
+};
+
 // Create Stripe checkout session
-const createStripeCheckoutSession = async (lead: any, user: any, req: Request) => {
-  logStep("Creating Stripe checkout session");
+const createStripeCheckoutSession = async (lead: any, user: any, preferredPaymentMethod: string, req: Request) => {
+  logStep("Creating Stripe checkout session", { preferredPaymentMethod });
   
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -125,10 +137,12 @@ const createStripeCheckoutSession = async (lead: any, user: any, req: Request) =
     
     const origin = req.headers.get("origin") || "https://lead-marketplace-platform.com";
     
-    // Configure the payment request with appropriate payment methods
-    // Using only valid payment method types from Stripe documentation
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+    // Start with base payment method types
+    const paymentMethodTypes = ["card"];
+    
+    // Configure the session options
+    const sessionConfig: any = {
+      payment_method_types: paymentMethodTypes,
       line_items: [
         {
           price_data: {
@@ -151,16 +165,21 @@ const createStripeCheckoutSession = async (lead: any, user: any, req: Request) =
         buyerId: user.id,
         originalPrice: originalPrice.toString(),
         markedUpPrice: markedUpPrice.toString(),
+        preferredPaymentMethod,
       },
       // Enable automatic tax calculation
       automatic_tax: { enabled: true },
-      // Add wallet payment methods separately
-      payment_method_options: {
-        card: {
-          setup_future_usage: 'off_session'
-        }
-      }
-    });
+      // Add payment method options
+      payment_method_options: getPaymentMethodOptions(preferredPaymentMethod)
+    };
+    
+    // Set preferred payment method
+    if (preferredPaymentMethod) {
+      sessionConfig.payment_method_preferences = [preferredPaymentMethod];
+    }
+    
+    // Create the checkout session
+    const session = await stripe.checkout.sessions.create(sessionConfig);
     
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
     return session;
@@ -194,14 +213,14 @@ serve(async (req) => {
       throw new Error(error);
     }
     
-    const { leadId } = requestData;
+    const { leadId, preferredPaymentMethod = 'card' } = requestData;
     if (!leadId) {
       const error = "Lead ID is required";
       logStep("ERROR: " + error);
       throw new Error(error);
     }
 
-    logStep("Processing lead checkout", { leadId });
+    logStep("Processing lead checkout", { leadId, preferredPaymentMethod });
 
     // Get auth header for user authentication
     const authHeader = req.headers.get("Authorization");
@@ -221,8 +240,8 @@ serve(async (req) => {
     // Fetch lead data
     const lead = await fetchLead(leadId, supabaseAdmin);
     
-    // Create Stripe checkout session
-    const session = await createStripeCheckoutSession(lead, user, req);
+    // Create Stripe checkout session with preferred payment method
+    const session = await createStripeCheckoutSession(lead, user, preferredPaymentMethod, req);
     
     // Return the checkout URL to the client
     return new Response(
