@@ -2,18 +2,6 @@
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { logStep, applyBuyerPriceMarkup, StripeSessionOptions, Lead } from "./utils.ts";
 
-// Get payment method options for Stripe Checkout
-const getPaymentMethodOptions = (preferredMethod: string) => {
-  // Base payment method options for card payments
-  const options: any = {
-    card: {
-      setup_future_usage: 'off_session',
-    }
-  };
-  
-  return options;
-};
-
 // Get payment method types - always return just 'card'
 // This is the key fix - Stripe Checkout doesn't support directly adding google_pay/apple_pay to payment_method_types
 const getPaymentMethodTypes = () => {
@@ -75,21 +63,17 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
         preferredPaymentMethod, // Store preferred method in metadata for reference
       },
       // Enable automatic tax calculation
-      automatic_tax: { enabled: true },
-      // Add basic payment method options
-      payment_method_options: getPaymentMethodOptions(preferredPaymentMethod)
+      automatic_tax: { enabled: true }
     };
     
     // Add payment_intent_data for wallets when Google/Apple Pay is selected
     // This is the proper way to influence which payment methods are prioritized
     if (preferredPaymentMethod === 'google_pay' || preferredPaymentMethod === 'apple_pay') {
       logStep("Adding wallet preference to payment_intent_data", { preferredPaymentMethod });
+      
+      // FIX: Use a simpler payment_intent_data structure that Stripe accepts
+      // Remove the nested payment_method_options object that was causing the error
       sessionConfig.payment_intent_data = {
-        payment_method_options: {
-          card: {
-            setup_future_usage: 'off_session',
-          }
-        },
         // Store preferred payment method - Stripe will use this internally
         metadata: {
           preferred_payment_method: preferredPaymentMethod
