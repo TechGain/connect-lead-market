@@ -71,9 +71,10 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
       payment_method_options: getPaymentMethodOptions(preferredPaymentMethod)
     };
     
-    // Set preferred payment method
-    if (preferredPaymentMethod) {
-      sessionConfig.payment_method_preferences = [preferredPaymentMethod];
+    // FIXED: Removed the incorrect payment_method_preferences parameter
+    // Use the preferred payment method via payment_method_types instead
+    if (preferredPaymentMethod === 'card') {
+      sessionConfig.payment_method_types = ['card'];
     }
     
     // Create the checkout session
