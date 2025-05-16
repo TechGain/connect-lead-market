@@ -22,7 +22,7 @@ const LeadCardPrice: React.FC<LeadCardPriceProps> = ({
   return (
     <div className="flex items-center gap-3">
       <div>
-        <span className="font-bold text-lg text-primary">{formatCurrency(displayPrice)}</span>
+        <span className="font-bold text-lg">{formatCurrency(displayPrice)}</span>
       </div>
       
       {/* Only show the Buy Lead button for new leads */}

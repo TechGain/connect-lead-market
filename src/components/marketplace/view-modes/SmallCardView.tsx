@@ -27,16 +27,19 @@ const SmallCardView: React.FC<SmallCardViewProps> = ({ leads, onPurchase }) => {
             </div>
             <div className="mt-auto pt-2 flex justify-between items-center">
               <div>
-                <span className="text-sm font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</span>
+                {/* Left side empty for consistency with larger cards */}
               </div>
-              {lead.status === 'new' && onPurchase && (
-                <button 
-                  onClick={() => onPurchase(lead)} 
-                  className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90"
-                >
-                  Buy
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</span>
+                {lead.status === 'new' && onPurchase && (
+                  <button 
+                    onClick={() => onPurchase(lead)} 
+                    className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90"
+                  >
+                    Buy
+                  </button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
