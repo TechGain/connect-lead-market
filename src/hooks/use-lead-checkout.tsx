@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
@@ -93,21 +94,27 @@ export const useLeadCheckout = (user: any) => {
       // Show toast before redirecting
       toast.info("Redirecting to secure checkout...");
       
-      // CRITICAL FIX: Use window.top to ensure redirect happens at top level, not in iframe
-      // This addresses the Stripe error: "Checkout is not able to run in an iFrame"
+      // Use a slight delay to ensure the UI updates before redirect
       setTimeout(() => {
-        // Use window.top.location.href to ensure redirect happens at the top level
-        window.top.location.href = data.url;
-        
-        // Set a timeout to detect if redirect failed
-        setTimeout(() => {
-          if (document.visibilityState !== 'hidden') {
-            console.log("[CHECKOUT] Redirect may have failed, visibility state:", document.visibilityState);
-            setRedirectingToStripe(false);
-            setIsProcessing(false);
-            toast.error("Redirect to Stripe failed. Please try the manual link or contact support.");
-          }
-        }, 5000);
+        try {
+          // Use window.top to ensure redirect happens at the top level, not in iframe
+          window.top.location.href = data.url;
+          
+          // Set a timeout to detect if redirect failed
+          setTimeout(() => {
+            if (document.visibilityState !== 'hidden') {
+              console.log("[CHECKOUT] Redirect may have failed, visibility state:", document.visibilityState);
+              setRedirectingToStripe(false);
+              setIsProcessing(false);
+              toast.error("Redirect to Stripe failed. Please try the manual link or contact support.");
+            }
+          }, 5000);
+        } catch (redirectError) {
+          console.error("[CHECKOUT] Redirect error:", redirectError);
+          setRedirectingToStripe(false);
+          setIsProcessing(false);
+          toast.error("Failed to redirect to checkout. Please try the manual link.");
+        }
       }, 800);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
@@ -117,7 +124,10 @@ export const useLeadCheckout = (user: any) => {
       setRedirectingToStripe(false);
       setStripeUrl(null);
       
-      if (errorMessage.includes('authentication') || errorMessage.includes('auth') || 
+      // Enhanced error messages based on specific errors we've seen
+      if (errorMessage.includes('Invalid payment_method_types')) {
+        toast.error(`This payment method is not currently available. Please try using a regular credit card.`);
+      } else if (errorMessage.includes('authentication') || errorMessage.includes('auth') || 
           errorMessage.includes('session') || errorMessage.includes('login')) {
         toast.error('Authentication error. Please try logging out and back in.');
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || 

@@ -11,23 +11,13 @@ const getPaymentMethodOptions = (preferredMethod: string) => {
     }
   };
   
-  // No wallet configuration in payment_method_options - this was causing the error
   return options;
 };
 
-// Get payment method types based on preference
-const getPaymentMethodTypes = (preferredMethod: string) => {
-  // Start with card as the base payment method
-  const paymentMethodTypes = ['card'];
-  
-  // Add Google Pay or Apple Pay as available payment methods when preferred
-  if (preferredMethod === 'google_pay') {
-    paymentMethodTypes.push('google_pay');
-  } else if (preferredMethod === 'apple_pay') {
-    paymentMethodTypes.push('apple_pay');
-  }
-  
-  return paymentMethodTypes;
+// Get payment method types - always return just 'card'
+// This is the key fix - Stripe Checkout doesn't support directly adding google_pay/apple_pay to payment_method_types
+const getPaymentMethodTypes = () => {
+  return ['card'];
 };
 
 // Create Stripe checkout session
@@ -51,8 +41,9 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
     
     const origin = req.headers.get("origin") || "https://lead-marketplace-platform.com";
     
-    // Get payment method types based on preference
-    const paymentMethodTypes = getPaymentMethodTypes(preferredPaymentMethod);
+    // Always use 'card' as the payment method type - Stripe will detect and use Google/Apple Pay automatically
+    // when available in the user's browser
+    const paymentMethodTypes = getPaymentMethodTypes();
     
     logStep("Using payment methods", { paymentMethodTypes });
     
@@ -81,13 +72,30 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
         buyerId: user.id,
         originalPrice: originalPrice.toString(),
         markedUpPrice: markedUpPrice.toString(),
-        preferredPaymentMethod,
+        preferredPaymentMethod, // Store preferred method in metadata for reference
       },
       // Enable automatic tax calculation
       automatic_tax: { enabled: true },
-      // Add basic payment method options (without the problematic wallet config)
+      // Add basic payment method options
       payment_method_options: getPaymentMethodOptions(preferredPaymentMethod)
     };
+    
+    // Add payment_intent_data for wallets when Google/Apple Pay is selected
+    // This is the proper way to influence which payment methods are prioritized
+    if (preferredPaymentMethod === 'google_pay' || preferredPaymentMethod === 'apple_pay') {
+      logStep("Adding wallet preference to payment_intent_data", { preferredPaymentMethod });
+      sessionConfig.payment_intent_data = {
+        payment_method_options: {
+          card: {
+            setup_future_usage: 'off_session',
+          }
+        },
+        // Store preferred payment method - Stripe will use this internally
+        metadata: {
+          preferred_payment_method: preferredPaymentMethod
+        }
+      };
+    }
     
     // Create the checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);

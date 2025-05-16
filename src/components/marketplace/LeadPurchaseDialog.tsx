@@ -70,6 +70,19 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
     onPurchase(selectedPaymentMethod);
   };
 
+  // Format how payment method is displayed to the user
+  const formatPaymentMethod = (method: string) => {
+    switch (method) {
+      case PAYMENT_METHODS.GOOGLE_PAY:
+        return "Google Pay";
+      case PAYMENT_METHODS.APPLE_PAY:
+        return "Apple Pay";
+      case PAYMENT_METHODS.CARD:
+      default:
+        return "Credit Card";
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
@@ -140,6 +153,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                         <path fill="#34A853" d="M10.3 20.1l-2.7-2.1c-1.1 1.9-1.7 4.2-1.7 6.7 0 2.4 0.6 4.6 1.7 6.5l2.7-2.1c-0.5-1.2-0.7-2.6-0.7-4 0-1.3 0.2-2.7 0.7-4"></path>
                       </svg>
                       Google Pay
+                      <Badge variant="outline" className="ml-2 text-xs">Preferred</Badge>
                     </label>
                   </div>
                   
@@ -168,7 +182,7 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                   <div>
                     <p className="font-medium">Error</p>
                     <p>{checkoutError}</p>
-                    <p className="mt-1 text-xs">Please try again or contact support if this issue persists.</p>
+                    <p className="mt-1 text-xs">Please try again with a different payment method or contact support if this issue persists.</p>
                   </div>
                 </div>
               )}
