@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Lead } from '@/types/lead';
+import { format } from 'date-fns'; // Import format properly from date-fns
 
 export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClose: () => void) => {
   const [leadType, setLeadType] = useState('');
@@ -96,8 +97,15 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       // Only include appointment info if the lead is confirmed
       let appointmentInfo = '';
       if (confirmationStatus === 'confirmed' && appointmentDate) {
-        const format = require('date-fns/format');
-        appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
+        try {
+          // Use the properly imported format function
+          appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
+        } catch (e) {
+          console.error("Failed to format appointment date", e);
+          toast.error("Error formatting the appointment date");
+          setIsUpdating(false);
+          return;
+        }
       }
       
       // Extract location from address
