@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Lead } from '@/types/lead';
@@ -132,7 +131,7 @@ export const useLeadCheckout = (user: any) => {
       setIsProcessing(false);
     }
   };
-
+  
   const handleCompletePurchase = async (leadId: string) => {
     try {
       setIsProcessing(true);

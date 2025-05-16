@@ -11,7 +11,33 @@ const getPaymentMethodOptions = (preferredMethod: string) => {
     }
   };
   
+  // Add Google Pay and Apple Pay specific options if needed
+  if (preferredMethod === 'google_pay') {
+    options.google_pay = {
+      setup_future_usage: 'off_session'
+    };
+  }
+  
+  if (preferredMethod === 'apple_pay') {
+    options.apple_pay = {
+      setup_future_usage: 'off_session'
+    };
+  }
+  
   return options;
+};
+
+// Configure payment method types based on preference
+const getPaymentMethodTypes = (preferredMethod: string) => {
+  // Start with the preferred method
+  const paymentMethodTypes = [preferredMethod];
+  
+  // Always include card as a fallback payment method
+  if (preferredMethod !== 'card' && !paymentMethodTypes.includes('card')) {
+    paymentMethodTypes.push('card');
+  }
+  
+  return paymentMethodTypes;
 };
 
 // Create Stripe checkout session
@@ -35,8 +61,10 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
     
     const origin = req.headers.get("origin") || "https://lead-marketplace-platform.com";
     
-    // Start with base payment method types
-    const paymentMethodTypes = ["card"];
+    // Get payment method types based on preference
+    const paymentMethodTypes = getPaymentMethodTypes(preferredPaymentMethod);
+    
+    logStep("Using payment methods", { paymentMethodTypes });
     
     // Configure the session options
     const sessionConfig: any = {
@@ -70,12 +98,6 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
       // Add payment method options
       payment_method_options: getPaymentMethodOptions(preferredPaymentMethod)
     };
-    
-    // FIXED: Removed the incorrect payment_method_preferences parameter
-    // Use the preferred payment method via payment_method_types instead
-    if (preferredPaymentMethod === 'card') {
-      sessionConfig.payment_method_types = ['card'];
-    }
     
     // Create the checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);
