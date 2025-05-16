@@ -19,11 +19,12 @@ const PaymentMethodSelector: React.FC = () => {
       </div>
       
       <div className="flex gap-2 mt-4 justify-center">
+        {/* Updated payment method icons with proper sources */}
         <img src="https://cdn.jsdelivr.net/gh/transferwise/currency-flags/dist/rectangle/visa.svg" alt="Visa" className="h-6" />
         <img src="https://cdn.jsdelivr.net/gh/transferwise/currency-flags/dist/rectangle/mastercard.svg" alt="Mastercard" className="h-6" />
         <img src="https://cdn.jsdelivr.net/gh/transferwise/currency-flags/dist/rectangle/amex.svg" alt="Amex" className="h-6" />
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Google_Pay_%28GPay%29_Logo.svg/512px-Google_Pay_%28GPay%29_Logo.svg.png" alt="Google Pay" className="h-6" />
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Apple_Pay_logo.svg/512px-Apple_Pay_logo.svg.png" alt="Apple Pay" className="h-6" style={{ filter: 'brightness(0.8)' }} />
+        <img src="https://www.gstatic.com/instantbuy/svg/dark_gpay.svg" alt="Google Pay" className="h-6" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Apple_Pay_logo.svg/512px-Apple_Pay_logo.svg.png" alt="Apple Pay" className="h-6" />
       </div>
       
       <p className="text-xs text-gray-500 mt-4 text-center">
