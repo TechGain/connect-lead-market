@@ -20,9 +20,9 @@ const LeadCardPrice: React.FC<LeadCardPriceProps> = ({
   isPurchased
 }) => {
   return (
-    <div className="flex items-center">
-      <div className="mr-4">
-        <span className="font-bold text-lg">{formatCurrency(displayPrice)}</span>
+    <div className="flex items-center gap-3">
+      <div>
+        <span className="font-bold text-lg text-primary">{formatCurrency(displayPrice)}</span>
       </div>
       
       {/* Only show the Buy Lead button for new leads */}
@@ -30,9 +30,17 @@ const LeadCardPrice: React.FC<LeadCardPriceProps> = ({
         <Button 
           size="sm" 
           onClick={() => onPurchase(lead)}
+          className="font-medium"
         >
           Buy Lead
         </Button>
+      )}
+      
+      {/* When lead is purchased or owned, we just show the price */}
+      {(isPurchased || isOwner) && lead.status !== 'new' && (
+        <span className="text-xs text-gray-500">
+          {lead.status === 'sold' ? 'Sold' : 'Pending'}
+        </span>
       )}
     </div>
   );

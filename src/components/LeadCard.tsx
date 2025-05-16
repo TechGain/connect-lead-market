@@ -92,6 +92,7 @@ const LeadCard = ({
           onPurchase={onPurchase}
           isOwner={isOwner}
           isPurchased={isPurchased}
+          onRate={onRate}
         />
       </CardFooter>
     </Card>

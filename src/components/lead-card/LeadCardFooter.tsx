@@ -3,19 +3,22 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { applyBuyerPriceMarkup } from '@/lib/utils';
 import LeadCardPrice from './LeadCardPrice';
+import LeadCardActions from './LeadCardActions';
 
 interface LeadCardFooterProps {
   lead: Lead;
   onPurchase?: (lead: Lead) => void;
   isOwner: boolean;
   isPurchased?: boolean;
+  onRate?: (lead: Lead) => void;
 }
 
 const LeadCardFooter: React.FC<LeadCardFooterProps> = ({ 
   lead, 
   onPurchase,
   isOwner,
-  isPurchased = false
+  isPurchased = false,
+  onRate
 }) => {
   // Use original price for owners (sellers), apply markup for buyers
   const displayPrice = isOwner ? lead.price : applyBuyerPriceMarkup(lead.price);
@@ -23,7 +26,15 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
   return (
     <div className="pt-2 border-t flex justify-between items-center">
       <div>
-        {/* This space is now handled in LeadCardActions component */}
+        {/* Place for any left-aligned actions */}
+        {isOwner || isPurchased ? (
+          <LeadCardActions
+            lead={lead}
+            isOwner={isOwner}
+            isPurchased={isPurchased}
+            onRate={onRate}
+          />
+        ) : null}
       </div>
       
       <LeadCardPrice 
