@@ -125,8 +125,9 @@ const createStripeCheckoutSession = async (lead: any, user: any, req: Request) =
     
     const origin = req.headers.get("origin") || "https://lead-marketplace-platform.com";
     
+    // Configure the payment request with Google Pay and Apple Pay support
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "google_pay", "apple_pay"],
       line_items: [
         {
           price_data: {
@@ -149,6 +150,10 @@ const createStripeCheckoutSession = async (lead: any, user: any, req: Request) =
         buyerId: user.id,
         originalPrice: originalPrice.toString(),
         markedUpPrice: markedUpPrice.toString(),
+      },
+      payment_method_options: {
+        google_pay: { setup_future_usage: 'off_session' },
+        apple_pay: { setup_future_usage: 'off_session' },
       },
     });
     

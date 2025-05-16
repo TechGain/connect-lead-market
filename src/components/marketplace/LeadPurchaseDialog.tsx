@@ -3,7 +3,7 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle, Loader2, ExternalLink } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, ExternalLink, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 interface LeadPurchaseDialogProps {
@@ -79,6 +79,33 @@ const LeadPurchaseDialog: React.FC<LeadPurchaseDialogProps> = ({
                   <span className="text-gray-600">Lead Price:</span>
                   <span className="font-semibold">{formatCurrency(displayPrice)}</span>
                 </div>
+              </div>
+              
+              {/* Payment method information */}
+              <div className="bg-gray-50 p-4 rounded-md">
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                  <CreditCard className="h-4 w-4" />
+                  Available Payment Methods
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-1.5 bg-white border rounded px-2 py-1">
+                    <img src="https://js.stripe.com/v3/fingerprinted/img/googlepay-ac58a6c087e76f3280bc2952a4f9ac5e.svg" 
+                         alt="Google Pay" className="h-5" />
+                    <span className="text-xs">Google Pay</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white border rounded px-2 py-1">
+                    <img src="https://js.stripe.com/v3/fingerprinted/img/applepay-c1bc44bc2e062d67aeb4009e67868eec.svg" 
+                         alt="Apple Pay" className="h-5" />
+                    <span className="text-xs">Apple Pay</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white border rounded px-2 py-1">
+                    <CreditCard className="h-4 w-4" />
+                    <span className="text-xs">Credit Card</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Secure checkout powered by Stripe. Your payment information is protected with industry-standard encryption.
+                </p>
               </div>
               
               {checkoutError && (
