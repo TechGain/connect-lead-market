@@ -4,40 +4,31 @@ import { logStep, applyBuyerPriceMarkup, StripeSessionOptions, Lead } from "./ut
 
 // Configure payment method options based on preference
 const getPaymentMethodOptions = (preferredMethod: string) => {
-  // Base payment method options
+  // Base payment method options for card payments
   const options: any = {
     card: {
-      setup_future_usage: 'off_session'
+      setup_future_usage: 'off_session',
     }
   };
   
-  // Add Google Pay and Apple Pay specific options if needed
-  if (preferredMethod === 'google_pay') {
-    options.google_pay = {
-      setup_future_usage: 'off_session'
-    };
-  }
-  
-  if (preferredMethod === 'apple_pay') {
-    options.apple_pay = {
-      setup_future_usage: 'off_session'
+  // Add wallet configurations for Google Pay and Apple Pay
+  if (preferredMethod === 'google_pay' || preferredMethod === 'apple_pay') {
+    // Set wallet options for card payments
+    options.card.wallet = {
+      // Always enable both wallet types when requested
+      allowedPaymentMethods: ['google_pay', 'apple_pay']
     };
   }
   
   return options;
 };
 
-// Configure payment method types based on preference
-const getPaymentMethodTypes = (preferredMethod: string) => {
-  // Start with the preferred method
-  const paymentMethodTypes = [preferredMethod];
-  
-  // Always include card as a fallback payment method
-  if (preferredMethod !== 'card' && !paymentMethodTypes.includes('card')) {
-    paymentMethodTypes.push('card');
-  }
-  
-  return paymentMethodTypes;
+// Get payment method types - always use 'card' as the base payment method
+// Google Pay and Apple Pay are configured through wallet options, not as separate methods
+const getPaymentMethodTypes = () => {
+  // Always return card as the payment method type
+  // Google Pay and Apple Pay are configured via wallet options
+  return ['card'];
 };
 
 // Create Stripe checkout session
@@ -61,8 +52,8 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
     
     const origin = req.headers.get("origin") || "https://lead-marketplace-platform.com";
     
-    // Get payment method types based on preference
-    const paymentMethodTypes = getPaymentMethodTypes(preferredPaymentMethod);
+    // Always use card as the payment method type
+    const paymentMethodTypes = getPaymentMethodTypes();
     
     logStep("Using payment methods", { paymentMethodTypes });
     
@@ -95,7 +86,7 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, preferr
       },
       // Enable automatic tax calculation
       automatic_tax: { enabled: true },
-      // Add payment method options
+      // Add payment method options with wallet configuration
       payment_method_options: getPaymentMethodOptions(preferredPaymentMethod)
     };
     
