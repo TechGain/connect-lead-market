@@ -18,7 +18,7 @@ const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
   const isAdmin = role === 'admin';
   
   return (
-    <div className="flex flex-row gap-3">
+    <div className="flex flex-row gap-3 mt-4">
       <div className="flex items-center p-2 bg-green-50/80 rounded-lg border border-green-100 shadow-sm">
         <div className="flex items-center justify-center w-7 h-7 bg-green-100 rounded-full mr-2">
           <CircleCheck className="text-green-600 h-4 w-4" />
