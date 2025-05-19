@@ -8,27 +8,32 @@ export type ViewMode = 'largeCards' | 'smallCards' | 'list' | 'compact';
 interface MarketplaceViewSelectorProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  compact?: boolean;
 }
 
 const MarketplaceViewSelector: React.FC<MarketplaceViewSelectorProps> = ({
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  compact = false
 }) => {
+  const iconSize = compact ? 4 : 6;
+  const buttonSize = compact ? 'h-8 w-8' : 'h-12 w-12';
+  
   return (
     <div className="flex items-center">
-      <span className="text-sm text-gray-500 mr-3">View:</span>
+      {!compact && <span className="text-sm text-gray-500 mr-3">View:</span>}
       <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && onViewModeChange(value as ViewMode)}>
-        <ToggleGroupItem value="largeCards" aria-label="Large Cards View" title="Large Cards" className="h-12 w-12">
-          <Grid2X2 className="h-6 w-6" />
+        <ToggleGroupItem value="largeCards" aria-label="Large Cards View" title="Large Cards" className={buttonSize}>
+          <Grid2X2 className={`h-${iconSize} w-${iconSize}`} />
         </ToggleGroupItem>
-        <ToggleGroupItem value="smallCards" aria-label="Small Cards View" title="Small Cards" className="h-12 w-12">
-          <GalleryHorizontal className="h-6 w-6" />
+        <ToggleGroupItem value="smallCards" aria-label="Small Cards View" title="Small Cards" className={buttonSize}>
+          <GalleryHorizontal className={`h-${iconSize} w-${iconSize}`} />
         </ToggleGroupItem>
-        <ToggleGroupItem value="list" aria-label="List View" title="List View" className="h-12 w-12">
-          <LayoutList className="h-6 w-6" />
+        <ToggleGroupItem value="list" aria-label="List View" title="List View" className={buttonSize}>
+          <LayoutList className={`h-${iconSize} w-${iconSize}`} />
         </ToggleGroupItem>
-        <ToggleGroupItem value="compact" aria-label="Compact View" title="Compact View" className="h-12 w-12">
-          <GalleryVertical className="h-6 w-6" />
+        <ToggleGroupItem value="compact" aria-label="Compact View" title="Compact View" className={buttonSize}>
+          <GalleryVertical className={`h-${iconSize} w-${iconSize}`} />
         </ToggleGroupItem>
       </ToggleGroup>
     </div>

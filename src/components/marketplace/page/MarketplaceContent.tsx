@@ -59,19 +59,17 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
         </div>
       </div>
       
-      {/* Filters and View Controls */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-          <div className="flex-grow">
-            <LeadFilters onFilterChange={handleFilterChange} />
-          </div>
-          
-          <div className="flex justify-end items-center">
-            <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />
-          </div>
+      {/* Compact Layout for Filters, Stats and View Controls */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-grow min-w-[300px]">
+          <LeadFilters onFilterChange={handleFilterChange} compact={true} />
         </div>
         
-        <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} />
+        <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} compact={true} />
+        
+        <div className="ml-auto">
+          <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} compact={true} />
+        </div>
       </div>
       
       {/* Debug Panel */}

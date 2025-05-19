@@ -16,9 +16,10 @@ interface LeadFiltersProps {
     maxPrice: number;
     minRating: number;
   }) => void;
+  compact?: boolean;
 }
 
-const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
+const LeadFilters = ({ onFilterChange, compact = false }: LeadFiltersProps) => {
   const [search, setSearch] = React.useState('');
   const [type, setType] = React.useState('');
   const [location, setLocation] = React.useState('');
@@ -55,24 +56,24 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className={`bg-white rounded-lg border ${compact ? 'p-2' : 'p-4'}`}>
+      <div className="flex items-center justify-between">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${compact ? 'h-4 w-4' : 'h-5 w-5'}`} />
           <Input
-            placeholder="Search leads by keyword..."
+            placeholder={compact ? "Search leads..." : "Search leads by keyword..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+            className={`pl-10 ${compact ? 'h-9 text-sm' : ''}`}
           />
         </div>
         <Button 
           variant="outline"
-          size="icon"
+          size={compact ? "sm" : "icon"}
           className="ml-2"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <Filter size={18} />
+          <Filter size={compact ? 16 : 18} />
         </Button>
       </div>
       
