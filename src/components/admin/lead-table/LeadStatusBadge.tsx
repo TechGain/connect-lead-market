@@ -12,7 +12,7 @@ const LeadStatusBadge: React.FC<LeadStatusBadgeProps> = ({ status, className }) 
   // Map each status to appropriate styling and display text
   switch (status) {
     case 'new':
-      return <Badge className={cn("bg-green-500 hover:bg-green-600", className)}>New</Badge>;
+      return <Badge className={cn("bg-blue-500 hover:bg-blue-600", className)}>New</Badge>;
     case 'pending':
       return <Badge className={cn("bg-yellow-500 hover:bg-yellow-600", className)}>Pending</Badge>;
     case 'sold':
