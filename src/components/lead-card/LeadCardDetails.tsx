@@ -1,5 +1,9 @@
+
 import React from 'react';
-import { PhoneOutgoing, Clock } from 'lucide-react';
+import { PhoneOutgoing, Clock, AlertCircle } from 'lucide-react';
+import { isAppointmentPassed } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
 interface LeadCardDetailsProps {
   description?: string;
   firstName?: string;
@@ -15,6 +19,7 @@ interface LeadCardDetailsProps {
   status: string;
   showFullDetails: boolean;
 }
+
 const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
   description,
   firstName,
@@ -32,6 +37,10 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
 }) => {
   // Determine confirmation status display
   const isConfirmed = confirmationStatus === 'confirmed';
+  
+  // Check if appointment is soon (within the next 24 hours)
+  const isAppointmentWarning = isConfirmed && appointmentTime && !isAppointmentPassed(appointmentTime);
+
   if (showFullDetails) {
     return <>
         <p className="text-gray-700">{description}</p>
@@ -44,9 +53,16 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
               <p><span className="font-medium">Email:</span> {contactEmail}</p>
               {address && <p><span className="font-medium">Address:</span> {address}</p>}
               {zipCode && <p><span className="font-medium">ZIP Code:</span> {zipCode}</p>}
-              {appointmentTime && <p>
+              {appointmentTime && (
+                <p>
                   <span className="font-medium">Appointment:</span> {appointmentTime}
-                </p>}
+                  {isAppointmentWarning && 
+                    <Badge variant="outline" className="ml-2 px-1 py-0 text-xs bg-amber-50 border-amber-200 text-amber-700">
+                      Upcoming
+                    </Badge>
+                  }
+                </p>
+              )}
               {buyerName && <p><span className="font-medium">Buyer:</span> {buyerName}</p>}
             </div>
           </div>}
@@ -80,4 +96,5 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
       </div>;
   }
 };
+
 export default LeadCardDetails;

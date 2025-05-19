@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Lead } from '@/types/lead';
 import { format } from 'date-fns'; // Import format properly from date-fns
+import { isAppointmentPassed } from '@/lib/utils';
 
 export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClose: () => void) => {
   const [leadType, setLeadType] = useState('');
@@ -111,6 +112,20 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       // Extract location from address
       const location = address.split(',').slice(-2).join(',').trim();
       
+      // Determine the appropriate status
+      // If the lead was erased (due to passed appointment) and now has a future appointment,
+      // restore it to 'new' status
+      let newStatus = lead.status;
+      if (lead.status === 'erased' && confirmationStatus === 'confirmed' && appointmentDate) {
+        // Check if the new appointment time is in the future
+        const newAppointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
+        if (!isAppointmentPassed(newAppointmentInfo)) {
+          // Restore the lead to 'new' status since it has a future appointment now
+          newStatus = 'new';
+          console.log('Restoring erased lead to new status due to future appointment');
+        }
+      }
+      
       // Update lead in database
       const { error } = await supabase
         .from('leads')
@@ -127,6 +142,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
           zip_code: zipCode,
           confirmation_status: confirmationStatus,
           appointment_time: appointmentInfo,
+          status: newStatus, // Use the determined status
         })
         .eq('id', lead.id);
         

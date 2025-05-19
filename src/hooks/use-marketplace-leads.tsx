@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { Lead, mapDbLeadToAppLead } from '@/types/lead';
 import { supabase } from '@/integrations/supabase/client';
+import { isAppointmentPassed } from '@/lib/utils';
 
 export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -41,8 +42,43 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       // Map database leads to app format
       const allLeads = leadsData.map(mapDbLeadToAppLead);
       
+      // Filter out leads with passed appointment times
+      const visibleLeads = allLeads.filter(lead => {
+        // Only check confirmed leads with appointment times
+        if (lead.status === 'new' && 
+            lead.confirmationStatus === 'confirmed' && 
+            lead.appointmentTime) {
+          
+          // If the appointment has passed, mark it as should be erased
+          const isPassed = isAppointmentPassed(lead.appointmentTime);
+          
+          if (isPassed) {
+            console.log(`Lead ${lead.id} has passed appointment: ${lead.appointmentTime}`);
+            
+            // Update the lead status to 'erased' in the database
+            // This is done asynchronously so we don't need to await it
+            supabase
+              .from('leads')
+              .update({ status: 'erased' })
+              .eq('id', lead.id)
+              .then(({ error }) => {
+                if (error) {
+                  console.error(`Failed to update lead ${lead.id} status:`, error);
+                } else {
+                  console.log(`Lead ${lead.id} marked as erased due to passed appointment`);
+                }
+              });
+            
+            // Don't include this lead in the visible leads
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
       // Sort leads - first by status (new leads first), then by creation date
-      const sortedLeads = [...allLeads].sort((a, b) => {
+      const sortedLeads = [...visibleLeads].sort((a, b) => {
         // First sort by status - 'new' comes before other statuses
         if (a.status === 'new' && b.status !== 'new') return -1;
         if (a.status !== 'new' && b.status === 'new') return 1;

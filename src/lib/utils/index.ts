@@ -19,3 +19,10 @@ export {
   applyBuyerPriceMarkup,
   zipToCityMap
 } from './location';
+
+// Re-export from datetime utilities
+export {
+  isAppointmentPassed,
+  formatDate
+} from './datetime';
+
