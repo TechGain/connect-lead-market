@@ -23,6 +23,7 @@ export {
 // Re-export from datetime utilities
 export {
   isAppointmentPassed,
-  formatDate
+  formatDate,
+  generateGoogleCalendarUrl
 } from './datetime';
 

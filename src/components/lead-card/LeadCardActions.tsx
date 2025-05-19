@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Calendar, Pencil, Trash2 } from 'lucide-react';
 import { Lead } from '@/types/lead';
+import { generateGoogleCalendarUrl } from '@/lib/utils';
 
 interface LeadCardActionsProps {
   lead: Lead;
@@ -21,16 +22,67 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
   onRate,
   isPurchased = false
 }) => {
+  // Generate calendar link if lead has appointment time
+  const handleAddToCalendar = () => {
+    if (!lead.appointmentTime) return null;
+    
+    // Format lead details for the calendar event
+    const eventTitle = `Lead Appointment: ${lead.type}`;
+    
+    // Create a detailed description with contact information
+    let description = `Lead details:\n`;
+    if (lead.description) description += `\nDescription: ${lead.description}`;
+    if (lead.contactName) description += `\nContact: ${lead.contactName}`;
+    if (lead.contactPhone) description += `\nPhone: ${lead.contactPhone}`;
+    if (lead.contactEmail) description += `\nEmail: ${lead.contactEmail}`;
+    
+    // Use the full address for the location if available
+    const location = lead.address || lead.location;
+    
+    // Generate the URL
+    const calendarUrl = generateGoogleCalendarUrl(
+      lead.appointmentTime,
+      eventTitle,
+      description,
+      location
+    );
+    
+    // Open the URL in a new tab if successfully generated
+    if (calendarUrl) {
+      window.open(calendarUrl, '_blank');
+    }
+  };
+
+  // Only show the Add to Calendar button for purchased leads with appointment times
+  const showCalendarButton = isPurchased && lead.appointmentTime;
+  
   return (
     <div className="flex items-center gap-2">
-      {isPurchased && onRate && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onRate(lead)}
-        >
-          Rate This Lead
-        </Button>
+      {isPurchased && (
+        <>
+          {onRate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onRate(lead)}
+            >
+              Rate This Lead
+            </Button>
+          )}
+          
+          {showCalendarButton && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAddToCalendar}
+              className="flex items-center gap-1"
+              title="Add to Google Calendar"
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Add to Calendar</span>
+            </Button>
+          )}
+        </>
       )}
       
       {isOwner && (
