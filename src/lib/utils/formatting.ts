@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for formatting values
  */
@@ -9,11 +8,31 @@
  * @returns Formatted currency string
  */
 export function formatCurrency(amount: number): string {
+  // For whole dollar amounts, display without decimal places
+  if (Math.round(amount) === amount) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+  
+  // Otherwise use standard 2 decimal places
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2
   }).format(amount);
+}
+
+/**
+ * Rounds a number to the nearest dollar
+ * @param amount The amount to round
+ * @returns Rounded dollar amount
+ */
+export function roundToNearestDollar(amount: number): number {
+  return Math.round(amount);
 }
 
 /**

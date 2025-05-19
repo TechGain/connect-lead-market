@@ -1,10 +1,15 @@
 
 /**
- * Formats a number as currency with 2 decimal places
+ * Formats a number as currency with 0 decimal places for whole numbers
  * @param value The number to format
  * @returns Formatted currency string without the dollar sign
  */
 export const formatCurrency = (value: number): string => {
+  if (Math.round(value) === value) {
+    // For whole dollar amounts, display without decimal places
+    return Number(value).toLocaleString('en-US');
+  }
+  // For amounts with cents, use 2 decimal places
   return Number(value).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 };
 

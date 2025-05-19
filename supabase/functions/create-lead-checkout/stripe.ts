@@ -19,11 +19,11 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, req: Re
       throw new Error("STRIPE_SECRET_KEY is not set");
     }
     
-    // Apply 10% markup to the price for buyers
+    // Apply 20% markup to the price for buyers and round to nearest dollar
     const originalPrice = lead.price;
     const markedUpPrice = applyBuyerPriceMarkup(originalPrice);
     
-    logStep("Applying price markup", { originalPrice, markedUpPrice });
+    logStep("Applying price markup and rounding", { originalPrice, markedUpPrice });
     
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -47,7 +47,7 @@ export const createStripeCheckoutSession = async (lead: Lead, user: any, req: Re
               name: `${lead.type} Lead in ${lead.location}`,
               description: `Purchase access to contact information for this ${lead.type} lead`,
             },
-            unit_amount: Math.round(Number(markedUpPrice) * 100), // Convert dollars to cents, with markup applied
+            unit_amount: Math.round(Number(markedUpPrice) * 100), // Convert dollars to cents, with markup applied and rounded
           },
           quantity: 1,
         },

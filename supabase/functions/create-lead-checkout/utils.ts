@@ -53,9 +53,9 @@ export const initializeSupabaseClients = () => {
   return { supabaseAdmin, supabaseClient };
 };
 
-// Apply 20% markup for buyers
+// Apply 20% markup for buyers and round to the nearest dollar
 export const applyBuyerPriceMarkup = (price: number): number => {
-  return price * 1.2; // 20% markup
+  return Math.round(price * 1.2); // 20% markup and round to nearest dollar
 };
 
 // Handle CORS preflight requests

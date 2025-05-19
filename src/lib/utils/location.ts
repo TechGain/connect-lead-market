@@ -3,9 +3,13 @@
  * Utility functions for handling location data and ZIP codes
  */
 
+// Import the roundToNearestDollar function
+import { roundToNearestDollar } from './formatting';
+
 // Applies a 20% markup to the lead price for buyers in the marketplace
+// and rounds to the nearest dollar
 export function applyBuyerPriceMarkup(price: number): number {
-  return price * 1.2;  // Apply 20% markup
+  return roundToNearestDollar(price * 1.2);  // Apply 20% markup and round
 }
 
 // Enhanced ZIP codes to city mappings - significantly expanded
