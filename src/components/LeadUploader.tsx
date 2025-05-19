@@ -59,7 +59,8 @@ const LeadUploader = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const requiredFields = [leadType, description, contactName, contactEmail, contactPhone, price, address, zipCode];
+    // Updated required fields to exclude email
+    const requiredFields = [leadType, description, contactName, contactPhone, price, address, zipCode];
     
     // If confirmed, also require appointment date and time
     if (confirmationStatus === 'confirmed' && (!appointmentDate || !appointmentTimeSlot)) {

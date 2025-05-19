@@ -79,7 +79,8 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       return;
     }
     
-    const requiredFields = [leadType, description, contactName, contactEmail, price, address, zipCode];
+    // Updated required fields to exclude email
+    const requiredFields = [leadType, description, contactName, contactPhone, price, address, zipCode];
     
     // If confirmed, also require appointment date and time
     if (confirmationStatus === 'confirmed' && (!appointmentDate || !appointmentTimeSlot)) {

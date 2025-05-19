@@ -34,14 +34,13 @@ const ContactInfoFields = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="contact-email">Contact Email *</Label>
+        <Label htmlFor="contact-email">Contact Email</Label>
         <Input
           id="contact-email"
           type="email"
           value={contactEmail}
           onChange={(e) => onContactEmailChange(e.target.value)}
           placeholder="example@email.com"
-          required
         />
       </div>
       
