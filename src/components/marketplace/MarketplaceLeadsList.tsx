@@ -9,6 +9,7 @@ import {
   CompactTableView 
 } from './view-modes';
 import { LoadingState, EmptyState } from './states';
+import { extractCityFromLocation } from '@/lib/utils';
 
 interface MarketplaceLeadsListProps {
   leads: Lead[];
@@ -30,8 +31,17 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
   console.log('Current view mode:', viewMode);
   
-  // Uncomment the line below when city extraction debugging is needed
-  // console.log('Sample locations:', leads.slice(0, 3).map(l => l.location));
+  // Debug city extraction for the first few leads
+  const DEBUG_CITY_EXTRACTION = false; // Set to true to debug city extraction
+  
+  if (DEBUG_CITY_EXTRACTION && leads.length > 0) {
+    console.log('================= CITY EXTRACTION DEBUG =================');
+    leads.slice(0, 5).forEach(lead => {
+      const city = extractCityFromLocation(lead.location, lead.zipCode || 'Unknown', true);
+      console.log(`Lead location: "${lead.location}" -> City: "${city}"`);
+    });
+    console.log('=======================================================');
+  }
 
   if (isLoading) {
     return <LoadingState />;

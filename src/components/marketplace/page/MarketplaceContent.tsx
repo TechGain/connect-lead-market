@@ -1,13 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import LeadFilters from '@/components/LeadFilters';
 import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
 import MarketplaceStats from '@/components/marketplace/MarketplaceStats';
 import MarketplaceLeadsList from '@/components/marketplace/MarketplaceLeadsList';
 import { Lead } from '@/types/lead';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw } from 'lucide-react';
+import { RefreshCcw, Bug } from 'lucide-react';
 import { format } from 'date-fns';
+import { extractCityFromLocation } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface MarketplaceContentProps {
   filteredLeads: Lead[];
@@ -32,6 +34,8 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   viewMode,
   onViewModeChange
 }) => {
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  
   // Calculate lead statistics
   const totalLeads = filteredLeads.length;
   const availableLeads = filteredLeads.filter(lead => lead.status === 'new').length;
@@ -58,8 +62,39 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
             <RefreshCcw size={16} />
             Refresh Data
           </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDebugPanel(!showDebugPanel)}
+            className="flex items-center gap-2"
+          >
+            <Bug size={16} />
+            {showDebugPanel ? 'Hide Debug' : 'Debug'}
+          </Button>
         </div>
       </div>
+      
+      {showDebugPanel && (
+        <div className="mb-6 p-4 border rounded-md bg-slate-50 overflow-auto max-h-80">
+          <h3 className="font-bold mb-2 flex items-center">
+            <Bug size={16} className="mr-2" /> 
+            Location Extraction Debug
+            <Badge variant="outline" className="ml-2">First 5 leads</Badge>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm font-mono">
+            {filteredLeads.slice(0, 5).map((lead, i) => (
+              <div key={i} className="bg-white p-2 rounded border">
+                <div><strong>Original:</strong> {lead.location || 'N/A'}</div>
+                <div><strong>ZIP:</strong> {lead.zipCode || 'N/A'}</div>
+                <div className="text-green-600 font-bold">
+                  <strong>City:</strong> {extractCityFromLocation(lead.location, lead.zipCode || 'Unknown')}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <LeadFilters onFilterChange={handleFilterChange} />
