@@ -16,19 +16,19 @@ const MarketplaceViewSelector: React.FC<MarketplaceViewSelectorProps> = ({
 }) => {
   return (
     <div className="flex items-center">
-      <span className="text-sm text-gray-500 mr-2">View:</span>
+      <span className="text-sm text-gray-500 mr-3">View:</span>
       <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && onViewModeChange(value as ViewMode)}>
-        <ToggleGroupItem value="largeCards" aria-label="Large Cards View" title="Large Cards" className="h-11 w-11">
-          <Grid2X2 className="h-5 w-5" />
+        <ToggleGroupItem value="largeCards" aria-label="Large Cards View" title="Large Cards" className="h-12 w-12">
+          <Grid2X2 className="h-6 w-6" />
         </ToggleGroupItem>
-        <ToggleGroupItem value="smallCards" aria-label="Small Cards View" title="Small Cards" className="h-11 w-11">
-          <GalleryHorizontal className="h-5 w-5" />
+        <ToggleGroupItem value="smallCards" aria-label="Small Cards View" title="Small Cards" className="h-12 w-12">
+          <GalleryHorizontal className="h-6 w-6" />
         </ToggleGroupItem>
-        <ToggleGroupItem value="list" aria-label="List View" title="List View" className="h-11 w-11">
-          <LayoutList className="h-5 w-5" />
+        <ToggleGroupItem value="list" aria-label="List View" title="List View" className="h-12 w-12">
+          <LayoutList className="h-6 w-6" />
         </ToggleGroupItem>
-        <ToggleGroupItem value="compact" aria-label="Compact View" title="Compact View" className="h-11 w-11">
-          <GalleryVertical className="h-5 w-5" />
+        <ToggleGroupItem value="compact" aria-label="Compact View" title="Compact View" className="h-12 w-12">
+          <GalleryVertical className="h-6 w-6" />
         </ToggleGroupItem>
       </ToggleGroup>
     </div>

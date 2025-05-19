@@ -91,6 +91,8 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
                 <SelectItem value="electrical">Electrical</SelectItem>
                 <SelectItem value="hvac">HVAC</SelectItem>
                 <SelectItem value="landscaping">Landscaping</SelectItem>
+                <SelectItem value="solar">Solar</SelectItem>
+                <SelectItem value="concrete">Concrete</SelectItem>
                 <SelectItem value="bathroom-remodel">Bathroom Remodel</SelectItem>
                 <SelectItem value="kitchen-remodel">Kitchen Remodel</SelectItem>
                 <SelectItem value="full-home-renovation">Full Home Renovation</SelectItem>
