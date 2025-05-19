@@ -17,7 +17,7 @@ export interface Database {
           description: string
           price: number
           quality_rating: number
-          status: 'new' | 'pending' | 'sold' | 'erased'  // Updated to include 'erased'
+          status: 'new' | 'pending' | 'sold' | 'erased' | 'refunded'  // Updated to include 'refunded'
           seller_id: string
           buyer_id: string | null
           created_at: string
@@ -33,7 +33,7 @@ export interface Database {
           description: string
           price: number
           quality_rating: number
-          status: 'new' | 'pending' | 'sold' | 'erased'  // Updated to include 'erased'
+          status: 'new' | 'pending' | 'sold' | 'erased' | 'refunded'  // Updated to include 'refunded'
           seller_id: string
           buyer_id?: string | null
           created_at?: string
@@ -49,7 +49,7 @@ export interface Database {
           description?: string
           price?: number
           quality_rating?: number
-          status?: 'new' | 'pending' | 'sold' | 'erased'  // Updated to include 'erased'
+          status?: 'new' | 'pending' | 'sold' | 'erased' | 'refunded'  // Updated to include 'refunded'
           seller_id?: string
           buyer_id?: string | null
           created_at?: string

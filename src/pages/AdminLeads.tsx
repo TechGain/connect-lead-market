@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Check, Trash2, Circle, CircleCheck, FileText } from 'lucide-react';
+import { Check, Trash2, Circle, CircleCheck, FileText, RefreshCcw } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminLeads, LeadStatusFilter } from '@/hooks/use-admin-leads';
@@ -20,8 +20,8 @@ const AdminLeadsPage: React.FC = () => {
     setStatusFilter(value as LeadStatusFilter);
   };
 
-  // Handle lead deletion by refreshing the leads list
-  const handleLeadDeleted = () => {
+  // Handle lead deletion or refund by refreshing the leads list
+  const handleLeadUpdated = () => {
     refreshLeads();
   };
 
@@ -29,6 +29,7 @@ const AdminLeadsPage: React.FC = () => {
   const activeLeasCount = leads.filter(lead => lead.status === 'new' || lead.status === 'pending').length;
   const soldLeadsCount = leads.filter(lead => lead.status === 'sold').length;
   const erasedLeadsCount = leads.filter(lead => lead.status === 'erased').length;
+  const refundedLeadsCount = leads.filter(lead => lead.status === 'refunded').length;
   
   // Log counts for debugging
   useEffect(() => {
@@ -36,7 +37,8 @@ const AdminLeadsPage: React.FC = () => {
       total: leads.length,
       active: activeLeasCount,
       sold: soldLeadsCount,
-      erased: erasedLeadsCount
+      erased: erasedLeadsCount,
+      refunded: refundedLeadsCount
     });
     
     // Log status distribution
@@ -46,7 +48,7 @@ const AdminLeadsPage: React.FC = () => {
     }, {} as Record<string, number>);
     
     console.log('Status distribution:', statusCounts);
-  }, [leads, activeLeasCount, soldLeadsCount, erasedLeadsCount]);
+  }, [leads, activeLeasCount, soldLeadsCount, erasedLeadsCount, refundedLeadsCount]);
   
   return (
     <PageLayout>
@@ -77,7 +79,7 @@ const AdminLeadsPage: React.FC = () => {
         ) : (
           <div className="space-y-6">
             <Tabs defaultValue={statusFilter} onValueChange={handleTabChange}>
-              <TabsList className="grid grid-cols-4 w-full max-w-md">
+              <TabsList className="grid grid-cols-5 w-full max-w-3xl">
                 <TabsTrigger value="all">
                   <Circle className="mr-2 h-4 w-4" />
                   All ({leads.length})
@@ -90,6 +92,10 @@ const AdminLeadsPage: React.FC = () => {
                   <Check className="mr-2 h-4 w-4" />
                   Sold ({soldLeadsCount})
                 </TabsTrigger>
+                <TabsTrigger value="refunded">
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Refunded ({refundedLeadsCount})
+                </TabsTrigger>
                 <TabsTrigger value="erased">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Erased ({erasedLeadsCount})
@@ -98,7 +104,11 @@ const AdminLeadsPage: React.FC = () => {
 
               <TabsContent value="all" className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">All Leads ({leads.length})</h2>
-                <AdminLeadTable leads={leads} onLeadDeleted={handleLeadDeleted} />
+                <AdminLeadTable 
+                  leads={leads} 
+                  onLeadDeleted={handleLeadUpdated}
+                  onLeadRefunded={handleLeadUpdated} 
+                />
               </TabsContent>
               
               <TabsContent value="active" className="mt-6">
@@ -107,7 +117,8 @@ const AdminLeadsPage: React.FC = () => {
                   leads={leads.filter(lead => 
                     lead.status === 'new' || lead.status === 'pending'
                   )} 
-                  onLeadDeleted={handleLeadDeleted}
+                  onLeadDeleted={handleLeadUpdated}
+                  onLeadRefunded={handleLeadUpdated}
                 />
               </TabsContent>
               
@@ -115,7 +126,17 @@ const AdminLeadsPage: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-4">Sold Leads ({soldLeadsCount})</h2>
                 <AdminLeadTable 
                   leads={leads.filter(lead => lead.status === 'sold')} 
-                  onLeadDeleted={handleLeadDeleted}
+                  onLeadDeleted={handleLeadUpdated}
+                  onLeadRefunded={handleLeadUpdated}
+                />
+              </TabsContent>
+              
+              <TabsContent value="refunded" className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">Refunded Leads ({refundedLeadsCount})</h2>
+                <AdminLeadTable 
+                  leads={leads.filter(lead => lead.status === 'refunded')} 
+                  onLeadDeleted={handleLeadUpdated}
+                  onLeadRefunded={handleLeadUpdated}
                 />
               </TabsContent>
               
@@ -123,7 +144,8 @@ const AdminLeadsPage: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-4">Erased Leads ({erasedLeadsCount})</h2>
                 <AdminLeadTable 
                   leads={leads.filter(lead => lead.status === 'erased')} 
-                  onLeadDeleted={handleLeadDeleted}
+                  onLeadDeleted={handleLeadUpdated}
+                  onLeadRefunded={handleLeadUpdated}
                 />
               </TabsContent>
             </Tabs>
@@ -133,6 +155,7 @@ const AdminLeadsPage: React.FC = () => {
               <ul className="list-disc ml-5 mt-2 space-y-1">
                 <li><span className="font-semibold">Active:</span> New or pending leads that are available for purchase</li>
                 <li><span className="font-semibold">Sold:</span> Leads that have been purchased by buyers</li>
+                <li><span className="font-semibold">Refunded:</span> Leads that were sold but have been refunded</li>
                 <li><span className="font-semibold">Erased:</span> Leads that have been deleted by sellers or admins</li>
               </ul>
             </div>

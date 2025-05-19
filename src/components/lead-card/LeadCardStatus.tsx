@@ -7,12 +7,26 @@ interface LeadCardStatusProps {
 }
 
 const LeadCardStatus: React.FC<LeadCardStatusProps> = ({ status }) => {
-  // Check if lead is sold
-  const isSold = status === 'sold' || status === 'pending';
+  // Determine badge variant and text based on status
+  const getBadgeDetails = () => {
+    switch (status) {
+      case 'sold':
+      case 'pending':
+        return { variant: 'secondary', text: 'Sold' };
+      case 'refunded':
+        return { variant: 'outline', text: 'Refunded' };
+      case 'erased':
+        return { variant: 'destructive', text: 'Erased' };
+      default:
+        return { variant: 'default', text: 'Available' };
+    }
+  };
+  
+  const { variant, text } = getBadgeDetails();
   
   return (
-    <Badge variant={isSold ? 'secondary' : 'default'}>
-      {isSold ? 'Sold' : 'Available'}
+    <Badge variant={variant as any}>
+      {text}
     </Badge>
   );
 };

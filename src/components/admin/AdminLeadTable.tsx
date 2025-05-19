@@ -6,18 +6,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from '@/utils/format-helpers';
-import { Trash2 } from 'lucide-react';
+import { Trash2, RefreshCcw } from 'lucide-react';
 import { useAdminLeadDelete } from '@/hooks/use-admin-lead-delete';
+import { useAdminLeadRefund } from '@/hooks/use-admin-lead-refund';
 
 interface AdminLeadTableProps {
   leads: Lead[];
   onLeadDeleted?: () => void;
+  onLeadRefunded?: () => void;
 }
 
-const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted }) => {
+const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ 
+  leads, 
+  onLeadDeleted,
+  onLeadRefunded 
+}) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const { deleteLead, isDeleting } = useAdminLeadDelete();
+  const { refundLead, isRefunding } = useAdminLeadRefund();
 
   if (!leads || leads.length === 0) {
     return (
@@ -35,6 +43,8 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted })
         return <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>;
       case 'sold':
         return <Badge className="bg-blue-500 hover:bg-blue-600">Sold</Badge>;
+      case 'refunded':
+        return <Badge variant="outline" className="border-orange-500 text-orange-600">Refunded</Badge>;
       case 'erased':
         return <Badge variant="destructive">Erased</Badge>;
       default:
@@ -47,6 +57,11 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted })
     setIsDeleteDialogOpen(true);
   };
 
+  const handleRefundClick = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsRefundDialogOpen(true);
+  };
+
   const confirmDeleteLead = async () => {
     if (selectedLead) {
       const success = await deleteLead(selectedLead.id);
@@ -57,10 +72,20 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted })
     }
   };
 
-  // Debug leads data
-  console.log("Rendering leads in AdminLeadTable:", 
-    leads.map(lead => ({ id: lead.id, status: lead.status, type: lead.type }))
-  );
+  const confirmRefundLead = async () => {
+    if (selectedLead) {
+      const success = await refundLead(selectedLead.id);
+      if (success && onLeadRefunded) {
+        onLeadRefunded();
+      }
+      setIsRefundDialogOpen(false);
+    }
+  };
+
+  // Check if lead can be refunded (only sold leads can be refunded)
+  const canBeRefunded = (lead: Lead) => {
+    return lead.status === 'sold';
+  };
 
   return (
     <>
@@ -88,7 +113,9 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted })
                     ? 'opacity-70 bg-red-50' 
                     : lead.status === 'sold'
                       ? 'bg-blue-50'
-                      : ''
+                      : lead.status === 'refunded'
+                        ? 'bg-orange-50'
+                        : ''
                 }
               >
                 <TableCell>{lead.type}</TableCell>
@@ -103,7 +130,18 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted })
                     ? new Date(lead.purchasedAt).toLocaleDateString() 
                     : '-'}
                 </TableCell>
-                <TableCell>
+                <TableCell className="space-x-1">
+                  {canBeRefunded(lead) && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRefundClick(lead)}
+                      className="h-8 w-8 text-orange-500 hover:text-orange-700 hover:bg-orange-50"
+                      title="Mark as Refunded"
+                    >
+                      <RefreshCcw className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -121,6 +159,7 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted })
         </Table>
       </div>
 
+      {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -133,6 +172,24 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({ leads, onLeadDeleted })
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={confirmDeleteLead} disabled={isDeleting}>
               {isDeleting ? 'Deleting...' : 'Delete Lead'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Dialog */}
+      <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Refund Lead</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to mark this lead as refunded? This indicates that the buyer has been refunded for their purchase.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRefundDialogOpen(false)}>Cancel</Button>
+            <Button variant="default" onClick={confirmRefundLead} disabled={isRefunding} className="bg-orange-500 hover:bg-orange-600">
+              {isRefunding ? 'Processing...' : 'Mark as Refunded'}
             </Button>
           </DialogFooter>
         </DialogContent>

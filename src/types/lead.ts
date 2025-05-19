@@ -1,4 +1,3 @@
-
 export interface Lead {
   id: string;
   type: string;
@@ -6,7 +5,7 @@ export interface Lead {
   description?: string;
   price: number;
   qualityRating: number | null;
-  status: 'new' | 'pending' | 'sold' | 'erased';  // Updated to include 'erased' status
+  status: 'new' | 'pending' | 'sold' | 'erased' | 'refunded';  // Updated to include 'refunded' status
   sellerId: string;
   sellerName?: string;
   buyerId?: string | null;
