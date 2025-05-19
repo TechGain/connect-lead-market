@@ -1,21 +1,14 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import LeadFilters from '@/components/LeadFilters';
 import { useAuthCheck } from '@/hooks/use-auth-check';
 import { useMarketplaceLeads } from '@/hooks/use-marketplace-leads';
 import { useLeadCheckout } from '@/hooks/use-lead-checkout';
 import { useCheckoutUrlParams } from '@/hooks/use-checkout-url-params';
-import MarketplaceHeader from '@/components/marketplace/MarketplaceHeader';
-import MarketplaceLeadsList from '@/components/marketplace/MarketplaceLeadsList';
-import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
-import MarketplaceStats from '@/components/marketplace/MarketplaceStats';
-import LeadPurchaseDialog from '@/components/marketplace/LeadPurchaseDialog';
-import AuthStateDisplay from '@/components/marketplace/AuthStateDisplay';
-import { Button } from '@/components/ui/button';
-import { RefreshCcw } from 'lucide-react';
+import { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import MarketplaceContainer from '@/components/marketplace/page/MarketplaceContainer';
 
 const Marketplace = () => {
   const [forceShowContent, setForceShowContent] = useState(false);
@@ -72,7 +65,6 @@ const Marketplace = () => {
     });
     
     setForceShowContent(true);
-    toast.info("Showing marketplace content without authentication");
   };
   
   // Function to handle refresh
@@ -86,11 +78,6 @@ const Marketplace = () => {
   // Check if user is buyer or admin
   const canAccessMarketplace = role === 'buyer' || role === 'admin';
   
-  // Calculate lead statistics
-  const totalLeads = filteredLeads.length;
-  const availableLeads = filteredLeads.filter(lead => lead.status === 'new').length;
-  const soldLeads = filteredLeads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
-
   // Handle view mode change
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
@@ -107,92 +94,32 @@ const Marketplace = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        {/* Auth state display handles loading, errors, and access issues */}
-        {!forceShowContent && (
-          <AuthStateDisplay 
-            isLoading={authLoading} 
-            authError={authError}
-            isLoggedIn={isLoggedIn}
-            role={role}
-          />
-        )}
-        
-        {/* Show loader if marketplace data is still loading */}
-        {((isLoggedIn && canAccessMarketplace && !authLoading) || forceShowContent) && leadsLoading && (
-          <div className="flex justify-center items-center py-12">
-            <p>Loading marketplace data...</p>
-          </div>
-        )}
-        
-        {/* Option to bypass auth */}
-        {authLoading && !forceShowContent && (
-          <div className="mt-8 text-center">
-            <Button variant="outline" onClick={handleForceShow} className="mx-auto">
-              Show Content Anyway
-            </Button>
-          </div>
-        )}
-        
-        {/* Show marketplace content when auth passes OR when forced */}
-        {((isLoggedIn && canAccessMarketplace && !authLoading) || forceShowContent) && !leadsLoading && (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <MarketplaceHeader 
-                title="Lead Marketplace" 
-                description="Browse available leads from verified sellers" 
-              />
-              
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">
-                  Last updated: {format(lastRefreshed, 'h:mm:ss a')}
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRefresh}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCcw size={16} />
-                  Refresh Data
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <LeadFilters onFilterChange={handleFilterChange} />
-              <MarketplaceViewSelector 
-                viewMode={viewMode} 
-                onViewModeChange={handleViewModeChange}
-              />
-            </div>
-            
-            {/* Add MarketplaceStats component here */}
-            <MarketplaceStats 
-              totalLeads={totalLeads}
-              availableLeads={availableLeads}
-              soldLeads={soldLeads}
-            />
-            
-            <MarketplaceLeadsList 
-              leads={filteredLeads}
-              isLoading={leadsLoading}
-              onPurchase={handlePurchaseLead}
-              onResetFilters={resetFilters}
-              viewMode={viewMode}
-            />
-            
-            <LeadPurchaseDialog 
-              selectedLead={selectedLead}
-              isOpen={isPreviewDialogOpen}
-              isProcessing={isProcessing}
-              redirectingToStripe={redirectingToStripe}
-              checkoutError={checkoutError}
-              stripeUrl={stripeUrl}
-              onClose={() => setIsPreviewDialogOpen(false)}
-              onPurchase={handlePaymentAndCheckout}
-            />
-          </>
-        )}
+        <MarketplaceContainer 
+          isLoggedIn={isLoggedIn}
+          canAccessMarketplace={canAccessMarketplace}
+          authLoading={authLoading}
+          authError={authError}
+          role={role}
+          forceShowContent={forceShowContent}
+          leadsLoading={leadsLoading}
+          filteredLeads={filteredLeads}
+          lastRefreshed={lastRefreshed}
+          handleRefresh={handleRefresh}
+          handleFilterChange={handleFilterChange}
+          resetFilters={resetFilters}
+          handlePurchaseLead={handlePurchaseLead}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          selectedLead={selectedLead}
+          isPreviewDialogOpen={isPreviewDialogOpen}
+          isProcessing={isProcessing}
+          redirectingToStripe={redirectingToStripe}
+          checkoutError={checkoutError}
+          stripeUrl={stripeUrl}
+          setIsPreviewDialogOpen={setIsPreviewDialogOpen}
+          handlePaymentAndCheckout={handlePaymentAndCheckout}
+          handleForceShow={handleForceShow}
+        />
       </main>
       
       <Footer />
