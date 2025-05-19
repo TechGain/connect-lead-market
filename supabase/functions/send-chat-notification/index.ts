@@ -38,17 +38,32 @@ serve(async (req) => {
       );
     }
     
-    // Add a response message from representative for user messages
-    const { data, error } = await supabaseAdmin
+    // Check if a representative has already sent a message in this chat
+    const { data: existingRepMessages, error: queryError } = await supabaseAdmin
       .from("messages")
-      .insert({
-        chat_id: chatId,
-        sender_type: "rep",
-        content: "Thank you for your message. Our team will get back to you shortly.",
-        sender_name: "Support Team" // Add the sender_name field
-      });
+      .select("id")
+      .eq("chat_id", chatId)
+      .eq("sender_type", "rep")
+      .limit(1);
+      
+    if (queryError) {
+      console.error("Error checking for existing rep messages:", queryError);
+      throw queryError;
+    }
+    
+    // Only send an automatic response if there are no existing rep messages
+    if (!existingRepMessages || existingRepMessages.length === 0) {
+      const { data, error } = await supabaseAdmin
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          sender_type: "rep",
+          content: "Thank you for your message. Our team will get back to you shortly.",
+          sender_name: "Support Team" // Add the sender_name field
+        });
 
-    if (error) throw error;
+      if (error) throw error;
+    }
 
     // Return success response
     return new Response(
