@@ -91,7 +91,7 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
               </div>
             </div>
             {filteredLeads.slice(0, 10).map((lead, i) => {
-              const city = extractCityFromLocation(lead.location, lead.zipCode || 'Unknown');
+              const city = extractCityFromLocation(lead.location, lead.zipCode || 'N/A');
               return (
                 <div key={i} className="bg-white p-2 rounded border">
                   <div className="grid grid-cols-3 gap-1">
@@ -99,7 +99,9 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
                       {lead.location || 'N/A'}
                     </div>
                     <div>{lead.zipCode || 'N/A'}</div>
-                    <div className="text-green-600 font-bold">{city}</div>
+                    <div className={`font-bold ${city === 'N/A' ? 'text-red-500' : 'text-green-600'}`}>
+                      {city}
+                    </div>
                   </div>
                 </div>
               );
@@ -115,12 +117,12 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
               <li>Direct ZIP code lookup (fastest and most reliable)</li>
               <li>City, State ZIP pattern extraction</li>
               <li>Street, City, State ZIP pattern extraction</li>
-              <li>State ZIP pattern with fallback to common city</li>
+              <li>Pipe-separated address format extraction</li>
               <li>City, State pattern (no ZIP)</li>
               <li>Various other patterns for multi-part addresses</li>
             </ol>
             <p className="mt-2">
-              If all methods fail, the system will try to extract a city name from the ZIP code.
+              If all methods fail, the system displays "N/A" instead of showing state/country names.
             </p>
           </div>
         </div>

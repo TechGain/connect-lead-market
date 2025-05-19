@@ -40,7 +40,7 @@ const CompactTableView: React.FC<CompactTableViewProps> = ({ leads, onPurchase }
                   <span>{formatLeadType(lead.type)}</span>
                 </div>
               </TableCell>
-              <TableCell>{extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location')}</TableCell>
+              <TableCell>{extractCityFromLocation(lead.location, lead.zipCode || 'N/A')}</TableCell>
               <TableCell className="text-right font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</TableCell>
               <TableCell className="text-center">
                 {lead.status === 'new' && onPurchase && (

@@ -28,7 +28,7 @@ const LeadCardHeader: React.FC<LeadCardHeaderProps> = ({
   // Get city using our enhanced extraction function
   const cityDisplay = showFullDetails 
     ? lead.location 
-    : extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location');
+    : extractCityFromLocation(lead.location, lead.zipCode || 'N/A');
   
   return (
     <div className="flex justify-between items-start">

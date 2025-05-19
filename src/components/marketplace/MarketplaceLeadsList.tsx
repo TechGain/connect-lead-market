@@ -37,7 +37,7 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   if (CITY_EXTRACTION_DEBUG && leads.length > 0) {
     console.group('========== CITY EXTRACTION RESULTS ==========');
     leads.slice(0, 10).forEach(lead => {
-      const cityResult = extractCityFromLocation(lead.location, lead.zipCode || 'Unknown', true);
+      const cityResult = extractCityFromLocation(lead.location, lead.zipCode || 'N/A', true);
       console.log(`Location: "${lead.location || 'N/A'}" | ZIP: "${lead.zipCode || 'N/A'}" | Result: "${cityResult}"`);
     });
     console.groupEnd();

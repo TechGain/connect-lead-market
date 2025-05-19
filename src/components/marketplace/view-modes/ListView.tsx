@@ -25,7 +25,7 @@ const ListView: React.FC<ListViewProps> = ({ leads, onPurchase }) => {
               <span className="font-medium">{formatLeadType(lead.type)}</span>
             </div>
             <span className="text-gray-500 text-sm mr-4">
-              {extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location')}
+              {extractCityFromLocation(lead.location, lead.zipCode || 'N/A')}
             </span>
           </div>
           <div className="flex items-center space-x-4">
