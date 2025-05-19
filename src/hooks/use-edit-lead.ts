@@ -144,6 +144,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
           confirmation_status: confirmationStatus,
           appointment_time: appointmentInfo,
           status: newStatus, // Use the determined status
+          created_at: new Date().toISOString(), // Update the created_at field to the current timestamp
         })
         .eq('id', lead.id);
         
