@@ -1,3 +1,4 @@
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 // Types
@@ -52,9 +53,9 @@ export const initializeSupabaseClients = () => {
   return { supabaseAdmin, supabaseClient };
 };
 
-// Apply 10% markup for buyers
+// Apply 20% markup for buyers
 export const applyBuyerPriceMarkup = (price: number): number => {
-  return price * 1.1; // 10% markup
+  return price * 1.2; // 20% markup
 };
 
 // Handle CORS preflight requests
