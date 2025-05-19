@@ -7,6 +7,7 @@ import LeadCardMetadata from './lead-card/LeadCardMetadata';
 import LeadCardDetails from './lead-card/LeadCardDetails';
 import LeadCardFooter from './lead-card/LeadCardFooter';
 import { formatLeadType } from '@/lib/utils';
+import { useUserRole } from '@/hooks/use-user-role';
 
 interface LeadCardProps {
   lead: Lead;
@@ -29,6 +30,9 @@ const LeadCard = ({
   onDelete,
   onRate
 }: LeadCardProps) => {
+  // Get the current user's role
+  const { role } = useUserRole();
+  
   // Check if lead is sold explicitly or erased
   const isSold = lead.status === 'sold' || lead.status === 'pending';
   const isErased = lead.status === 'erased';
@@ -86,6 +90,7 @@ const LeadCard = ({
           status={lead.status}
           showFullDetails={showFullDetails}
           purchasedAt={lead.purchasedAt}
+          viewerRole={role} // Pass the user's role to LeadCardDetails
         />
       </CardContent>
       

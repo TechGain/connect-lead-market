@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/utils/format-helpers';
@@ -19,6 +20,7 @@ interface LeadCardDetailsProps {
   showFullDetails: boolean;
   buyerName?: string | null;
   purchasedAt?: string | null;
+  viewerRole?: string | null; // New prop to determine if buyer name should be shown
 }
 const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
   description,
@@ -35,9 +37,11 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
   status,
   showFullDetails = false,
   buyerName,
-  purchasedAt
+  purchasedAt,
+  viewerRole = null // Default to null
 }) => {
   const isAppointmentExpired = appointmentTime ? isAppointmentPassed(appointmentTime) : false;
+  const shouldShowBuyerName = buyerName && viewerRole !== 'seller'; // Hide buyer name from sellers
 
   // Only show limited fields if not full details or description exists
   if (!showFullDetails || !description) {
@@ -94,8 +98,8 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
           <span className="font-semibold">Contact:</span> {contactName}
         </p>}
       
-      {/* Show buyer information if available */}
-      {buyerName && <p className="text-gray-600 text-sm">
+      {/* Show buyer information only if viewer is not a seller */}
+      {shouldShowBuyerName && <p className="text-gray-600 text-sm">
           <span className="font-semibold">Buyer:</span> {buyerName}
         </p>}
       
