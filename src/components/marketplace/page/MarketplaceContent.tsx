@@ -60,14 +60,16 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
       </div>
       
       {/* Compact Layout for Filters, Stats and View Controls */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center mb-4">
         <div className="w-[250px]">
           <LeadFilters onFilterChange={handleFilterChange} compact={true} />
         </div>
         
-        <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} compact={true} />
+        <div className="flex-1 mx-4">
+          <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} compact={true} />
+        </div>
         
-        <div className="ml-auto">
+        <div>
           <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} compact={true} />
         </div>
       </div>

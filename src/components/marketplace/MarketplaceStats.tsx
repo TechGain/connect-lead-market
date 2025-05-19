@@ -21,18 +21,18 @@ const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
   
   if (compact) {
     return (
-      <div className="flex items-center gap-3">
-        <div className="flex items-center bg-green-50 rounded-md px-3 py-1 border border-green-100">
+      <div className="flex items-center w-full justify-start gap-4">
+        <div className="flex items-center bg-green-50 rounded-md px-3.5 py-1.5 border border-green-100">
           <CircleCheck className="text-green-600 h-4 w-4 mr-2" />
           <span className="text-sm font-medium">Available: </span>
-          <Badge variant="outline" className="ml-1 font-mono bg-white text-xs">{availableLeads}</Badge>
+          <Badge variant="outline" className="ml-1.5 font-mono bg-white text-xs">{availableLeads}</Badge>
         </div>
         
         {isAdmin && (
-          <div className="flex items-center bg-gray-50 rounded-md px-3 py-1 border border-gray-100">
+          <div className="flex items-center bg-gray-50 rounded-md px-3.5 py-1.5 border border-gray-100">
             <CircleX className="text-gray-500 h-4 w-4 mr-2" />
             <span className="text-sm font-medium">Sold: </span>
-            <Badge variant="outline" className="ml-1 font-mono bg-white text-xs">{soldLeads}</Badge>
+            <Badge variant="outline" className="ml-1.5 font-mono bg-white text-xs">{soldLeads}</Badge>
           </div>
         )}
       </div>
