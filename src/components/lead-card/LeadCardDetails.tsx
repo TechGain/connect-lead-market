@@ -56,6 +56,20 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
             <span className="font-semibold">Contact:</span> {firstName}
           </p>
         )}
+        
+        {/* Display confirmation status for both confirmed and unconfirmed */}
+        {confirmationStatus === 'confirmed' && appointmentTime && (
+          <div className="mt-1 flex items-center gap-2">
+            <Badge className="bg-green-500 hover:bg-green-600 text-white">Confirmed</Badge>
+            <span className="text-sm text-gray-600">
+              {appointmentTime}
+              {isAppointmentExpired && (
+                <Badge variant="outline" className="ml-1 text-red-500 border-red-300 bg-red-50 text-xs">Expired</Badge>
+              )}
+            </span>
+          </div>
+        )}
+        
         {confirmationStatus === 'unconfirmed' && (
           <div className="mt-1">
             <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">Unconfirmed</Badge>
@@ -77,7 +91,19 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
         </div>
       )}
       
-      {/* Show confirmation status */}
+      {/* Display confirmation status */}
+      {confirmationStatus === 'confirmed' && appointmentTime && (
+        <div className="mt-1 flex items-center gap-2">
+          <Badge className="bg-green-500 hover:bg-green-600 text-white">Confirmed</Badge>
+          <span className="text-sm text-gray-600">
+            {appointmentTime}
+            {isAppointmentExpired && (
+              <Badge variant="outline" className="ml-1 text-red-500 border-red-300 bg-red-50 text-xs">Expired</Badge>
+            )}
+          </span>
+        </div>
+      )}
+      
       {confirmationStatus === 'unconfirmed' && (
         <div className="mt-1">
           <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">Unconfirmed</Badge>
@@ -118,16 +144,6 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
         <p className="text-gray-600 text-sm">
           <span className="font-semibold">Address:</span> {address}
         </p>
-      )}
-      
-      {/* Show appointment time with expired indicator if needed */}
-      {appointmentTime && (
-        <div className="text-gray-600 text-sm">
-          <span className="font-semibold">Appointment:</span> {appointmentTime}
-          {isAppointmentExpired && (
-            <Badge variant="outline" className="ml-2 text-red-500 border-red-300 bg-red-50">Expired</Badge>
-          )}
-        </div>
       )}
     </div>
   );
