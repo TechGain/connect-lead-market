@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/utils/format-helpers';
@@ -54,6 +53,13 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
         {firstName && (
           <p className="text-gray-600 mb-2">
             <span className="font-semibold">Contact:</span> {firstName}
+          </p>
+        )}
+        
+        {/* Add description in the limited view mode */}
+        {description && (
+          <p className="text-gray-600 mb-2 line-clamp-2 text-sm">
+            <span className="font-semibold">Description:</span> {description}
           </p>
         )}
         
