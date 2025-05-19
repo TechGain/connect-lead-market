@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import LeadFilters from '@/components/LeadFilters';
 import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
@@ -10,7 +9,6 @@ import { RefreshCcw, Bug } from 'lucide-react';
 import { format } from 'date-fns';
 import { extractCityFromLocation } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-
 interface MarketplaceContentProps {
   filteredLeads: Lead[];
   leadsLoading: boolean;
@@ -22,7 +20,6 @@ interface MarketplaceContentProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
-
 const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   filteredLeads,
   leadsLoading,
@@ -35,14 +32,12 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   onViewModeChange
 }) => {
   const [showDebugPanel, setShowDebugPanel] = useState(false);
-  
+
   // Calculate lead statistics
   const totalLeads = filteredLeads.length;
   const availableLeads = filteredLeads.filter(lead => lead.status === 'new').length;
   const soldLeads = filteredLeads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
-
-  return (
-    <>
+  return <>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Lead Marketplace</h1>
@@ -53,30 +48,16 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
           <span className="text-sm text-gray-500">
             Last updated: {format(lastRefreshed, 'h:mm:ss a')}
           </span>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-            className="flex items-center gap-2"
-          >
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="flex items-center gap-2">
             <RefreshCcw size={16} />
             Refresh Data
           </Button>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDebugPanel(!showDebugPanel)}
-            className="flex items-center gap-2"
-          >
-            <Bug size={16} />
-            {showDebugPanel ? 'Hide Debug' : 'Debug'}
-          </Button>
+          
         </div>
       </div>
       
-      {showDebugPanel && (
-        <div className="mb-6 p-4 border rounded-md bg-slate-50 overflow-auto max-h-96">
+      {showDebugPanel && <div className="mb-6 p-4 border rounded-md bg-slate-50 overflow-auto max-h-96">
           <h3 className="font-bold mb-2 flex items-center">
             <Bug size={16} className="mr-2" /> 
             Location Extraction Debug
@@ -91,9 +72,8 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
               </div>
             </div>
             {filteredLeads.slice(0, 10).map((lead, i) => {
-              const city = extractCityFromLocation(lead.location, lead.zipCode || 'N/A');
-              return (
-                <div key={i} className="bg-white p-2 rounded border">
+          const city = extractCityFromLocation(lead.location, lead.zipCode || 'N/A');
+          return <div key={i} className="bg-white p-2 rounded border">
                   <div className="grid grid-cols-3 gap-1">
                     <div className="truncate" title={lead.location || 'N/A'}>
                       {lead.location || 'N/A'}
@@ -103,9 +83,8 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
                       {city}
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                </div>;
+        })}
           </div>
           
           <div className="bg-slate-100 p-3 rounded border border-slate-200 text-xs mt-4">
@@ -125,32 +104,16 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
               If all methods fail, the system displays "N/A" instead of showing state/country names.
             </p>
           </div>
-        </div>
-      )}
+        </div>}
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <LeadFilters onFilterChange={handleFilterChange} />
-        <MarketplaceViewSelector 
-          viewMode={viewMode} 
-          onViewModeChange={onViewModeChange}
-        />
+        <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />
       </div>
       
-      <MarketplaceStats 
-        totalLeads={totalLeads}
-        availableLeads={availableLeads}
-        soldLeads={soldLeads}
-      />
+      <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} />
       
-      <MarketplaceLeadsList 
-        leads={filteredLeads}
-        isLoading={leadsLoading}
-        onPurchase={handlePurchaseLead}
-        onResetFilters={resetFilters}
-        viewMode={viewMode}
-      />
-    </>
-  );
+      <MarketplaceLeadsList leads={filteredLeads} isLoading={leadsLoading} onPurchase={handlePurchaseLead} onResetFilters={resetFilters} viewMode={viewMode} />
+    </>;
 };
-
 export default MarketplaceContent;
