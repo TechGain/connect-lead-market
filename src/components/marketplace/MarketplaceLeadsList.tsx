@@ -31,16 +31,16 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
   console.log('Current view mode:', viewMode);
   
-  // Debug city extraction for the first few leads
-  const DEBUG_CITY_EXTRACTION = false; // Set to true to debug city extraction
+  // Enhanced city extraction debugging
+  const CITY_EXTRACTION_DEBUG = true; // Enable city extraction debug by default
   
-  if (DEBUG_CITY_EXTRACTION && leads.length > 0) {
-    console.log('================= CITY EXTRACTION DEBUG =================');
-    leads.slice(0, 5).forEach(lead => {
-      const city = extractCityFromLocation(lead.location, lead.zipCode || 'Unknown', true);
-      console.log(`Lead location: "${lead.location}" -> City: "${city}"`);
+  if (CITY_EXTRACTION_DEBUG && leads.length > 0) {
+    console.group('========== CITY EXTRACTION RESULTS ==========');
+    leads.slice(0, 10).forEach(lead => {
+      const cityResult = extractCityFromLocation(lead.location, lead.zipCode || 'Unknown', true);
+      console.log(`Location: "${lead.location || 'N/A'}" | ZIP: "${lead.zipCode || 'N/A'}" | Result: "${cityResult}"`);
     });
-    console.log('=======================================================');
+    console.groupEnd();
   }
 
   if (isLoading) {

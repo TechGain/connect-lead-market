@@ -76,22 +76,52 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
       </div>
       
       {showDebugPanel && (
-        <div className="mb-6 p-4 border rounded-md bg-slate-50 overflow-auto max-h-80">
+        <div className="mb-6 p-4 border rounded-md bg-slate-50 overflow-auto max-h-96">
           <h3 className="font-bold mb-2 flex items-center">
             <Bug size={16} className="mr-2" /> 
             Location Extraction Debug
-            <Badge variant="outline" className="ml-2">First 5 leads</Badge>
+            <Badge variant="outline" className="ml-2">First 10 leads</Badge>
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm font-mono">
-            {filteredLeads.slice(0, 5).map((lead, i) => (
-              <div key={i} className="bg-white p-2 rounded border">
-                <div><strong>Original:</strong> {lead.location || 'N/A'}</div>
-                <div><strong>ZIP:</strong> {lead.zipCode || 'N/A'}</div>
-                <div className="text-green-600 font-bold">
-                  <strong>City:</strong> {extractCityFromLocation(lead.location, lead.zipCode || 'Unknown')}
-                </div>
+          <div className="grid grid-cols-1 gap-3 text-sm font-mono mb-4">
+            <div className="bg-white p-2 rounded border font-semibold">
+              <div className="grid grid-cols-3 gap-1">
+                <div>Location</div>
+                <div>ZIP Code</div>
+                <div>Extracted City</div>
               </div>
-            ))}
+            </div>
+            {filteredLeads.slice(0, 10).map((lead, i) => {
+              const city = extractCityFromLocation(lead.location, lead.zipCode || 'Unknown');
+              return (
+                <div key={i} className="bg-white p-2 rounded border">
+                  <div className="grid grid-cols-3 gap-1">
+                    <div className="truncate" title={lead.location || 'N/A'}>
+                      {lead.location || 'N/A'}
+                    </div>
+                    <div>{lead.zipCode || 'N/A'}</div>
+                    <div className="text-green-600 font-bold">{city}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="bg-slate-100 p-3 rounded border border-slate-200 text-xs mt-4">
+            <h4 className="font-bold mb-1">City Extraction Information</h4>
+            <p className="mb-1">
+              The system uses multiple extraction methods in this priority order:
+            </p>
+            <ol className="list-decimal pl-5 space-y-1">
+              <li>Direct ZIP code lookup (fastest and most reliable)</li>
+              <li>City, State ZIP pattern extraction</li>
+              <li>Street, City, State ZIP pattern extraction</li>
+              <li>State ZIP pattern with fallback to common city</li>
+              <li>City, State pattern (no ZIP)</li>
+              <li>Various other patterns for multi-part addresses</li>
+            </ol>
+            <p className="mt-2">
+              If all methods fail, the system will try to extract a city name from the ZIP code.
+            </p>
           </div>
         </div>
       )}

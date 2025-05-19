@@ -25,21 +25,19 @@ const LeadCardHeader: React.FC<LeadCardHeaderProps> = ({
   onRate,
   isPurchased = false
 }) => {
+  // Get city using our enhanced extraction function
+  const cityDisplay = showFullDetails 
+    ? lead.location 
+    : extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location');
+  
   return (
     <div className="flex justify-between items-start">
       <div>
         <h3 className="font-medium text-lg">{formatLeadType(lead.type)}</h3>
-        {showFullDetails ? (
-          <div className="flex items-center text-gray-500 mt-1">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{lead.location}</span>
-          </div>
-        ) : (
-          <div className="flex items-center text-gray-500 mt-1">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location')}</span>
-          </div>
-        )}
+        <div className="flex items-center text-gray-500 mt-1">
+          <MapPin className="h-4 w-4 mr-1" />
+          <span>{cityDisplay}</span>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <LeadCardActions 
