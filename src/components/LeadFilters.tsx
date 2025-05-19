@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +55,7 @@ const LeadFilters = ({ onFilterChange }: LeadFiltersProps) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border p-4 mb-6">
+    <div className="bg-white rounded-lg border p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

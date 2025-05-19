@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import LeadFilters from '@/components/LeadFilters';
 import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
@@ -9,6 +10,7 @@ import { RefreshCcw, Bug } from 'lucide-react';
 import { format } from 'date-fns';
 import { extractCityFromLocation } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+
 interface MarketplaceContentProps {
   filteredLeads: Lead[];
   leadsLoading: boolean;
@@ -20,6 +22,7 @@ interface MarketplaceContentProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
+
 const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   filteredLeads,
   leadsLoading,
@@ -37,6 +40,7 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   const totalLeads = filteredLeads.length;
   const availableLeads = filteredLeads.filter(lead => lead.status === 'new').length;
   const soldLeads = filteredLeads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
+
   return <>
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -52,8 +56,18 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
             <RefreshCcw size={16} />
             Refresh Data
           </Button>
-          
-          
+        </div>
+      </div>
+      
+      {/* Reorganized layout for filters, view selector and stats */}
+      <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 mb-6">
+        <div className="flex-grow">
+          <LeadFilters onFilterChange={handleFilterChange} />
+        </div>
+        
+        <div className="flex flex-col md:flex-row items-end md:items-center gap-4 md:ml-4">
+          <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />
+          <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} />
         </div>
       </div>
       
@@ -106,14 +120,8 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
           </div>
         </div>}
       
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <LeadFilters onFilterChange={handleFilterChange} />
-        <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      </div>
-      
-      <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} />
-      
       <MarketplaceLeadsList leads={filteredLeads} isLoading={leadsLoading} onPurchase={handlePurchaseLead} onResetFilters={resetFilters} viewMode={viewMode} />
     </>;
 };
+
 export default MarketplaceContent;
