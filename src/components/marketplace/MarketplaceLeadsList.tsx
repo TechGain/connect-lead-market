@@ -29,6 +29,9 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   console.log('MarketplaceLeadsList: Displaying leads:', leads.length);
   console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
   console.log('Current view mode:', viewMode);
+  
+  // Uncomment the line below when city extraction debugging is needed
+  // console.log('Sample locations:', leads.slice(0, 3).map(l => l.location));
 
   if (isLoading) {
     return <LoadingState />;

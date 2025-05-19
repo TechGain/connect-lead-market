@@ -58,39 +58,102 @@ export function applyBuyerPriceMarkup(price: number): number {
 }
 
 /**
- * Extracts the city name from a location string
- * @param location The location string, typically in format "City, State ZIP" or "Address, City, State ZIP"
- * @returns The extracted city name, or fallback if city can't be determined
+ * Enhanced function to accurately extract city names from various location string formats
+ * 
+ * @param location The location string from Google Maps or other source
+ * @param fallback Fallback value to return if city extraction fails
+ * @param debug Optional flag to enable debug logging
+ * @returns The extracted city name
  */
-export function extractCityFromLocation(location: string, fallback: string = 'Unknown'): string {
-  if (!location) return fallback;
-  
-  // Common formats:
-  // "Los Angeles, CA 90001"
-  // "123 Main St, Los Angeles, CA 90001"
+export function extractCityFromLocation(location: string, fallback: string = 'Unknown', debug: boolean = false): string {
+  if (!location || typeof location !== 'string') {
+    return fallback;
+  }
   
   try {
-    // Split by commas
-    const parts = location.split(',').map(part => part.trim());
+    // Trim the location and log it if debug is enabled
+    const trimmedLocation = location.trim();
     
-    if (parts.length === 1) {
-      // If there's just one part, it's likely just the city or cannot be parsed
-      return parts[0] || fallback;
+    if (debug) {
+      console.log(`[CityExtractor] Processing: "${trimmedLocation}"`);
     }
     
-    if (parts.length === 2) {
-      // Format is likely "City, State ZIP"
-      return parts[0];
+    // Format 1: "City, State ZIP" or "City, ST ZIP"
+    // Example: "Los Angeles, CA 90001"
+    const cityStateZipRegex = /^([^,]+),\s*([A-Z]{2})\s+(\d{5}(-\d{4})?)$/;
+    const cityStateZipMatch = trimmedLocation.match(cityStateZipRegex);
+    
+    if (cityStateZipMatch) {
+      const city = cityStateZipMatch[1].trim();
+      if (debug) console.log(`[CityExtractor] Format 1 matched: "${city}"`);
+      return city;
     }
     
+    // Format 2: "Street, City, State ZIP"
+    // Example: "123 Main St, Los Angeles, CA 90001"
+    const streetCityStateZipRegex = /^.+,\s*([^,]+),\s*([A-Z]{2})\s+(\d{5}(-\d{4})?)$/;
+    const streetCityStateZipMatch = trimmedLocation.match(streetCityStateZipRegex);
+    
+    if (streetCityStateZipMatch) {
+      const city = streetCityStateZipMatch[1].trim();
+      if (debug) console.log(`[CityExtractor] Format 2 matched: "${city}"`);
+      return city;
+    }
+    
+    // Format 3: Multi-part address with city in middle
+    // Split by commas and examine each part
+    const parts = trimmedLocation.split(',').map(part => part.trim());
+    
+    // If we have 3 or more parts, check the second to last part for a city
     if (parts.length >= 3) {
-      // Format is likely "Address, City, State ZIP" - the city is the second-to-last part
-      return parts[parts.length - 2];
+      // Second to last part is often the city
+      const potentialCity = parts[parts.length - 2];
+      
+      // If it doesn't contain digits (to avoid ZIP codes), use it
+      if (!/\d/.test(potentialCity)) {
+        if (debug) console.log(`[CityExtractor] Format 3 matched: "${potentialCity}"`);
+        return potentialCity;
+      }
     }
     
+    // Format 4: Check for "City State ZIP" without commas
+    // Example: "Los Angeles CA 90001"
+    const cityStateZipNoCommaRegex = /^([A-Za-z\s.]+)\s+([A-Z]{2})\s+(\d{5}(-\d{4})?)$/;
+    const cityStateZipNoCommaMatch = trimmedLocation.match(cityStateZipNoCommaRegex);
+    
+    if (cityStateZipNoCommaMatch) {
+      const city = cityStateZipNoCommaMatch[1].trim();
+      if (debug) console.log(`[CityExtractor] Format 4 matched: "${city}"`);
+      return city;
+    }
+    
+    // Format 5: If we just have two parts, assume first is city (when no street address)
+    // Example: "San Francisco, CA"
+    if (parts.length === 2) {
+      const potentialCity = parts[0];
+      if (!/\d/.test(potentialCity)) {
+        if (debug) console.log(`[CityExtractor] Format 5 matched: "${potentialCity}"`);
+        return potentialCity;
+      }
+    }
+    
+    // Format 6: Last resort, check if any part looks like a city (no numbers)
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      // If the part has no digits and is not a state code, it's likely a city
+      if (part.length > 2 && !/\d/.test(part) && !/^[A-Z]{2}$/.test(part)) {
+        if (debug) console.log(`[CityExtractor] Format 6 matched: "${part}"`);
+        return part;
+      }
+    }
+    
+    // If we get here, we couldn't extract a city - log and return fallback
+    if (debug) console.log(`[CityExtractor] No city found, using fallback: "${fallback}"`);
     return fallback;
+    
   } catch (error) {
-    console.error("Error extracting city from location:", error);
+    console.error("[CityExtractor] Error extracting city:", error);
     return fallback;
   }
 }
+
