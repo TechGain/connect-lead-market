@@ -43,7 +43,7 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
   if (!showFullDetails || !description) {
     return <div className="mt-2">
         {zipCode && <p className="text-gray-600 mb-2">
-            <span className="font-semibold">Zip:</span> {zipCode}
+            <span className="font-semibold">Zip Code:</span> {zipCode}
           </p>}
         {firstName && <p className="text-gray-600 mb-2">
             <span className="font-semibold">Client's Name:</span> {firstName}
