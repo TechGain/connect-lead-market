@@ -1,25 +1,28 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface LeadStatusBadgeProps {
   status: string;
+  className?: string;
 }
 
-const LeadStatusBadge: React.FC<LeadStatusBadgeProps> = ({ status }) => {
+const LeadStatusBadge: React.FC<LeadStatusBadgeProps> = ({ status, className }) => {
+  // Map each status to appropriate styling and display text
   switch (status) {
     case 'new':
-      return <Badge className="bg-green-500 hover:bg-green-600">New</Badge>;
+      return <Badge className={cn("bg-green-500 hover:bg-green-600", className)}>New</Badge>;
     case 'pending':
-      return <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>;
+      return <Badge className={cn("bg-yellow-500 hover:bg-yellow-600", className)}>Pending</Badge>;
     case 'sold':
-      return <Badge className="bg-blue-500 hover:bg-blue-600">Sold</Badge>;
+      return <Badge className={cn("bg-blue-500 hover:bg-blue-600", className)}>Sold</Badge>;
     case 'refunded':
-      return <Badge variant="outline" className="border-orange-500 text-orange-600">Refunded</Badge>;
+      return <Badge variant="outline" className={cn("border-orange-500 text-orange-600", className)}>Refunded</Badge>;
     case 'erased':
-      return <Badge variant="destructive">Erased</Badge>;
+      return <Badge variant="destructive" className={className}>Erased</Badge>;
     default:
-      return <Badge>{status}</Badge>;
+      return <Badge className={className}>{status}</Badge>;
   }
 };
 
