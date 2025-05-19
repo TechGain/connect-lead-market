@@ -9,7 +9,7 @@ import {
   CompactTableView 
 } from './view-modes';
 import { LoadingState, EmptyState } from './states';
-import { extractCityFromLocation } from '@/lib/utils';
+import { extractCityFromLocation } from '@/lib/utils/location/cityExtractor';
 
 interface MarketplaceLeadsListProps {
   leads: Lead[];
