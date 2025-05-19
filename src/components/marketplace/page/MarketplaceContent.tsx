@@ -59,14 +59,14 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
         </div>
       </div>
       
-      {/* Reorganized layout with filter and view selector, then stats below */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start mb-4">
-          <div className="flex-grow">
+      {/* Reorganized layout with more compact filter and view controls */}
+      <div className="mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center mb-2">
+          <div className="md:col-span-3">
             <LeadFilters onFilterChange={handleFilterChange} />
           </div>
           
-          <div className="md:self-end mt-2 md:mt-0">
+          <div className="flex justify-end">
             <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />
           </div>
         </div>
