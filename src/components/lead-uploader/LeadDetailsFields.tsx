@@ -17,6 +17,40 @@ interface LeadDetailsFieldsProps {
   onZipCodeFound: (zipCode: string) => void;
 }
 
+// Define lead types in an array for easy sorting
+const leadTypes = [
+  { value: 'air-dryer', label: 'Air Dryer' },
+  { value: 'air-duct', label: 'Air Duct' },
+  { value: 'bathroom-remodel', label: 'Bathroom Remodel' },
+  { value: 'concrete', label: 'Concrete' },
+  { value: 'electrical', label: 'Electrical' },
+  { value: 'exterior-paint', label: 'Exterior Paint' },
+  { value: 'flooring-services', label: 'Flooring Services' },
+  { value: 'foundation-repair', label: 'Foundation Repair' },
+  { value: 'full-home-renovation', label: 'Full Home Renovation' },
+  { value: 'garage-conversion', label: 'Garage Conversion' },
+  { value: 'garage-doors-repair', label: 'Garage Doors Repair' },
+  { value: 'home-cleaning', label: 'Home Cleaning' },
+  { value: 'hvac', label: 'HVAC' },
+  { value: 'insulation-services', label: 'Insulation Services' },
+  { value: 'interior-paint', label: 'Interior Paint' },
+  { value: 'kitchen-remodel', label: 'Kitchen Remodel' },
+  { value: 'landscaping', label: 'Landscaping' },
+  { value: 'locksmith-services', label: 'Locksmith Services' },
+  { value: 'new-construction', label: 'New Construction' },
+  { value: 'plumbing', label: 'Plumbing' },
+  { value: 'pool-services', label: 'Pool Services' },
+  { value: 'roofing', label: 'Roofing' },
+  { value: 'sliding-door-repair', label: 'Sliding Door Repair' },
+  { value: 'smart-home-services', label: 'Smart Home Services' },
+  { value: 'solar', label: 'Solar' },
+];
+
+// Sort the lead types alphabetically by label
+const sortedLeadTypes = [...leadTypes].sort((a, b) => 
+  a.label.localeCompare(b.label)
+);
+
 const LeadDetailsFields = ({
   leadType,
   description,
@@ -36,31 +70,9 @@ const LeadDetailsFields = ({
             <SelectValue placeholder="Select lead type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="roofing">Roofing</SelectItem>
-            <SelectItem value="plumbing">Plumbing</SelectItem>
-            <SelectItem value="electrical">Electrical</SelectItem>
-            <SelectItem value="hvac">HVAC</SelectItem>
-            <SelectItem value="landscaping">Landscaping</SelectItem>
-            <SelectItem value="solar">Solar</SelectItem>
-            <SelectItem value="concrete">Concrete</SelectItem>
-            <SelectItem value="bathroom-remodel">Bathroom Remodel</SelectItem>
-            <SelectItem value="kitchen-remodel">Kitchen Remodel</SelectItem>
-            <SelectItem value="full-home-renovation">Full Home Renovation</SelectItem>
-            <SelectItem value="garage-conversion">Garage Conversion</SelectItem>
-            <SelectItem value="new-construction">New Construction</SelectItem>
-            <SelectItem value="locksmith-services">Locksmith Services</SelectItem>
-            <SelectItem value="garage-doors-repair">Garage Doors Repair</SelectItem>
-            <SelectItem value="sliding-door-repair">Sliding Door Repair</SelectItem>
-            <SelectItem value="flooring-services">Flooring Services</SelectItem>
-            <SelectItem value="home-cleaning">Home Cleaning</SelectItem>
-            <SelectItem value="pool-services">Pool Services</SelectItem>
-            <SelectItem value="insulation-services">Insulation Services</SelectItem>
-            <SelectItem value="smart-home-services">Smart Home Services</SelectItem>
-            <SelectItem value="foundation-repair">Foundation Repair</SelectItem>
-            <SelectItem value="exterior-paint">Exterior Paint</SelectItem>
-            <SelectItem value="interior-paint">Interior Paint</SelectItem>
-            <SelectItem value="air-duct">Air Duct</SelectItem>
-            <SelectItem value="air-dryer">Air Dryer</SelectItem>
+            {sortedLeadTypes.map((type) => (
+              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
