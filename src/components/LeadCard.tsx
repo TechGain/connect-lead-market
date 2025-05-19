@@ -66,6 +66,7 @@ const LeadCard = ({
           <LeadCardMetadata 
             sellerName={lead.sellerName}
             showFullDetails={showFullDetails}
+            isPurchased={isPurchased} // Pass the isPurchased prop
           />
         </div>
         
