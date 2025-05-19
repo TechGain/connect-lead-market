@@ -10,6 +10,8 @@ interface LeadCardPriceProps {
   onPurchase?: (lead: Lead) => void;
   isOwner: boolean;
   isPurchased: boolean;
+  showButton?: boolean;
+  showPrice?: boolean;
 }
 
 const LeadCardPrice: React.FC<LeadCardPriceProps> = ({
@@ -17,16 +19,19 @@ const LeadCardPrice: React.FC<LeadCardPriceProps> = ({
   displayPrice,
   onPurchase,
   isOwner,
-  isPurchased
+  isPurchased,
+  showButton = true,
+  showPrice = true
 }) => {
   return (
-    <div className="flex items-center gap-3 ml-auto">
-      <div>
+    <>
+      {/* Price display */}
+      {showPrice && (
         <span className="font-bold text-lg">{formatCurrency(displayPrice)}</span>
-      </div>
+      )}
       
-      {/* Only show the Buy Lead button for new leads */}
-      {lead.status === 'new' && onPurchase && !isOwner && !isPurchased && (
+      {/* Buy Lead button */}
+      {lead.status === 'new' && onPurchase && !isOwner && !isPurchased && showButton && (
         <Button 
           size="sm" 
           onClick={() => onPurchase(lead)}
@@ -36,13 +41,13 @@ const LeadCardPrice: React.FC<LeadCardPriceProps> = ({
         </Button>
       )}
       
-      {/* When lead is purchased or owned, we just show the price */}
-      {(isPurchased || isOwner) && lead.status !== 'new' && (
-        <span className="text-xs text-gray-500">
+      {/* Status indicator (shown when lead is purchased or owned) */}
+      {showPrice && (isPurchased || isOwner) && lead.status !== 'new' && (
+        <span className="text-xs text-gray-500 ml-2">
           {lead.status === 'sold' ? 'Sold' : 'Pending'}
         </span>
       )}
-    </div>
+    </>
   );
 };
 

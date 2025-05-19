@@ -25,8 +25,20 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
 
   return (
     <div className="pt-2 border-t flex justify-between items-center w-full">
-      <div>
-        {/* Place for any left-aligned actions */}
+      {/* Price now appears on the left side */}
+      <div className="font-bold text-lg">
+        <LeadCardPrice 
+          lead={lead}
+          displayPrice={displayPrice}
+          onPurchase={onPurchase}
+          isOwner={isOwner}
+          isPurchased={isPurchased}
+          showButton={false}
+        />
+      </div>
+      
+      <div className="flex items-center gap-2">
+        {/* Actions in the middle (if applicable) */}
         {isOwner || isPurchased ? (
           <LeadCardActions
             lead={lead}
@@ -35,15 +47,20 @@ const LeadCardFooter: React.FC<LeadCardFooterProps> = ({
             onRate={onRate}
           />
         ) : null}
+        
+        {/* Buy Lead button remains on the right */}
+        {lead.status === 'new' && onPurchase && !isOwner && !isPurchased && (
+          <LeadCardPrice 
+            lead={lead}
+            displayPrice={displayPrice}
+            onPurchase={onPurchase}
+            isOwner={isOwner}
+            isPurchased={isPurchased}
+            showButton={true}
+            showPrice={false}
+          />
+        )}
       </div>
-      
-      <LeadCardPrice 
-        lead={lead}
-        displayPrice={displayPrice}
-        onPurchase={onPurchase}
-        isOwner={isOwner}
-        isPurchased={isPurchased}
-      />
     </div>
   );
 };
