@@ -2,7 +2,7 @@
 import React from 'react';
 import { Lead } from '@/types/lead';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
+import { formatCurrency, formatLeadType, applyBuyerPriceMarkup, extractCityFromLocation } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -40,7 +40,7 @@ const CompactTableView: React.FC<CompactTableViewProps> = ({ leads, onPurchase }
                   <span>{formatLeadType(lead.type)}</span>
                 </div>
               </TableCell>
-              <TableCell>{lead.zipCode || 'Unknown ZIP'}</TableCell>
+              <TableCell>{extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location')}</TableCell>
               <TableCell className="text-right font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</TableCell>
               <TableCell className="text-center">
                 {lead.status === 'new' && onPurchase && (

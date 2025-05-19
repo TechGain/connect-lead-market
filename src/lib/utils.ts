@@ -56,3 +56,41 @@ export function formatLeadType(type: string): string {
 export function applyBuyerPriceMarkup(price: number): number {
   return price * 1.2;  // Apply 20% markup
 }
+
+/**
+ * Extracts the city name from a location string
+ * @param location The location string, typically in format "City, State ZIP" or "Address, City, State ZIP"
+ * @returns The extracted city name, or fallback if city can't be determined
+ */
+export function extractCityFromLocation(location: string, fallback: string = 'Unknown'): string {
+  if (!location) return fallback;
+  
+  // Common formats:
+  // "Los Angeles, CA 90001"
+  // "123 Main St, Los Angeles, CA 90001"
+  
+  try {
+    // Split by commas
+    const parts = location.split(',').map(part => part.trim());
+    
+    if (parts.length === 1) {
+      // If there's just one part, it's likely just the city or cannot be parsed
+      return parts[0] || fallback;
+    }
+    
+    if (parts.length === 2) {
+      // Format is likely "City, State ZIP"
+      return parts[0];
+    }
+    
+    if (parts.length >= 3) {
+      // Format is likely "Address, City, State ZIP" - the city is the second-to-last part
+      return parts[parts.length - 2];
+    }
+    
+    return fallback;
+  } catch (error) {
+    console.error("Error extracting city from location:", error);
+    return fallback;
+  }
+}

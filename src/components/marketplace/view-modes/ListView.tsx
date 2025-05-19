@@ -2,7 +2,7 @@
 import React from 'react';
 import { Lead } from '@/types/lead';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
+import { formatCurrency, formatLeadType, applyBuyerPriceMarkup, extractCityFromLocation } from '@/lib/utils';
 
 interface ListViewProps {
   leads: Lead[];
@@ -24,7 +24,9 @@ const ListView: React.FC<ListViewProps> = ({ leads, onPurchase }) => {
               </Badge>
               <span className="font-medium">{formatLeadType(lead.type)}</span>
             </div>
-            <span className="text-gray-500 text-sm mr-4">{lead.zipCode || 'Unknown ZIP'}</span>
+            <span className="text-gray-500 text-sm mr-4">
+              {extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location')}
+            </span>
           </div>
           <div className="flex items-center space-x-4">
             <span className="font-bold">{formatCurrency(applyBuyerPriceMarkup(lead.price))}</span>

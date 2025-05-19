@@ -2,7 +2,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Lead } from '@/types/lead';
-import { formatLeadType } from '@/lib/utils';
+import { formatLeadType, extractCityFromLocation } from '@/lib/utils';
 import LeadCardStatus from './LeadCardStatus';
 import LeadCardActions from './LeadCardActions';
 
@@ -37,7 +37,7 @@ const LeadCardHeader: React.FC<LeadCardHeaderProps> = ({
         ) : (
           <div className="flex items-center text-gray-500 mt-1">
             <MapPin className="h-4 w-4 mr-1" />
-            <span>{lead.zipCode || 'Unknown ZIP'}</span>
+            <span>{extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location')}</span>
           </div>
         )}
       </div>

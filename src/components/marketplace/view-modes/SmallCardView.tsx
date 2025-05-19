@@ -3,7 +3,7 @@ import React from 'react';
 import { Lead } from '@/types/lead';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatLeadType, applyBuyerPriceMarkup } from '@/lib/utils';
+import { formatCurrency, formatLeadType, applyBuyerPriceMarkup, extractCityFromLocation } from '@/lib/utils';
 
 interface SmallCardViewProps {
   leads: Lead[];
@@ -23,7 +23,7 @@ const SmallCardView: React.FC<SmallCardViewProps> = ({ leads, onPurchase }) => {
               </Badge>
             </div>
             <div className="text-sm text-gray-500 mb-2">
-              <span>{lead.zipCode || 'Unknown ZIP'}</span>
+              <span>{extractCityFromLocation(lead.location, lead.zipCode || 'Unknown location')}</span>
             </div>
             <div className="mt-auto pt-2 flex justify-between items-center">
               <div>
