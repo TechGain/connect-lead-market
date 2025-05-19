@@ -60,8 +60,8 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
       </div>
       
       {/* Compact Layout for Filters, Stats and View Controls */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="flex-grow min-w-[300px]">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-[250px]">
           <LeadFilters onFilterChange={handleFilterChange} compact={true} />
         </div>
         

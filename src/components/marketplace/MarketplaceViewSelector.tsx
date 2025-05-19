@@ -16,8 +16,8 @@ const MarketplaceViewSelector: React.FC<MarketplaceViewSelectorProps> = ({
   onViewModeChange,
   compact = false
 }) => {
-  const iconSize = compact ? 4 : 6;
-  const buttonSize = compact ? 'h-8 w-8' : 'h-12 w-12';
+  const iconSize = compact ? 5 : 6;
+  const buttonSize = compact ? 'h-9 w-9' : 'h-12 w-12';
   
   return (
     <div className="flex items-center">

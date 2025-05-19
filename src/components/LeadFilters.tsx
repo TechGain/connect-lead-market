@@ -56,24 +56,24 @@ const LeadFilters = ({ onFilterChange, compact = false }: LeadFiltersProps) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg border ${compact ? 'p-2' : 'p-4'}`}>
+    <div className={`bg-white rounded-lg border ${compact ? 'p-1.5' : 'p-4'}`}>
       <div className="flex items-center justify-between">
         <div className="relative flex-1">
-          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${compact ? 'h-4 w-4' : 'h-5 w-5'}`} />
+          <Search className={`absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 ${compact ? 'h-3.5 w-3.5' : 'h-5 w-5'}`} />
           <Input
-            placeholder={compact ? "Search leads..." : "Search leads by keyword..."}
+            placeholder={compact ? "Search..." : "Search leads by keyword..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={`pl-10 ${compact ? 'h-9 text-sm' : ''}`}
+            className={`pl-7 ${compact ? 'h-8 text-xs py-1' : ''}`}
           />
         </div>
         <Button 
           variant="outline"
           size={compact ? "sm" : "icon"}
-          className="ml-2"
+          className={`ml-1 ${compact ? 'h-8 w-8 p-1' : ''}`}
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <Filter size={compact ? 16 : 18} />
+          <Filter size={compact ? 14 : 18} />
         </Button>
       </div>
       
