@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Lead } from '@/types/lead';
@@ -84,6 +85,7 @@ const LeadCard = ({
           confirmationStatus={lead.confirmationStatus}
           status={lead.status}
           showFullDetails={showFullDetails}
+          purchasedAt={lead.purchasedAt}
         />
       </CardContent>
       

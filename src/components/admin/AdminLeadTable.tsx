@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from '@/utils/format-helpers';
-import { Trash2, RefreshCcw } from 'lucide-react';
+import { Trash2, RefreshCcw, Clock } from 'lucide-react';
 import { useAdminLeadDelete } from '@/hooks/use-admin-lead-delete';
 import { useAdminLeadRefund } from '@/hooks/use-admin-lead-refund';
+import { getConfirmationTimeRemaining } from '@/lib/utils/datetime';
 
 interface AdminLeadTableProps {
   leads: Lead[];
@@ -87,6 +88,33 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({
     return lead.status === 'sold';
   };
 
+  // Render confirmation timer for admin table view
+  const renderConfirmationTimer = (lead: Lead) => {
+    if (lead.confirmationStatus !== 'unconfirmed' || lead.status !== 'sold' || !lead.purchasedAt) {
+      return null;
+    }
+
+    const timeRemaining = getConfirmationTimeRemaining(lead.purchasedAt);
+    if (!timeRemaining) return null;
+
+    const { hours, minutes } = timeRemaining;
+    if (hours === 0 && minutes === 0) {
+      return (
+        <div className="flex items-center text-red-500 text-xs">
+          <Clock className="h-3 w-3 mr-1" />
+          <span>Expired</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center text-amber-600 text-xs">
+        <Clock className="h-3 w-3 mr-1" />
+        <span>{hours}h {minutes}m left</span>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="overflow-x-auto">
@@ -97,6 +125,7 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({
               <TableHead>Location</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Confirmation</TableHead>
               <TableHead>Seller</TableHead>
               <TableHead>Buyer</TableHead>
               <TableHead>Created</TableHead>
@@ -122,6 +151,16 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({
                 <TableCell>{lead.location}</TableCell>
                 <TableCell>${formatCurrency(lead.price)}</TableCell>
                 <TableCell>{getStatusBadge(lead.status)}</TableCell>
+                <TableCell>
+                  {lead.confirmationStatus === 'unconfirmed' ? (
+                    <div>
+                      <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">Unconfirmed</Badge>
+                      {renderConfirmationTimer(lead)}
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">Confirmed</Badge>
+                  )}
+                </TableCell>
                 <TableCell>{lead.sellerName || lead.sellerId}</TableCell>
                 <TableCell>{lead.buyerName || lead.buyerId || '-'}</TableCell>
                 <TableCell>{new Date(lead.createdAt).toLocaleDateString()}</TableCell>

@@ -1,23 +1,26 @@
 
 import React from 'react';
-import { PhoneOutgoing, Clock, AlertCircle } from 'lucide-react';
-import { isAppointmentPassed } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/utils/format-helpers';
+import { isAppointmentPassed } from '@/lib/utils/datetime';
+import ConfirmationTimer from './ConfirmationTimer';
 
 interface LeadCardDetailsProps {
   description?: string;
   firstName?: string;
   zipCode?: string;
   type: string;
+  price?: number;
   contactName?: string;
   contactPhone?: string;
   contactEmail?: string;
   address?: string;
   appointmentTime?: string;
-  buyerName?: string;
-  confirmationStatus?: string;
-  status: string;
+  confirmationStatus?: 'confirmed' | 'unconfirmed';
+  status?: string;
   showFullDetails: boolean;
+  buyerName?: string | null;
+  purchasedAt?: string | null;
 }
 
 const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
@@ -25,76 +28,109 @@ const LeadCardDetails: React.FC<LeadCardDetailsProps> = ({
   firstName,
   zipCode,
   type,
+  price,
   contactName,
   contactPhone,
   contactEmail,
   address,
   appointmentTime,
-  buyerName,
-  confirmationStatus,
+  confirmationStatus = 'confirmed',
   status,
-  showFullDetails
+  showFullDetails = false,
+  buyerName,
+  purchasedAt
 }) => {
-  // Determine confirmation status display
-  const isConfirmed = confirmationStatus === 'confirmed';
+  const isAppointmentExpired = appointmentTime ? isAppointmentPassed(appointmentTime) : false;
   
-  // Check if appointment is soon (within the next 24 hours)
-  const isAppointmentWarning = isConfirmed && appointmentTime && !isAppointmentPassed(appointmentTime);
-
-  if (showFullDetails) {
-    return <>
-        <p className="text-gray-700">{description}</p>
-        
-        {status === 'sold' && <div className="border-t border-gray-100 pt-3">
-            <h4 className="font-medium mb-2">Contact Information</h4>
-            <div className="space-y-1 text-sm">
-              <p><span className="font-medium">Name:</span> {contactName}</p>
-              <p><span className="font-medium">Phone:</span> {contactPhone}</p>
-              <p><span className="font-medium">Email:</span> {contactEmail}</p>
-              {address && <p><span className="font-medium">Address:</span> {address}</p>}
-              {zipCode && <p><span className="font-medium">ZIP Code:</span> {zipCode}</p>}
-              {appointmentTime && (
-                <p>
-                  <span className="font-medium">Appointment:</span> {appointmentTime}
-                  {isAppointmentWarning && 
-                    <Badge variant="outline" className="ml-2 px-1 py-0 text-xs bg-amber-50 border-amber-200 text-amber-700">
-                      Upcoming
-                    </Badge>
-                  }
-                </p>
-              )}
-              {buyerName && <p><span className="font-medium">Buyer:</span> {buyerName}</p>}
-            </div>
-          </div>}
-      </>;
-  } else {
-    // Limited view for marketplace
-    return <div className="space-y-2">
-        <p className="text-gray-700"><span className="font-medium">First Name:</span> {firstName || 'Unknown'}</p>
-        
-        <p className="text-gray-700"><span className="font-medium">ZIP Code:</span> {zipCode || 'Unknown'}</p>
-        
-        {/* Display confirmation status without icon */}
-        <div className="flex items-center">
-          <span className="font-medium text-gray-700 mr-2">Status:</span>
-          {isConfirmed ? <span className="text-green-600">
-              Confirmed
-            </span> : <span className="text-amber-600">Unconfirmed</span>}
-        </div>
-        
-        {/* Action prompt for unconfirmed leads with phone icon */}
-        {!isConfirmed && <div className="flex items-center text-sm text-amber-600 mt-1 font-medium">
-            <PhoneOutgoing className="h-4 w-4 mr-1" />
-            <span>Call customer to schedule appointment</span>
-          </div>}
-        
-        {/* Display appointment time if it exists and status is confirmed */}
-        {isConfirmed && appointmentTime && <div className="flex items-center text-sm text-green-600 font-medium">
-            <Clock className="h-4 w-4 mr-1" />
-            <span>Appointment: {appointmentTime}</span>
-          </div>}
-      </div>;
+  // Only show limited fields if not full details or description exists
+  if (!showFullDetails || !description) {
+    return (
+      <div className="mt-2">
+        {zipCode && (
+          <p className="text-gray-600 mb-2">
+            <span className="font-semibold">Zip:</span> {zipCode}
+          </p>
+        )}
+        {firstName && (
+          <p className="text-gray-600 mb-2">
+            <span className="font-semibold">Contact:</span> {firstName}
+          </p>
+        )}
+        {confirmationStatus === 'unconfirmed' && (
+          <div className="mt-1">
+            <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">Unconfirmed</Badge>
+            {purchasedAt && status === 'sold' && (
+              <ConfirmationTimer purchasedAt={purchasedAt} />
+            )}
+          </div>
+        )}
+      </div>
+    );
   }
+
+  return (
+    <div className="mt-2 space-y-2">
+      {description && (
+        <div>
+          <h4 className="font-semibold text-sm text-gray-700">Description:</h4>
+          <p className="text-gray-600 text-sm mt-1">{description}</p>
+        </div>
+      )}
+      
+      {/* Show confirmation status */}
+      {confirmationStatus === 'unconfirmed' && (
+        <div className="mt-1">
+          <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">Unconfirmed</Badge>
+          {purchasedAt && status === 'sold' && (
+            <ConfirmationTimer purchasedAt={purchasedAt} />
+          )}
+        </div>
+      )}
+      
+      {/* Contact information */}
+      {contactName && (
+        <p className="text-gray-600 text-sm">
+          <span className="font-semibold">Contact:</span> {contactName}
+        </p>
+      )}
+      
+      {/* Show buyer information if available */}
+      {buyerName && (
+        <p className="text-gray-600 text-sm">
+          <span className="font-semibold">Buyer:</span> {buyerName}
+        </p>
+      )}
+      
+      {/* Only show these fields in full details mode */}
+      {contactPhone && (
+        <p className="text-gray-600 text-sm">
+          <span className="font-semibold">Phone:</span> {contactPhone}
+        </p>
+      )}
+      
+      {contactEmail && (
+        <p className="text-gray-600 text-sm">
+          <span className="font-semibold">Email:</span> {contactEmail}
+        </p>
+      )}
+      
+      {address && (
+        <p className="text-gray-600 text-sm">
+          <span className="font-semibold">Address:</span> {address}
+        </p>
+      )}
+      
+      {/* Show appointment time with expired indicator if needed */}
+      {appointmentTime && (
+        <div className="text-gray-600 text-sm">
+          <span className="font-semibold">Appointment:</span> {appointmentTime}
+          {isAppointmentExpired && (
+            <Badge variant="outline" className="ml-2 text-red-500 border-red-300 bg-red-50">Expired</Badge>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default LeadCardDetails;

@@ -14,7 +14,7 @@ const LeadCardStatus: React.FC<LeadCardStatusProps> = ({ status }) => {
       case 'pending':
         return { variant: 'secondary', text: 'Sold' };
       case 'refunded':
-        return { variant: 'outline', text: 'Refunded' };
+        return { variant: 'outline', text: 'Refunded', className: 'border-orange-500 text-orange-600' };
       case 'erased':
         return { variant: 'destructive', text: 'Erased' };
       default:
@@ -22,10 +22,10 @@ const LeadCardStatus: React.FC<LeadCardStatusProps> = ({ status }) => {
     }
   };
   
-  const { variant, text } = getBadgeDetails();
+  const { variant, text, className = '' } = getBadgeDetails();
   
   return (
-    <Badge variant={variant as any}>
+    <Badge variant={variant as any} className={className}>
       {text}
     </Badge>
   );

@@ -1,9 +1,8 @@
-
 /**
  * Utility functions for date and time operations
  */
 
-import { format, parse, isAfter, isBefore } from 'date-fns';
+import { format, parse, isAfter, isBefore, differenceInHours, differenceInMinutes } from 'date-fns';
 
 /**
  * Checks if an appointment time string has passed the current time
@@ -78,6 +77,57 @@ export function isAppointmentPassed(appointmentTimeStr: string | null | undefine
  */
 export function formatDate(date: Date): string {
   return format(date, 'PPP');
+}
+
+/**
+ * Calculates the time remaining before the 48-hour confirmation period expires
+ * @param purchasedAt The timestamp when the lead was purchased
+ * @returns Object containing hours and minutes remaining, or null if invalid
+ */
+export function getConfirmationTimeRemaining(purchasedAt: string | null | undefined): { hours: number; minutes: number } | null {
+  if (!purchasedAt) {
+    return null;
+  }
+  
+  try {
+    const purchaseDate = new Date(purchasedAt);
+    const now = new Date();
+    
+    // Calculate the expiration date (48 hours after purchase)
+    const expirationDate = new Date(purchaseDate);
+    expirationDate.setHours(expirationDate.getHours() + 48);
+    
+    // If expiration time has passed, return zeros
+    if (isAfter(now, expirationDate)) {
+      return { hours: 0, minutes: 0 };
+    }
+    
+    // Calculate remaining time
+    const hours = differenceInHours(expirationDate, now);
+    const minutes = differenceInMinutes(expirationDate, now) % 60;
+    
+    return { hours, minutes };
+  } catch (error) {
+    console.error('Error calculating confirmation time remaining:', error);
+    return null;
+  }
+}
+
+/**
+ * Formats the remaining time as a string in the format "HH:MM"
+ * @param timeRemaining Object containing hours and minutes
+ * @returns Formatted time string or empty string if invalid
+ */
+export function formatTimeRemaining(timeRemaining: { hours: number; minutes: number } | null): string {
+  if (!timeRemaining) {
+    return '';
+  }
+  
+  const { hours, minutes } = timeRemaining;
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  
+  return `${formattedHours}:${formattedMinutes}`;
 }
 
 /**
@@ -165,4 +215,3 @@ export function generateGoogleCalendarUrl(
     return null;
   }
 }
-
