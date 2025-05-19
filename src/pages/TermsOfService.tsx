@@ -3,23 +3,44 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PageLayout from "@/components/PageLayout";
 
 const TermsOfService = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <PageLayout>
       <Helmet>
         <title>Terms of Service | StayConnect</title>
         <meta name="description" content="StayConnect terms of service and user agreement." />
       </Helmet>
       
-      <Header />
-      
-      <main className="flex-1 container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-8">Terms of Service</h1>
           
           <div className="prose prose-lg max-w-none">
-            <p className="text-gray-600">Last Updated: May 6, 2025</p>
+            <p className="text-gray-600">Last Updated: May 19, 2025</p>
+            
+            <section className="mt-8 bg-amber-50 p-6 rounded-lg border border-amber-200">
+              <h2 className="text-2xl font-semibold mb-4">Refund Policy for Unqualified Leads</h2>
+              
+              <div className="space-y-4">
+                <p className="font-medium">StayConnect provides refunds for unqualified leads under the following conditions:</p>
+                
+                <div className="pl-4 border-l-4 border-amber-300 ml-2">
+                  <h3 className="font-semibold">A) Unconfirmed Leads</h3>
+                  <p>Refunds are provided if 48 hours have passed and the buyer couldn't reach the customer over the phone despite documented attempts.</p>
+                </div>
+                
+                <div className="pl-4 border-l-4 border-amber-300 ml-2">
+                  <h3 className="font-semibold">B) Confirmed Leads</h3>
+                  <p>Refunds are provided if the client didn't open the door or didn't show up to the meeting (client no-show only, not salesperson no-show).</p>
+                </div>
+                
+                <p className="font-medium text-amber-700">
+                  <strong>Important:</strong> All refund requests require proof of attempts to reach the customer. This documentation must be submitted with any refund claim.
+                </p>
+              </div>
+            </section>
             
             <section className="mt-8">
               <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
@@ -125,9 +146,7 @@ const TermsOfService = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
-    </div>
+    </PageLayout>
   );
 };
 
