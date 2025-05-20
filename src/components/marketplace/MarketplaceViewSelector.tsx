@@ -2,6 +2,7 @@
 import React from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Grid2X2, LayoutList, GalleryVertical, GalleryHorizontal } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export type ViewMode = 'largeCards' | 'smallCards' | 'list' | 'compact';
 
@@ -16,11 +17,12 @@ const MarketplaceViewSelector: React.FC<MarketplaceViewSelectorProps> = ({
   onViewModeChange,
   compact = false
 }) => {
+  const isMobile = useIsMobile();
   const iconSize = compact ? 6 : 6;
-  const buttonSize = compact ? 'h-10 w-10' : 'h-12 w-12';
+  const buttonSize = compact ? 'h-9 w-9' : 'h-12 w-12';
   
   return (
-    <div className="flex items-center">
+    <div className={`flex items-center ${isMobile ? 'justify-center w-full' : ''}`}>
       {!compact && <span className="text-sm text-gray-500 mr-3">View:</span>}
       <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && onViewModeChange(value as ViewMode)}>
         <ToggleGroupItem value="largeCards" aria-label="Large Cards View" title="Large Cards" className={buttonSize}>

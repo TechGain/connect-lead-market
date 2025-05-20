@@ -10,6 +10,7 @@ import { RefreshCcw, Bug } from 'lucide-react';
 import { format } from 'date-fns';
 import { extractCityFromLocation } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MarketplaceContentProps {
   filteredLeads: Lead[];
@@ -35,6 +36,7 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   onViewModeChange
 }) => {
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const isMobile = useIsMobile();
 
   // Calculate lead statistics
   const totalLeads = filteredLeads.length;
@@ -59,17 +61,17 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
         </div>
       </div>
       
-      {/* Compact Layout for Filters, Stats and View Controls */}
-      <div className="flex items-center mb-4">
-        <div className="w-[250px]">
+      {/* Responsive Layout for Filters, Stats and View Controls */}
+      <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center'} mb-4`}>
+        <div className={`${isMobile ? 'w-full' : 'w-[250px]'}`}>
           <LeadFilters onFilterChange={handleFilterChange} compact={true} />
         </div>
         
-        <div className="flex-1 mx-4">
+        <div className={`${isMobile ? 'w-full' : 'flex-1 mx-4'}`}>
           <MarketplaceStats totalLeads={totalLeads} availableLeads={availableLeads} soldLeads={soldLeads} compact={true} />
         </div>
         
-        <div>
+        <div className={`${isMobile ? 'w-full flex justify-center' : ''}`}>
           <MarketplaceViewSelector viewMode={viewMode} onViewModeChange={onViewModeChange} compact={true} />
         </div>
       </div>
