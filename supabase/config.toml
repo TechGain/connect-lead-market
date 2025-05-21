@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.send-lead-notification]
 verify_jwt = true
+
+[functions.send-lead-email-notification]
+verify_jwt = true
