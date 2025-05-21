@@ -56,9 +56,9 @@ serve(async (req: Request) => {
     // Initialize Resend
     const resend = new Resend(apiKey);
     
-    // Send a test email using the custom domain
+    // Send a test email using Resend's default domain
     const emailResult = await resend.emails.send({
-      from: "Leads Marketplace <info@stayconnectus.com>",
+      from: "Leads Marketplace <onboarding@resend.dev>",
       to: email,
       subject: "Email Notification Test",
       html: `
@@ -68,6 +68,7 @@ serve(async (req: Request) => {
             <p>This is a test email to verify that the email sending functionality is working properly.</p>
             <p>If you're receiving this, it means the configuration is correct!</p>
             <p>Date and time of test: ${new Date().toLocaleString()}</p>
+            <p><em>Note: This email is sent from Resend's default domain (onboarding@resend.dev) while your custom domain is being verified.</em></p>
           </body>
         </html>
       `,

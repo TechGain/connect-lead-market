@@ -39,7 +39,7 @@ export async function sendEmail(
     }
     
     const emailResponse = await resend.emails.send({
-      from: "Leads Marketplace <info@stayconnectus.com>",
+      from: "Leads Marketplace <onboarding@resend.dev>",
       to: recipient,
       subject,
       html: htmlContent,
