@@ -61,9 +61,6 @@ export function generateLeadEmailHtml(
               <div class="lead-detail">
                 <span class="label">Date Added:</span> ${creationDate}
               </div>
-              <div class="lead-detail">
-                <span class="label">Seller:</span> ${lead.profiles?.full_name || 'Unknown'} ${lead.profiles?.company ? `(${lead.profiles.company})` : ''}
-              </div>
             </div>
             
             <p>Don't miss out on this opportunity!</p>
@@ -85,3 +82,4 @@ export function generateLeadEmailHtml(
 export function generateLeadEmailSubject(lead: any): string {
   return `New Lead Available: ${lead.type} in ${lead.location}`;
 }
+
