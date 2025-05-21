@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import ProfileInfoCard from './ProfileInfoCard';
 import ProfileSettingsCard from './ProfileSettingsCard';
+import NotificationPreferences from './NotificationPreferences';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPhoneToE164 } from '@/utils/format-helpers';
 
 interface ProfileData {
   name: string;
@@ -12,6 +14,7 @@ interface ProfileData {
   rating: number;
   joinedDate: string;
   totalLeads: number;
+  phone?: string | null;
 }
 
 interface ProfileContentProps {
@@ -20,6 +23,7 @@ interface ProfileContentProps {
   refreshProfile: () => void;
   isOffline?: boolean;
   role: 'seller' | 'buyer';
+  userEmail?: string | null;
 }
 
 const ProfileContent = ({ 
@@ -27,7 +31,8 @@ const ProfileContent = ({
   userData,
   refreshProfile, 
   isOffline = false,
-  role
+  role,
+  userEmail
 }: ProfileContentProps) => {
   const [leadCount, setLeadCount] = useState<number>(profileData.totalLeads || 0);
   
@@ -87,25 +92,41 @@ const ProfileContent = ({
     company: profileData.company,
     role,
     isOffline,
-    leadCount
+    leadCount,
+    userEmail
   });
+
+  // Format the phone number for display purposes
+  const phoneNumber = profileData?.phone || userData?.phone;
+  const formattedPhone = phoneNumber ? formatPhoneToE164(phoneNumber) : null;
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <ProfileInfoCard 
-        profileData={{
-          ...profileData,
-          avatar: undefined, // No avatar support yet
-          totalLeads: leadCount // Use the fetched count
-        }} 
-        role={role}
-        onRefresh={handleRefresh}
-        isOffline={isOffline}
-      />
-      <ProfileSettingsCard 
-        role={role} 
-        disabled={isOffline}
-      />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <ProfileInfoCard 
+          profileData={{
+            ...profileData,
+            avatar: undefined, // No avatar support yet
+            totalLeads: leadCount // Use the fetched count
+          }} 
+          role={role}
+          onRefresh={handleRefresh}
+          isOffline={isOffline}
+        />
+        <ProfileSettingsCard 
+          role={role} 
+          disabled={isOffline}
+        />
+      </div>
+      
+      {userData?.id && !isOffline && (
+        <div className="mt-6">
+          <NotificationPreferences 
+            userPhone={formattedPhone || phoneNumber} 
+            userEmail={userEmail}
+          />
+        </div>
+      )}
     </div>
   );
 };

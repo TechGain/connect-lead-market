@@ -28,6 +28,7 @@ const Profile = () => {
           userData={user}
           refreshProfile={() => {}}
           role={role as 'seller' | 'buyer' || 'buyer'}
+          userEmail={user?.email}
         />
       </ProfileContainer>
     </PageLayout>
