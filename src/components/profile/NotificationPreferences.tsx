@@ -6,14 +6,17 @@ import { Label } from '@/components/ui/label';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatPhoneToE164 } from '@/utils/format-helpers';
+import { useUserRole } from '@/hooks/use-user-role';
 
 interface NotificationPreferencesProps {
-  userId?: string;
   userPhone?: string | null;
   userEmail?: string | null;
 }
 
-export const NotificationPreferences = ({ userId, userPhone, userEmail }: NotificationPreferencesProps) => {
+export const NotificationPreferences = ({ userPhone, userEmail }: NotificationPreferencesProps) => {
+  const { user } = useUserRole();
+  const userId = user?.id;
+  
   const { 
     smsEnabled, 
     emailEnabled, 

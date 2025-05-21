@@ -10,7 +10,7 @@ interface ProfileHeaderProps {
 }
 
 const ProfileHeader = ({ error, isOffline = false }: ProfileHeaderProps) => {
-  const { isLoggedIn, role, user, refreshUserRole } = useUserRole();
+  const { isLoggedIn, role, user, refreshRole } = useUserRole();
   
   // Detect connection issues from error message or offline status
   const hasConnectionIssue = isOffline || 
@@ -45,7 +45,7 @@ const ProfileHeader = ({ error, isOffline = false }: ProfileHeaderProps) => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={refreshUserRole}
+            onClick={refreshRole}
             className="flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />

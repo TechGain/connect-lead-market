@@ -14,7 +14,7 @@ import ProfileMainLayout from '@/components/profile/ProfileMainLayout';
 
 const Profile = () => {
   const { profileData, isLoading, error } = useProfileData();
-  const { userId, role } = useUserRole();
+  const { user, role } = useUserRole();
 
   return (
     <PageLayout>
@@ -24,36 +24,15 @@ const Profile = () => {
 
       <ProfileContainer>
         <ProfileHeader 
-          fullName={profileData.name}
-          email={profileData.email}
-          company={profileData.company}
-          joinedDate={profileData.joinedDate}
-          isLoading={isLoading}
+          error={error}
         />
         
-        <ProfileContent isLoading={isLoading} error={error}>
-          <ProfileMainLayout>
-            <ProfileInfoCard 
-              role={role || 'buyer'} 
-              email={profileData.email}
-              company={profileData.company}
-              totalLeads={profileData.totalLeads}
-              rating={profileData.rating}
-              isLoading={isLoading}
-            />
-            
-            <ProfileSettingsCard 
-              role={role as 'seller' | 'buyer'} 
-              disabled={isLoading}
-            />
-            
-            <NotificationPreferences 
-              userId={userId} 
-              userPhone={profileData.phone}
-              userEmail={profileData.email} 
-            />
-          </ProfileMainLayout>
-        </ProfileContent>
+        <ProfileContent 
+          profileData={profileData}
+          userData={user}
+          refreshProfile={() => {}}
+          role={role as 'seller' | 'buyer' || 'buyer'}
+        />
       </ProfileContainer>
     </PageLayout>
   );
