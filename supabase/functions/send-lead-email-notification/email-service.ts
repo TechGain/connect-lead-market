@@ -38,6 +38,18 @@ export async function sendEmail(
       return { success: false, error: "No recipient email provided" };
     }
     
+    // The Resend account owner's email - Resend only allows sending to this email with the free tier
+    const resendAccountEmail = "stayconnectorg@gmail.com";
+    
+    // If the target email is not the Resend account owner's email, warn about this limitation
+    if (recipient !== resendAccountEmail) {
+      console.warn(`Warning: With default Resend domain, emails can only be sent to ${resendAccountEmail}`);
+      return { 
+        success: false, 
+        error: `With the default Resend domain, emails can only be sent to ${resendAccountEmail} until domain verification is complete.`
+      };
+    }
+    
     const emailResponse = await resend.emails.send({
       from: "Leads Marketplace <onboarding@resend.dev>",
       to: recipient,

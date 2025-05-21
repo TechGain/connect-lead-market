@@ -11,6 +11,9 @@ interface EmailTestButtonProps {
 const EmailTestButton = ({ userEmail }: EmailTestButtonProps) => {
   const [isSending, setIsSending] = useState(false);
   
+  // The Resend account owner's email - needed for warning message
+  const resendAccountEmail = "stayconnectorg@gmail.com";
+  
   const handleTestEmail = async () => {
     if (!userEmail) {
       toast.error("No email address found to send test to");
@@ -20,7 +23,12 @@ const EmailTestButton = ({ userEmail }: EmailTestButtonProps) => {
     setIsSending(true);
     
     try {
-      toast.info("Sending test email...");
+      // Show appropriate message based on email match with Resend account
+      if (userEmail !== resendAccountEmail) {
+        toast.info(`Note: Test emails can only be sent to ${resendAccountEmail} until domain verification is complete`);
+      } else {
+        toast.info("Sending test email...");
+      }
       
       const { data, error } = await supabase.functions.invoke('test-email-sending', {
         body: { email: userEmail }
@@ -37,7 +45,12 @@ const EmailTestButton = ({ userEmail }: EmailTestButtonProps) => {
       if (data.success) {
         toast.success(`Test email sent successfully to ${userEmail}!`);
       } else {
-        toast.error(`Failed to send test email: ${data.error || 'Unknown error'}`);
+        // Special handling for the Resend account email limitation
+        if (data.error && data.error.includes("can only send test emails to")) {
+          toast.warning(`${data.error} To test now, please login with ${resendAccountEmail} or complete domain verification.`);
+        } else {
+          toast.error(`Failed to send test email: ${data.error || 'Unknown error'}`);
+        }
       }
       
     } catch (error) {

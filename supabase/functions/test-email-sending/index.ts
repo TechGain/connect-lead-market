@@ -22,7 +22,7 @@ serve(async (req: Request) => {
     if (!apiKey) {
       console.error("RESEND_API_KEY is not configured!");
       return new Response(
-        JSON.stringify({ error: "RESEND_API_KEY environment variable is not set" }),
+        JSON.stringify({ success: false, error: "RESEND_API_KEY environment variable is not set" }),
         { 
           status: 500, 
           headers: { 
@@ -40,7 +40,7 @@ serve(async (req: Request) => {
     
     if (!email) {
       return new Response(
-        JSON.stringify({ error: "Email address is required" }),
+        JSON.stringify({ success: false, error: "Email address is required" }),
         { 
           status: 400, 
           headers: { 
@@ -55,6 +55,29 @@ serve(async (req: Request) => {
     
     // Initialize Resend
     const resend = new Resend(apiKey);
+    
+    // The Resend account owner's email - Resend only allows sending to this email with the free tier
+    // This should be updated to the email you used when signing up for Resend
+    const resendAccountEmail = "stayconnectorg@gmail.com";
+    
+    // If the target email is not the Resend account owner's email, warn about this limitation
+    if (email !== resendAccountEmail) {
+      console.warn(`Warning: In development mode with default Resend domain, emails can only be sent to ${resendAccountEmail}`);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `With the default Resend domain, you can only send test emails to ${resendAccountEmail} (the email used to create your Resend account). To send to other emails, please verify your domain in Resend.`
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
     
     // Send a test email using Resend's default domain
     const emailResult = await resend.emails.send({
@@ -111,7 +134,7 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error("Error in test-email-sending function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, error: error.message }),
       { 
         status: 500, 
         headers: { 
