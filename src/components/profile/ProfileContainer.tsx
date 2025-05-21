@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { useUserRole } from '@/hooks/use-user-role';
 import ProfileLoadingState from './ProfileLoadingState';
 import ProfileErrorDisplay from './ProfileErrorDisplay';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 
 interface ProfileContainerProps {
   isOffline?: boolean;
+  children?: ReactNode;
 }
 
 // Define a minimal profile data shape for fallbacks
@@ -25,7 +26,7 @@ const DEFAULT_PROFILE_DATA = {
   totalLeads: 0
 };
 
-const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
+const ProfileContainer = ({ isOffline = false, children }: ProfileContainerProps) => {
   const { user, isLoggedIn, role: userRole } = useUserRole();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -146,6 +147,27 @@ const ProfileContainer = ({ isOffline = false }: ProfileContainerProps) => {
     fetchProfileData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+  
+  // If children are provided, render them
+  if (children) {
+    return (
+      <>
+        {isOffline && (
+          <Alert className="mb-6 bg-yellow-50 border-yellow-200">
+            <AlertTitle className="text-yellow-800 flex items-center gap-2">
+              <WifiOff className="h-4 w-4" /> Offline Mode
+            </AlertTitle>
+            <AlertDescription className="text-yellow-700">
+              <p className="mb-2">
+                You're currently offline. Your profile shows cached data and some features may be unavailable.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+        {children}
+      </>
+    );
+  }
   
   console.log("Current profile render state:", { 
     isLoading, 

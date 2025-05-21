@@ -7,10 +7,6 @@ import { Helmet } from 'react-helmet-async';
 import ProfileContainer from '@/components/profile/ProfileContainer';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileContent from '@/components/profile/ProfileContent';
-import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
-import ProfileSettingsCard from '@/components/profile/ProfileSettingsCard';
-import NotificationPreferences from '@/components/profile/NotificationPreferences';
-import ProfileMainLayout from '@/components/profile/ProfileMainLayout';
 
 const Profile = () => {
   const { profileData, isLoading, error } = useProfileData();
@@ -22,7 +18,7 @@ const Profile = () => {
         <title>Your Profile | Leads Marketplace</title>
       </Helmet>
 
-      <ProfileContainer>
+      <ProfileContainer isOffline={false}>
         <ProfileHeader 
           error={error}
         />

@@ -65,8 +65,8 @@ const ProfileFallbackView = ({
       {userData?.id && !isOffline && (
         <div className="mt-6">
           <NotificationPreferences 
-            userId={userData.id} 
             userPhone={formattedPhone || phoneNumber} 
+            userEmail={userData.email}
           />
         </div>
       )}
