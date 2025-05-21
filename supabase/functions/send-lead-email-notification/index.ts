@@ -181,7 +181,7 @@ serve(async (req: Request) => {
     for (const buyer of buyers) {
       try {
         const emailResponse = await resend.emails.send({
-          from: "Leads Marketplace <notifications@resend.dev>", // Using Resend's default domain for now
+          from: "Leads Marketplace <notifications@yourdomain.com>", // Replace with your verified domain
           to: buyer.email,
           subject: emailSubject,
           html: emailHtml,
