@@ -82,7 +82,8 @@ export function useRegisterAction() {
             company: company,
             phone: formattedPhone, // Store formatted phone in the profile
             sms_notifications_enabled: true, // Enable SMS notifications by default
-            referral_source: referralSource // Store where the user heard about us
+            referral_source: referralSource, // Store where the user heard about us
+            email: email // Add email to profile data
           };
           
           const { error: profileError } = await supabase
@@ -92,7 +93,7 @@ export function useRegisterAction() {
           if (profileError) {
             console.error("Error creating profile during registration:", profileError);
           } else {
-            console.log("Profile successfully created with role, company, phone, and referral:", { role, company, formattedPhone, referralSource });
+            console.log("Profile successfully created with role, company, phone, email, and referral:", { role, company, formattedPhone, email, referralSource });
           }
         } catch (err) {
           console.error("Exception creating profile during registration:", err);

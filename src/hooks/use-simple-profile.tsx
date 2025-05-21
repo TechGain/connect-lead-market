@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -38,7 +39,7 @@ export const useSimpleProfile = (isOffline = false) => {
             
             const fallbackProfile: ProfileData = {
               name: cachedProfile?.full_name || cachedUser?.user_metadata?.full_name || 'User',
-              email: cachedUser?.email || 'Email unavailable',
+              email: cachedProfile?.email || cachedUser?.email || 'Email unavailable',
               company: cachedProfile?.company || 'Not specified',
               role: (cachedProfile?.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer') as 'seller' | 'buyer',
               rating: cachedProfile?.rating || 4.7,
@@ -139,7 +140,7 @@ export const useSimpleProfile = (isOffline = false) => {
       
       const formattedProfile: ProfileData = {
         name: profile.full_name || currentUser?.user_metadata?.full_name || 'User',
-        email: currentUser.email || '',
+        email: profile.email || currentUser.email || '', // Now prioritizing profile.email
         company: profile.company || 'Not specified',
         role: (profile.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer') as 'seller' | 'buyer',
         rating: profile.rating || 4.7,
@@ -170,7 +171,7 @@ export const useSimpleProfile = (isOffline = false) => {
             
             const fallbackProfile: ProfileData = {
               name: cachedProfile?.full_name || cachedUser?.user_metadata?.full_name || 'User',
-              email: cachedUser?.email || 'Email unavailable',
+              email: cachedProfile?.email || cachedUser?.email || 'Email unavailable',
               company: cachedProfile?.company || 'Not specified',
               role: (cachedProfile?.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer') as 'seller' | 'buyer',
               rating: cachedProfile?.rating || 4.7,

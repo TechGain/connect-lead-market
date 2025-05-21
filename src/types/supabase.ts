@@ -69,6 +69,7 @@ export interface Database {
           role: 'seller' | 'buyer' | 'admin'
           company: string | null
           rating: number | null
+          email: string | null  // Added email field
         }
         Insert: {
           id: string
@@ -79,6 +80,7 @@ export interface Database {
           role: 'seller' | 'buyer' | 'admin'
           company?: string | null
           rating?: number | null
+          email?: string | null  // Added email field
         }
         Update: {
           id?: string
@@ -89,6 +91,7 @@ export interface Database {
           role?: 'seller' | 'buyer' | 'admin'
           company?: string | null
           rating?: number | null
+          email?: string | null  // Added email field
         }
       }
       lead_ratings: {

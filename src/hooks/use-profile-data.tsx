@@ -157,9 +157,10 @@ export const useProfileData = () => {
       }
       
       // Create profile data object with fallbacks from cached data
+      // Now prioritizing profile.email when available, falling back to user.email
       const newProfileData = {
         name: profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-        email: user.email || '',
+        email: profile?.email || user.email || '',
         company: profile?.company || 'Not specified',
         rating: profile?.rating || 4.7,
         joinedDate,
@@ -177,7 +178,8 @@ export const useProfileData = () => {
           // Add these fields to ensure we have them for fallback
           full_name: newProfileData.name,
           company: newProfileData.company,
-          rating: newProfileData.rating
+          rating: newProfileData.rating,
+          email: newProfileData.email // Include email in cached profile data
         }));
       }
       
