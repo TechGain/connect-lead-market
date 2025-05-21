@@ -12,6 +12,7 @@ export function createEmailService() {
   
   if (!apiKey) {
     console.error("RESEND_API_KEY environment variable is not set!");
+    throw new Error("RESEND_API_KEY is not configured");
   } else {
     console.log("Resend API key is configured properly");
   }
@@ -43,6 +44,15 @@ export async function sendEmail(
       subject,
       html: htmlContent,
     });
+    
+    // Handle the case where Resend returns an error object
+    if ('error' in emailResponse && emailResponse.error) {
+      console.error(`Resend API Error: ${JSON.stringify(emailResponse.error)}`);
+      return { 
+        success: false, 
+        error: emailResponse.error.message || "Unknown error from Resend API" 
+      };
+    }
     
     console.log(`Email sent to ${recipient}`, emailResponse);
     return { success: true, id: emailResponse.id };

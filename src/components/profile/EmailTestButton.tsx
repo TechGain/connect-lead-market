@@ -27,7 +27,7 @@ const EmailTestButton = ({ userEmail }: EmailTestButtonProps) => {
       });
       
       if (error) {
-        console.error("Error sending test email:", error);
+        console.error("Error invoking test-email-sending function:", error);
         toast.error(`Failed to send test email: ${error.message}`);
         return;
       }

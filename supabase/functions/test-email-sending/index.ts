@@ -56,8 +56,8 @@ serve(async (req: Request) => {
     // Initialize Resend
     const resend = new Resend(apiKey);
     
-    // Send a test email - Changed from domain to use Resend's default domain
-    const emailResponse = await resend.emails.send({
+    // Send a test email using Resend's default domain
+    const emailResult = await resend.emails.send({
       from: "Leads Marketplace <onboarding@resend.dev>",
       to: email,
       subject: "Email Notification Test",
@@ -73,13 +73,31 @@ serve(async (req: Request) => {
       `,
     });
     
-    console.log("Email sending response:", emailResponse);
+    // Handle the case where Resend returns an error object
+    if ('error' in emailResult && emailResult.error) {
+      console.error("Resend API Error:", JSON.stringify(emailResult.error));
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: emailResult.error.message || "Unknown error from Resend API"
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+    
+    console.log("Email sending response:", emailResult);
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Test email sent successfully",
-        id: emailResponse.id
+        id: emailResult.id
       }),
       { 
         status: 200, 
