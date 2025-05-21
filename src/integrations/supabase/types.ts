@@ -189,6 +189,7 @@ export type Database = {
           company: string | null
           created_at: string
           email: string | null
+          email_notifications_enabled: boolean | null
           full_name: string
           id: string
           phone: string | null
@@ -202,6 +203,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
+          email_notifications_enabled?: boolean | null
           full_name: string
           id: string
           phone?: string | null
@@ -215,6 +217,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
+          email_notifications_enabled?: boolean | null
           full_name?: string
           id?: string
           phone?: string | null
@@ -231,6 +234,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_buyer_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+        }[]
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean

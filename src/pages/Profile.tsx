@@ -1,56 +1,61 @@
 
-import React, { useState, useEffect } from 'react';
-import ProfileMainLayout from '@/components/profile/ProfileMainLayout';
-import ProfileContainer from '@/components/profile/ProfileContainer';
+import React from 'react';
+import PageLayout from '@/components/PageLayout';
+import { useProfileData } from '@/hooks/use-profile-data';
+import { useUserRole } from '@/hooks/use-user-role';
 import { Helmet } from 'react-helmet-async';
-import { useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
+import ProfileContainer from '@/components/profile/ProfileContainer';
+import ProfileHeader from '@/components/profile/ProfileHeader';
+import ProfileContent from '@/components/profile/ProfileContent';
+import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
+import ProfileSettingsCard from '@/components/profile/ProfileSettingsCard';
+import NotificationPreferences from '@/components/profile/NotificationPreferences';
+import ProfileMainLayout from '@/components/profile/ProfileMainLayout';
 
 const Profile = () => {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const location = useLocation();
-  
-  // Monitor online/offline status
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOffline(false);
-      toast.success("You're back online!");
-    };
-    
-    const handleOffline = () => {
-      setIsOffline(true);
-      toast.error("You're offline. Some features may be unavailable.");
-    };
-    
-    // Add event listeners
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // Initial check on load
-    if (!navigator.onLine) {
-      setIsOffline(true);
-      toast.warning("You appear to be offline. Using limited functionality.");
-    }
-    
-    // Check for connection error param in URL
-    const params = new URLSearchParams(location.search);
-    if (params.get('connection_error') === 'true') {
-      toast.error("Connection issues were detected. Using offline mode.");
-    }
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [location]);
+  const { profileData, isLoading, error } = useProfileData();
+  const { userId, role } = useUserRole();
 
   return (
-    <ProfileMainLayout>
+    <PageLayout>
       <Helmet>
-        <title>{isOffline ? "Offline Mode | " : ""}My Profile | Leads Platform</title>
+        <title>Your Profile | Leads Marketplace</title>
       </Helmet>
-      <ProfileContainer isOffline={isOffline} />
-    </ProfileMainLayout>
+
+      <ProfileContainer>
+        <ProfileHeader 
+          fullName={profileData.name}
+          email={profileData.email}
+          company={profileData.company}
+          joinedDate={profileData.joinedDate}
+          isLoading={isLoading}
+        />
+        
+        <ProfileContent isLoading={isLoading} error={error}>
+          <ProfileMainLayout>
+            <ProfileInfoCard 
+              role={role || 'buyer'} 
+              email={profileData.email}
+              company={profileData.company}
+              totalLeads={profileData.totalLeads}
+              rating={profileData.rating}
+              isLoading={isLoading}
+            />
+            
+            <ProfileSettingsCard 
+              role={role as 'seller' | 'buyer'} 
+              disabled={isLoading}
+            />
+            
+            <NotificationPreferences 
+              userId={userId} 
+              userPhone={profileData.phone}
+              userEmail={profileData.email} 
+            />
+          </ProfileMainLayout>
+        </ProfileContent>
+      </ProfileContainer>
+    </PageLayout>
   );
 };
 

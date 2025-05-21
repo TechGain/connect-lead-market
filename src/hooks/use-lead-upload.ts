@@ -40,19 +40,33 @@ export const useLeadUpload = () => {
       console.log('Lead uploaded successfully:', data);
       toast.success('Lead uploaded successfully!');
 
-      // Trigger SMS notifications after successful lead upload
+      // Trigger notifications after successful lead upload
       try {
-        console.log('Triggering SMS notifications for new lead:', data.id);
-        const { error: notificationError } = await supabase.functions.invoke('send-lead-notification', {
+        console.log('Triggering notifications for new lead:', data.id);
+        
+        // Trigger SMS notifications
+        const { error: smsError } = await supabase.functions.invoke('send-lead-notification', {
           body: { leadId: data.id }
         });
 
-        if (notificationError) {
-          console.error('Error triggering notifications:', notificationError);
+        if (smsError) {
+          console.error('Error triggering SMS notifications:', smsError);
+        }
+        
+        // Trigger email notifications
+        const { error: emailError } = await supabase.functions.invoke('send-lead-email-notification', {
+          body: { leadId: data.id }
+        });
+
+        if (emailError) {
+          console.error('Error triggering email notifications:', emailError);
+        }
+        
+        if (smsError || emailError) {
           // Don't fail the lead upload if notifications fail
           toast.error('Lead uploaded but notifications may be delayed');
         } else {
-          console.log('Notifications triggered successfully');
+          console.log('All notifications triggered successfully');
         }
       } catch (notificationError) {
         console.error('Exception triggering notifications:', notificationError);

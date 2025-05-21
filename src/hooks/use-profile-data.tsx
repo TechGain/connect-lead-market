@@ -11,6 +11,7 @@ interface ProfileData {
   joinedDate: string;
   avatar: undefined;
   totalLeads: number;
+  phone?: string | null;
 }
 
 export const useProfileData = () => {
@@ -21,7 +22,8 @@ export const useProfileData = () => {
     rating: 4.7,
     joinedDate: '',
     avatar: undefined,
-    totalLeads: 0
+    totalLeads: 0,
+    phone: null
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -165,7 +167,8 @@ export const useProfileData = () => {
         rating: profile?.rating || 4.7,
         joinedDate,
         avatar: undefined,
-        totalLeads
+        totalLeads,
+        phone: profile?.phone || null
       };
       
       // Update profile data state
@@ -179,7 +182,8 @@ export const useProfileData = () => {
           full_name: newProfileData.name,
           company: newProfileData.company,
           rating: newProfileData.rating,
-          email: newProfileData.email // Include email in cached profile data
+          email: newProfileData.email, 
+          phone: newProfileData.phone
         }));
       }
       
