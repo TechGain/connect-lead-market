@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatPhoneToE164 } from '@/utils/format-helpers';
 import { useUserRole } from '@/hooks/use-user-role';
+import EmailTestButton from './EmailTestButton';
 
 interface NotificationPreferencesProps {
   userPhone?: string | null;
@@ -118,6 +119,9 @@ export const NotificationPreferences = ({ userPhone, userEmail }: NotificationPr
           </>
         )}
       </CardContent>
+      <CardFooter className="flex justify-end">
+        <EmailTestButton userEmail={userEmail} />
+      </CardFooter>
     </Card>
   );
 };

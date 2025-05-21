@@ -8,7 +8,15 @@ import { Resend } from "npm:resend@2.0.0";
  * Initialize Resend with API key
  */
 export function createEmailService() {
-  const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  
+  if (!apiKey) {
+    console.error("RESEND_API_KEY environment variable is not set!");
+  } else {
+    console.log("Resend API key is configured properly");
+  }
+  
+  const resend = new Resend(apiKey);
   return resend;
 }
 
@@ -22,6 +30,13 @@ export async function sendEmail(
   htmlContent: string
 ) {
   try {
+    console.log(`Attempting to send email to ${recipient}`);
+    
+    if (!recipient) {
+      console.error("No recipient email provided");
+      return { success: false, error: "No recipient email provided" };
+    }
+    
     const emailResponse = await resend.emails.send({
       from: "Leads Marketplace <info@stayconnectus.com>",
       to: recipient,

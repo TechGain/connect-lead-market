@@ -4,37 +4,36 @@ project_id = "bfmxxuarnqmxqqnpxqjf"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "storage", "graphql_public"]
+invaded_secret = "your-invaded-secret"
 
 [db]
 port = 54322
+shadow_port = 54320
 
 [studio]
 port = 54323
 
 [inbucket]
 port = 54324
-
-[auth]
-enabled = true
-port = 54325
+smtp_port = 54325
+pop3_port = 54326
 
 [storage]
 enabled = true
-port = 54328
+
+[auth]
+enabled = true
+
+[realtime]
+enabled = true
+
+[analytics]
+enabled = false
+port = 54327
+
+[extensions.jwt]
+secret = "your-jwt-secret"
 
 [functions]
-[functions.send-chat-notification]
-verify_jwt = true
-
-[functions.create-lead-checkout]
-verify_jwt = true
-
-[functions.complete-lead-purchase]
-verify_jwt = true
-
-[functions.send-lead-notification]
-verify_jwt = true
-
-[functions.send-lead-email-notification]
+[functions.test-email-sending]
 verify_jwt = true

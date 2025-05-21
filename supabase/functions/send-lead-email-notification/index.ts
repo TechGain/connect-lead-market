@@ -25,9 +25,10 @@ interface LeadEmailNotificationRequest {
 }
 
 async function fetchLeadDetails(leadId: string) {
+  // Modified query to not use the foreign key relationship that was causing errors
   const { data: lead, error: leadError } = await supabase
     .from('leads')
-    .select('*, profiles!leads_seller_id_fkey(full_name, company)')
+    .select('*')
     .eq('id', leadId)
     .single();
   
@@ -40,22 +41,37 @@ async function fetchLeadDetails(leadId: string) {
 }
 
 async function fetchActiveBuyers() {
-  const { data: buyers, error: buyersError } = await supabase.rpc('get_active_buyer_emails');
-  
-  if (buyersError) {
-    console.error("Error fetching buyers:", buyersError);
-    throw new Error(buyersError.message);
+  try {
+    // Use a direct query instead of the function that might be problematic
+    const { data: buyers, error: buyersError } = await supabase
+      .from('profiles')
+      .select('email, full_name, id')
+      .eq('role', 'buyer')
+      .eq('email_notifications_enabled', true)
+      .not('email', 'is', null);
+    
+    if (buyersError) {
+      console.error("Error fetching buyers:", buyersError);
+      throw new Error(buyersError.message);
+    }
+    
+    return buyers || [];
+  } catch (error) {
+    console.error("Exception fetching buyers:", error);
+    throw error;
   }
-  
-  return buyers || [];
 }
 
 async function processLeadNotification(leadId: string) {
+  console.log("Processing lead notification for lead ID:", leadId);
+  
   // Fetch the lead details
   const lead = await fetchLeadDetails(leadId);
+  console.log("Lead details fetched:", lead.id, lead.type);
   
   // Get all active buyers who have enabled email notifications
   const buyers = await fetchActiveBuyers();
+  console.log(`Found ${buyers.length} buyers with email notifications enabled`);
   
   if (buyers.length === 0) {
     console.log("No buyers found with email notifications enabled");
@@ -70,16 +86,32 @@ async function processLeadNotification(leadId: string) {
   const emailSubject = generateLeadEmailSubject(lead);
   const emailHtml = generateLeadEmailHtml(lead, formattedPrice, creationDate, supabaseUrl);
   
+  console.log("Email content prepared:", { subject: emailSubject });
+  
   // Send emails to all buyers
   const emailResults = [];
   for (const buyer of buyers) {
-    const result = await sendEmail(resend, buyer.email, emailSubject, emailHtml);
+    console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
     
-    emailResults.push({
-      buyer: buyer.id,
-      email: buyer.email,
-      ...result
-    });
+    try {
+      const result = await sendEmail(resend, buyer.email, emailSubject, emailHtml);
+      
+      console.log(`Email result for ${buyer.email}:`, result);
+      
+      emailResults.push({
+        buyer: buyer.id,
+        email: buyer.email,
+        ...result
+      });
+    } catch (error) {
+      console.error(`Exception sending email to ${buyer.email}:`, error);
+      emailResults.push({
+        buyer: buyer.id,
+        email: buyer.email,
+        success: false,
+        error: error.message
+      });
+    }
   }
   
   return {
@@ -96,13 +128,19 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { leadId } = await req.json() as LeadEmailNotificationRequest;
+    console.log("Received request to send-lead-email-notification");
+    
+    const body = await req.json();
+    const { leadId } = body as LeadEmailNotificationRequest;
 
     if (!leadId) {
+      console.error("Missing leadId in request");
       return createJsonResponse({ error: "Lead ID is required" }, 400);
     }
 
+    console.log(`Processing notification for lead: ${leadId}`);
     const result = await processLeadNotification(leadId);
+    console.log("Notification processing completed:", result);
     return createJsonResponse(result);
 
   } catch (error) {
