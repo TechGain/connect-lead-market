@@ -56,32 +56,9 @@ serve(async (req: Request) => {
     // Initialize Resend
     const resend = new Resend(apiKey);
     
-    // The Resend account owner's email - Resend only allows sending to this email with the free tier
-    // This should be updated to the email you used when signing up for Resend
-    const resendAccountEmail = "stayconnectorg@gmail.com";
-    
-    // If the target email is not the Resend account owner's email, warn about this limitation
-    if (email !== resendAccountEmail) {
-      console.warn(`Warning: In development mode with default Resend domain, emails can only be sent to ${resendAccountEmail}`);
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `With the default Resend domain, you can only send test emails to ${resendAccountEmail} (the email used to create your Resend account). To send to other emails, please verify your domain in Resend.`
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
-    }
-    
-    // Send a test email using Resend's default domain
+    // Send a test email using the custom domain
     const emailResult = await resend.emails.send({
-      from: "Leads Marketplace <onboarding@resend.dev>",
+      from: "Leads Marketplace <info@stayconnectus.com>",
       to: email,
       subject: "Email Notification Test",
       html: `
