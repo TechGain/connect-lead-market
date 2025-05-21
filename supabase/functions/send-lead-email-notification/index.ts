@@ -20,6 +20,9 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Get the website URL from environment or use a fallback
+const websiteUrl = Deno.env.get('WEBSITE_URL') || 'https://stayconnectus.com';
+
 interface LeadEmailNotificationRequest {
   leadId: string;
 }
@@ -84,7 +87,7 @@ async function processLeadNotification(leadId: string) {
   
   // Create email content
   const emailSubject = generateLeadEmailSubject(lead);
-  const emailHtml = generateLeadEmailHtml(lead, formattedPrice, creationDate, supabaseUrl);
+  const emailHtml = generateLeadEmailHtml(lead, formattedPrice, creationDate, websiteUrl);
   
   console.log("Email content prepared:", { subject: emailSubject });
   

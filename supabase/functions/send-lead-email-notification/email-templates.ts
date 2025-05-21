@@ -10,8 +10,11 @@ export function generateLeadEmailHtml(
   lead: any,
   formattedPrice: string,
   creationDate: string,
-  supabaseUrl: string
+  websiteUrl: string
 ): string {
+  // Get the website URL from environment or use a fallback
+  const marketplaceUrl = `${websiteUrl}/marketplace`;
+  
   return `
     <html>
       <head>
@@ -64,7 +67,7 @@ export function generateLeadEmailHtml(
             </div>
             
             <p>Don't miss out on this opportunity!</p>
-            <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/marketplace" class="cta-button">View Lead in Marketplace</a>
+            <a href="${marketplaceUrl}" class="cta-button">View Lead in Marketplace</a>
           </div>
           <div class="footer">
             <p>You're receiving this email because you've enabled lead notifications. 
