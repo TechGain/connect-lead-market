@@ -56,9 +56,9 @@ serve(async (req: Request) => {
     // Initialize Resend
     const resend = new Resend(apiKey);
     
-    // Send a test email
+    // Send a test email - Changed from domain to use Resend's default domain
     const emailResponse = await resend.emails.send({
-      from: "Leads Marketplace <info@stayconnectus.com>",
+      from: "Leads Marketplace <onboarding@resend.dev>",
       to: email,
       subject: "Email Notification Test",
       html: `
