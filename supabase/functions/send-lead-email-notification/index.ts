@@ -101,6 +101,19 @@ async function processLeadNotification(leadId: string) {
   // Maximum number of retry attempts per email
   const maxRetries = 2;
   
+  // Check if we're in test mode without domain verification
+  const isTestMode = !Deno.env.get("DOMAIN_VERIFIED");
+  const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
+  
+  if (isTestMode) {
+    console.warn("======== IMPORTANT NOTICE ========");
+    console.warn("Running in TEST MODE: Only emails to the verified address will be sent.");
+    console.warn(`Verified email: ${verifiedEmail}`);
+    console.warn("To send emails to all buyers, verify a domain at https://resend.com/domains");
+    console.warn("Then set DOMAIN_VERIFIED=true in your environment variables");
+    console.warn("==================================");
+  }
+  
   for (const buyer of buyers) {
     console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
     
@@ -155,6 +168,8 @@ async function processLeadNotification(leadId: string) {
   // Count successful emails
   const successCount = emailResults.filter(r => r.success).length;
   const rateLimitedCount = emailResults.filter(r => r.rateLimited).length;
+  const redirectedCount = emailResults.filter(r => r.redirected).length;
+  const domainVerificationCount = emailResults.filter(r => r.domainVerificationRequired).length;
   const totalAttempts = emailResults.reduce((sum, r) => sum + (r.attempts || 0), 0);
   
   // Create appropriate message
@@ -162,17 +177,28 @@ async function processLeadNotification(leadId: string) {
   if (rateLimitedCount > 0) {
     message += `. ${rateLimitedCount} emails couldn't be sent due to rate limiting.`;
   }
+  if (redirectedCount > 0) {
+    message += `. ${redirectedCount} emails were redirected to the verified email because domain verification is required.`;
+  }
+  if (domainVerificationCount > 0) {
+    message += `. Domain verification is required to send emails to all buyers.`;
+  }
   
-  console.log(`Email notification complete: ${successCount} successful, ${rateLimitedCount} rate limited, total attempts: ${totalAttempts}`);
+  console.log(`Email notification complete: ${successCount} successful, ${rateLimitedCount} rate limited, ${redirectedCount} redirected, total attempts: ${totalAttempts}`);
   
   return {
     message,
     results: emailResults,
     rateLimited: rateLimitedCount > 0,
+    redirected: redirectedCount > 0,
+    domainVerificationRequired: domainVerificationCount > 0,
+    testMode: isTestMode,
     stats: {
       total: buyers.length,
       successful: successCount,
       rateLimited: rateLimitedCount,
+      redirected: redirectedCount,
+      domainVerificationRequired: domainVerificationCount,
       totalAttempts
     }
   };

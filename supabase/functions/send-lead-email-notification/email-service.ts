@@ -39,29 +39,56 @@ export async function sendEmail(
     }
     
     // Get the FROM email address from environment or use default
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "Leads Marketplace <onboarding@resend.dev>";
+    // IMPORTANT: This should use a verified domain once domain verification is complete
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "Leads Marketplace <notifications@yourdomain.com>";
+    const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
     
-    // With an upgraded Resend account, we can now send to any email address
-    // regardless of whether we're using the default sender or not
+    // Check if we're in testing mode (no verified domain yet)
+    const isTestMode = !Deno.env.get("DOMAIN_VERIFIED");
+    const effectiveRecipient = isTestMode ? verifiedEmail : recipient;
+    
+    // If we're in test mode and not sending to the verified email, log a warning
+    if (isTestMode && recipient !== verifiedEmail) {
+      console.warn(`IMPORTANT: In test mode - redirecting email intended for ${recipient} to ${verifiedEmail} due to domain verification requirements`);
+      console.warn(`To send to all recipients, verify a domain at https://resend.com/domains and set DOMAIN_VERIFIED=true in your environment`);
+    }
     
     const emailResponse = await resend.emails.send({
       from: fromEmail,
-      to: recipient,
-      subject,
+      to: effectiveRecipient,
+      subject: isTestMode && recipient !== verifiedEmail ? `[TEST MODE] ${subject} (intended for: ${recipient})` : subject,
       html: htmlContent,
     });
     
     // Handle the case where Resend returns an error object
     if ('error' in emailResponse && emailResponse.error) {
       console.error(`Resend API Error: ${JSON.stringify(emailResponse.error)}`);
+      
+      // Check if this is a domain verification error
+      if (emailResponse.error.message && emailResponse.error.message.includes("verify a domain")) {
+        return {
+          success: false,
+          error: "Domain verification required. Please verify a domain at https://resend.com/domains",
+          domainVerificationRequired: true
+        };
+      }
+      
       return { 
         success: false, 
         error: emailResponse.error.message || "Unknown error from Resend API" 
       };
     }
     
-    console.log(`Email sent to ${recipient}`, emailResponse);
-    return { success: true, id: emailResponse.id };
+    // If we're in test mode but not sending to the intended recipient, mark as redirected
+    const redirected = isTestMode && recipient !== verifiedEmail;
+    
+    console.log(`Email sent to ${redirected ? verifiedEmail + ' (redirected)' : recipient}`, emailResponse);
+    return { 
+      success: true, 
+      id: emailResponse.id,
+      redirected,
+      intendedRecipient: redirected ? recipient : undefined
+    };
   } catch (error) {
     // Handle rate limiting specifically
     if (error.message && error.message.includes("Too many requests")) {
