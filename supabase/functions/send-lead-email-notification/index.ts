@@ -91,9 +91,19 @@ async function processLeadNotification(leadId: string) {
   
   console.log("Email content prepared:", { subject: emailSubject });
   
-  // Send emails to all buyers
+  // Send emails to all buyers with rate limiting
   const emailResults = [];
-  for (const buyer of buyers) {
+  const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
+  
+  // Send to verified email first (if it's in the buyers list)
+  const verifiedBuyer = buyers.find(b => b.email === verifiedEmail);
+  const otherBuyers = buyers.filter(b => b.email !== verifiedEmail);
+  const orderedBuyers = verifiedBuyer ? [verifiedBuyer, ...otherBuyers] : otherBuyers;
+  
+  // Use a delay between email sends to avoid rate limiting
+  const delayBetweenEmails = 500; // milliseconds
+  
+  for (const buyer of orderedBuyers) {
     console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
     
     try {
@@ -106,6 +116,11 @@ async function processLeadNotification(leadId: string) {
         email: buyer.email,
         ...result
       });
+      
+      // If this was successful and we have more emails to send, add a delay
+      if (result.success && buyer !== orderedBuyers[orderedBuyers.length - 1]) {
+        await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
+      }
     } catch (error) {
       console.error(`Exception sending email to ${buyer.email}:`, error);
       emailResults.push({
@@ -117,9 +132,20 @@ async function processLeadNotification(leadId: string) {
     }
   }
   
+  // Count successful emails and domain verification issues
+  const successCount = emailResults.filter(r => r.success).length;
+  const domainVerificationIssues = emailResults.filter(r => r.needsDomainVerification).length;
+  
+  // Create appropriate message
+  let message = `Notification sent to ${successCount} buyers`;
+  if (domainVerificationIssues > 0) {
+    message += `. ${domainVerificationIssues} emails couldn't be sent due to domain verification requirements.`;
+  }
+  
   return {
-    message: `Notification sent to ${emailResults.filter(r => r.success).length} buyers`,
-    results: emailResults
+    message,
+    results: emailResults,
+    domainVerificationRequired: domainVerificationIssues > 0
   };
 }
 

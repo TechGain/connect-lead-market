@@ -38,8 +38,25 @@ export async function sendEmail(
       return { success: false, error: "No recipient email provided" };
     }
     
+    // Get the FROM email address from environment or use default
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "Leads Marketplace <onboarding@resend.dev>";
+    const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
+    
+    // Check if using default sender and recipient is not the verified email
+    const isUsingDefaultSender = fromEmail.includes("onboarding@resend.dev");
+    const isVerifiedRecipient = recipient === verifiedEmail;
+    
+    if (isUsingDefaultSender && !isVerifiedRecipient) {
+      console.warn(`Cannot send to ${recipient} - Using default sender, but recipient is not the verified email`);
+      return { 
+        success: false, 
+        error: `When using the default Resend sender, you can only send to ${verifiedEmail}. Please verify a domain in Resend and update the FROM_EMAIL env variable.`,
+        needsDomainVerification: true
+      };
+    }
+    
     const emailResponse = await resend.emails.send({
-      from: "Leads Marketplace <onboarding@resend.dev>",
+      from: fromEmail,
       to: recipient,
       subject,
       html: htmlContent,
@@ -57,6 +74,16 @@ export async function sendEmail(
     console.log(`Email sent to ${recipient}`, emailResponse);
     return { success: true, id: emailResponse.id };
   } catch (error) {
+    // Handle rate limiting specifically
+    if (error.message && error.message.includes("Too many requests")) {
+      console.error(`Rate limit exceeded for ${recipient}:`, error);
+      return { 
+        success: false, 
+        error: "Rate limit exceeded. Please try again in a few seconds.",
+        rateLimited: true
+      };
+    }
+    
     console.error(`Failed to send email to ${recipient}:`, error);
     return { 
       success: false, 
