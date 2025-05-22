@@ -56,11 +56,33 @@ serve(async (req: Request) => {
     // Initialize Resend
     const resend = new Resend(apiKey);
     
-    // Send a test email using Resend's default domain
+    // Check if we have a verified domain
+    const domainVerified = Deno.env.get("DOMAIN_VERIFIED") === "true";
+    const fromDomain = Deno.env.get("FROM_EMAIL")?.split('@')[1] || "yourdomain.com";
+    const fromName = "Leads Marketplace";
+    
+    // Set the from email based on domain verification status
+    const fromEmail = domainVerified 
+      ? `${fromName} <notifications@${fromDomain}>`
+      : "Leads Marketplace <onboarding@resend.dev>";
+    
+    console.log(`Using from email: ${fromEmail}`);
+    
+    // Check if we need to redirect to the verified email
+    const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
+    const needsRedirect = !domainVerified && email !== verifiedEmail;
+    const effectiveRecipient = needsRedirect ? verifiedEmail : email;
+    
+    if (needsRedirect) {
+      console.warn(`IMPORTANT: Redirecting test email intended for ${email} to ${verifiedEmail} due to domain verification requirements`);
+      console.warn(`To send to any recipient, verify a domain at https://resend.com/domains and set DOMAIN_VERIFIED=true`);
+    }
+    
+    // Send a test email 
     const emailResult = await resend.emails.send({
-      from: "Leads Marketplace <onboarding@resend.dev>",
-      to: email,
-      subject: "Email Notification Test",
+      from: fromEmail,
+      to: effectiveRecipient,
+      subject: needsRedirect ? `[TEST MODE] Email Notification Test (intended for: ${email})` : "Email Notification Test",
       html: `
         <html>
           <body>
@@ -68,7 +90,11 @@ serve(async (req: Request) => {
             <p>This is a test email to verify that the email sending functionality is working properly.</p>
             <p>If you're receiving this, it means the configuration is correct!</p>
             <p>Date and time of test: ${new Date().toLocaleString()}</p>
-            <p><em>Note: This email is sent from Resend's default domain (onboarding@resend.dev) while your custom domain is being verified.</em></p>
+            ${needsRedirect ? `
+            <p><em>NOTE: This email was sent to ${verifiedEmail} instead of ${email} because your domain has not been verified yet.</em></p>
+            <p><em>To send emails to any recipient, please verify your domain at <a href="https://resend.com/domains">Resend's Domain Settings</a> and set DOMAIN_VERIFIED=true</em></p>
+            ` : ''}
+            <p><em>From: ${fromEmail}</em></p>
           </body>
         </html>
       `,
@@ -77,6 +103,25 @@ serve(async (req: Request) => {
     // Handle the case where Resend returns an error object
     if ('error' in emailResult && emailResult.error) {
       console.error("Resend API Error:", JSON.stringify(emailResult.error));
+      
+      // Check if this is a domain verification error
+      if (emailResult.error.message && emailResult.error.message.includes("verify a domain")) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: "Domain verification required. Please verify a domain at https://resend.com/domains",
+            domainVerificationRequired: true
+          }),
+          { 
+            status: 403, 
+            headers: { 
+              "Content-Type": "application/json",
+              ...corsHeaders
+            }
+          }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -97,8 +142,9 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Test email sent successfully",
-        id: emailResult.id
+        message: needsRedirect ? `Test email sent to ${verifiedEmail} (redirected from ${email})` : "Test email sent successfully",
+        id: emailResult.id,
+        redirected: needsRedirect
       }),
       { 
         status: 200, 

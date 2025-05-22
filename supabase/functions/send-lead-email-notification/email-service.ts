@@ -38,13 +38,18 @@ export async function sendEmail(
       return { success: false, error: "No recipient email provided" };
     }
     
-    // Get the FROM email address from environment or use default
-    // IMPORTANT: This should use a verified domain once domain verification is complete
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "Leads Marketplace <notifications@yourdomain.com>";
+    // Get the FROM email address configured properly
+    const fromName = "Leads Marketplace";
+    const fromDomain = Deno.env.get("FROM_EMAIL")?.split('@')[1] || "yourdomain.com";
+    const fromEmail = `${fromName} <notifications@${fromDomain}>`;
+    
+    // For logging and debugging
+    console.log(`Using from email: ${fromEmail}`);
+    
     const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
     
     // Check if we're in testing mode (no verified domain yet)
-    const isTestMode = !Deno.env.get("DOMAIN_VERIFIED");
+    const isTestMode = Deno.env.get("DOMAIN_VERIFIED") !== "true";
     const effectiveRecipient = isTestMode ? verifiedEmail : recipient;
     
     // If we're in test mode and not sending to the verified email, log a warning

@@ -20,7 +20,7 @@ const EmailTestButton = ({ userEmail }: EmailTestButtonProps) => {
     setIsSending(true);
     
     try {
-      toast.info("Sending test email using Resend's default domain...");
+      toast.info("Sending test email...");
       
       const { data, error } = await supabase.functions.invoke('test-email-sending', {
         body: { email: userEmail }
@@ -35,8 +35,15 @@ const EmailTestButton = ({ userEmail }: EmailTestButtonProps) => {
       console.log("Test email response:", data);
       
       if (data.success) {
-        toast.success(`Test email sent successfully to ${userEmail}!`);
-        toast.info("Note: Currently using Resend's default domain while your custom domain verification completes.");
+        if (data.redirected) {
+          toast.success(`Test email redirected to the verified email due to domain settings`);
+          toast.info("To send emails to all recipients, verify your domain in Resend and set DOMAIN_VERIFIED=true");
+        } else {
+          toast.success(`Test email sent successfully to ${userEmail}!`);
+        }
+      } else if (data.domainVerificationRequired) {
+        toast.error("Domain verification required");
+        toast.info("Please verify your domain at resend.com/domains and set DOMAIN_VERIFIED=true");
       } else {
         toast.error(`Failed to send test email: ${data.error || 'Unknown error'}`);
       }
