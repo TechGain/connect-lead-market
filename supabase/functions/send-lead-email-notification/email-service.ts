@@ -48,8 +48,17 @@ export async function sendEmail(
     
     const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
     
-    // Check if we're in testing mode (no verified domain yet)
-    const isTestMode = Deno.env.get("DOMAIN_VERIFIED") !== "true";
+    // Log the raw value of DOMAIN_VERIFIED for debugging
+    const rawDomainVerifiedValue = Deno.env.get("DOMAIN_VERIFIED");
+    console.log(`Raw DOMAIN_VERIFIED value: "${rawDomainVerifiedValue}"`);
+    
+    // More robust checking for domain verification
+    // Check for various truthy values: "true", "TRUE", "1", "yes", etc.
+    const domainVerifiedValue = (Deno.env.get("DOMAIN_VERIFIED") || "").trim().toLowerCase();
+    const isTestMode = !["true", "1", "yes", "y"].includes(domainVerifiedValue);
+    
+    console.log(`Test mode (domain not verified): ${isTestMode}`);
+    
     const effectiveRecipient = isTestMode ? verifiedEmail : recipient;
     
     // If we're in test mode and not sending to the verified email, log a warning

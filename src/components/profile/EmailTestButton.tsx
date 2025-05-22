@@ -38,14 +38,30 @@ const EmailTestButton = ({ userEmail }: EmailTestButtonProps) => {
         if (data.redirected) {
           toast.success(`Test email redirected to the verified email due to domain settings`);
           toast.info("To send emails to all recipients, verify your domain in Resend and set DOMAIN_VERIFIED=true");
+          
+          // Show debug info in console for troubleshooting
+          if (data.debugInfo) {
+            console.info("Email Debug Information:", data.debugInfo);
+          }
         } else {
           toast.success(`Test email sent successfully to ${userEmail}!`);
         }
       } else if (data.domainVerificationRequired) {
         toast.error("Domain verification required");
         toast.info("Please verify your domain at resend.com/domains and set DOMAIN_VERIFIED=true");
+        
+        // Display more detailed information about the environment variables
+        if (data.debugInfo) {
+          console.info("Email Configuration Debug Information:", data.debugInfo);
+          toast.info(`Domain verification value: "${data.debugInfo.domainVerifiedRaw || 'not set'}"`);
+        }
       } else {
         toast.error(`Failed to send test email: ${data.error || 'Unknown error'}`);
+        
+        // Show debug info in console for troubleshooting
+        if (data.debugInfo) {
+          console.info("Email Debug Information:", data.debugInfo);
+        }
       }
       
     } catch (error) {
