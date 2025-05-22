@@ -93,17 +93,11 @@ async function processLeadNotification(leadId: string) {
   
   // Send emails to all buyers with rate limiting
   const emailResults = [];
-  const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
-  
-  // Send to verified email first (if it's in the buyers list)
-  const verifiedBuyer = buyers.find(b => b.email === verifiedEmail);
-  const otherBuyers = buyers.filter(b => b.email !== verifiedEmail);
-  const orderedBuyers = verifiedBuyer ? [verifiedBuyer, ...otherBuyers] : otherBuyers;
   
   // Use a delay between email sends to avoid rate limiting
   const delayBetweenEmails = 500; // milliseconds
   
-  for (const buyer of orderedBuyers) {
+  for (const buyer of buyers) {
     console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
     
     try {
@@ -118,7 +112,7 @@ async function processLeadNotification(leadId: string) {
       });
       
       // If this was successful and we have more emails to send, add a delay
-      if (result.success && buyer !== orderedBuyers[orderedBuyers.length - 1]) {
+      if (result.success && buyer !== buyers[buyers.length - 1]) {
         await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
       }
     } catch (error) {
@@ -132,20 +126,20 @@ async function processLeadNotification(leadId: string) {
     }
   }
   
-  // Count successful emails and domain verification issues
+  // Count successful emails
   const successCount = emailResults.filter(r => r.success).length;
-  const domainVerificationIssues = emailResults.filter(r => r.needsDomainVerification).length;
+  const rateLimitedCount = emailResults.filter(r => r.rateLimited).length;
   
   // Create appropriate message
   let message = `Notification sent to ${successCount} buyers`;
-  if (domainVerificationIssues > 0) {
-    message += `. ${domainVerificationIssues} emails couldn't be sent due to domain verification requirements.`;
+  if (rateLimitedCount > 0) {
+    message += `. ${rateLimitedCount} emails couldn't be sent due to rate limiting.`;
   }
   
   return {
     message,
     results: emailResults,
-    domainVerificationRequired: domainVerificationIssues > 0
+    rateLimited: rateLimitedCount > 0
   };
 }
 

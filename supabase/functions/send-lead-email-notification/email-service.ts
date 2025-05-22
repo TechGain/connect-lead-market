@@ -40,20 +40,9 @@ export async function sendEmail(
     
     // Get the FROM email address from environment or use default
     const fromEmail = Deno.env.get("FROM_EMAIL") || "Leads Marketplace <onboarding@resend.dev>";
-    const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
     
-    // Check if using default sender and recipient is not the verified email
-    const isUsingDefaultSender = fromEmail.includes("onboarding@resend.dev");
-    const isVerifiedRecipient = recipient === verifiedEmail;
-    
-    if (isUsingDefaultSender && !isVerifiedRecipient) {
-      console.warn(`Cannot send to ${recipient} - Using default sender, but recipient is not the verified email`);
-      return { 
-        success: false, 
-        error: `When using the default Resend sender, you can only send to ${verifiedEmail}. Please verify a domain in Resend and update the FROM_EMAIL env variable.`,
-        needsDomainVerification: true
-      };
-    }
+    // With an upgraded Resend account, we can now send to any email address
+    // regardless of whether we're using the default sender or not
     
     const emailResponse = await resend.emails.send({
       from: fromEmail,
