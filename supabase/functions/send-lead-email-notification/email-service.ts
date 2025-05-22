@@ -38,13 +38,13 @@ export async function sendEmail(
       return { success: false, error: "No recipient email provided" };
     }
     
-    // Get the FROM email address configured properly
+    // Get the FROM email address configured properly - use the full email
     const fromName = "Leads Marketplace";
-    const fromDomain = Deno.env.get("FROM_EMAIL")?.split('@')[1] || "yourdomain.com";
-    const fromEmail = `${fromName} <notifications@${fromDomain}>`;
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "info@stayconnectus.com";
+    const fromAddress = `${fromName} <${fromEmail}>`;
     
     // For logging and debugging
-    console.log(`Using from email: ${fromEmail}`);
+    console.log(`Using from email: ${fromAddress}`);
     
     const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
     
@@ -59,7 +59,7 @@ export async function sendEmail(
     }
     
     const emailResponse = await resend.emails.send({
-      from: fromEmail,
+      from: isTestMode ? "Leads Marketplace <onboarding@resend.dev>" : fromAddress,
       to: effectiveRecipient,
       subject: isTestMode && recipient !== verifiedEmail ? `[TEST MODE] ${subject} (intended for: ${recipient})` : subject,
       html: htmlContent,

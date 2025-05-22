@@ -58,15 +58,17 @@ serve(async (req: Request) => {
     
     // Check if we have a verified domain
     const domainVerified = Deno.env.get("DOMAIN_VERIFIED") === "true";
-    const fromDomain = Deno.env.get("FROM_EMAIL")?.split('@')[1] || "yourdomain.com";
+    
+    // Get the full FROM_EMAIL (don't split it)
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "info@stayconnectus.com";
     const fromName = "Leads Marketplace";
     
     // Set the from email based on domain verification status
-    const fromEmail = domainVerified 
-      ? `${fromName} <notifications@${fromDomain}>`
+    const fromAddress = domainVerified 
+      ? `${fromName} <${fromEmail}>`
       : "Leads Marketplace <onboarding@resend.dev>";
     
-    console.log(`Using from email: ${fromEmail}`);
+    console.log(`Using from email: ${fromAddress}`);
     
     // Check if we need to redirect to the verified email
     const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
@@ -80,7 +82,7 @@ serve(async (req: Request) => {
     
     // Send a test email 
     const emailResult = await resend.emails.send({
-      from: fromEmail,
+      from: fromAddress,
       to: effectiveRecipient,
       subject: needsRedirect ? `[TEST MODE] Email Notification Test (intended for: ${email})` : "Email Notification Test",
       html: `
@@ -94,7 +96,7 @@ serve(async (req: Request) => {
             <p><em>NOTE: This email was sent to ${verifiedEmail} instead of ${email} because your domain has not been verified yet.</em></p>
             <p><em>To send emails to any recipient, please verify your domain at <a href="https://resend.com/domains">Resend's Domain Settings</a> and set DOMAIN_VERIFIED=true</em></p>
             ` : ''}
-            <p><em>From: ${fromEmail}</em></p>
+            <p><em>From: ${fromAddress}</em></p>
           </body>
         </html>
       `,
