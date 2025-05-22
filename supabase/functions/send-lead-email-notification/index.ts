@@ -94,41 +94,68 @@ async function processLeadNotification(leadId: string) {
   // Send emails to all buyers with rate limiting
   const emailResults = [];
   
-  // Use a delay between email sends to avoid rate limiting
-  const delayBetweenEmails = 500; // milliseconds
+  // Use a more conservative delay between email sends to avoid rate limiting
+  // Increase from 500ms to 2000ms (2 seconds) to ensure we stay well under Resend's rate limit
+  const delayBetweenEmails = 2000; // milliseconds
+  
+  // Maximum number of retry attempts per email
+  const maxRetries = 2;
   
   for (const buyer of buyers) {
     console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
     
-    try {
-      const result = await sendEmail(resend, buyer.email, emailSubject, emailHtml);
-      
-      console.log(`Email result for ${buyer.email}:`, result);
-      
-      emailResults.push({
-        buyer: buyer.id,
-        email: buyer.email,
-        ...result
-      });
-      
-      // If this was successful and we have more emails to send, add a delay
-      if (result.success && buyer !== buyers[buyers.length - 1]) {
-        await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
+    let attempts = 0;
+    let result;
+    
+    // Try sending the email with retries for rate-limited requests
+    while (attempts <= maxRetries) {
+      try {
+        // If this is a retry attempt, add an additional delay
+        if (attempts > 0) {
+          // Exponential backoff - wait longer for each retry
+          const retryDelay = delayBetweenEmails * (attempts * 2);
+          console.log(`Retry attempt ${attempts} for ${buyer.email}, waiting ${retryDelay}ms`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+        
+        result = await sendEmail(resend, buyer.email, emailSubject, emailHtml);
+        
+        console.log(`Email result for ${buyer.email}:`, result);
+        
+        // If successful or error is not related to rate limiting, break the retry loop
+        if (result.success || !result.rateLimited) {
+          break;
+        }
+        
+        attempts++;
+      } catch (error) {
+        console.error(`Exception sending email to ${buyer.email}:`, error);
+        result = {
+          success: false,
+          error: error.message
+        };
+        break;
       }
-    } catch (error) {
-      console.error(`Exception sending email to ${buyer.email}:`, error);
-      emailResults.push({
-        buyer: buyer.id,
-        email: buyer.email,
-        success: false,
-        error: error.message
-      });
+    }
+    
+    // Record the result
+    emailResults.push({
+      buyer: buyer.id,
+      email: buyer.email,
+      ...result,
+      attempts
+    });
+    
+    // If this wasn't the last buyer and wasn't rate limited, add the standard delay
+    if (buyer !== buyers[buyers.length - 1] && (!result || !result.rateLimited)) {
+      await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
     }
   }
   
   // Count successful emails
   const successCount = emailResults.filter(r => r.success).length;
   const rateLimitedCount = emailResults.filter(r => r.rateLimited).length;
+  const totalAttempts = emailResults.reduce((sum, r) => sum + (r.attempts || 0), 0);
   
   // Create appropriate message
   let message = `Notification sent to ${successCount} buyers`;
@@ -136,10 +163,18 @@ async function processLeadNotification(leadId: string) {
     message += `. ${rateLimitedCount} emails couldn't be sent due to rate limiting.`;
   }
   
+  console.log(`Email notification complete: ${successCount} successful, ${rateLimitedCount} rate limited, total attempts: ${totalAttempts}`);
+  
   return {
     message,
     results: emailResults,
-    rateLimited: rateLimitedCount > 0
+    rateLimited: rateLimitedCount > 0,
+    stats: {
+      total: buyers.length,
+      successful: successCount,
+      rateLimited: rateLimitedCount,
+      totalAttempts
+    }
   };
 }
 
