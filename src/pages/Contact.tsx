@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-
 const Contact = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +16,6 @@ const Contact = () => {
     });
     (e.target as HTMLFormElement).reset();
   };
-
   return <div className="flex flex-col min-h-screen">
       <Helmet>
         <title>Contact Us | StayConnect</title>
@@ -42,7 +39,7 @@ const Contact = () => {
                   <Phone className="h-5 w-5 text-brand-600 mt-1" />
                   <div>
                     <h3 className="font-medium">Phone</h3>
-                    <p className="text-gray-600">+1 (310) 565-3358</p>
+                    <p className="text-gray-600">+1 (818) 445-3241</p>
                   </div>
                 </div>
                 
@@ -140,5 +137,4 @@ const Contact = () => {
       <Footer />
     </div>;
 };
-
 export default Contact;
