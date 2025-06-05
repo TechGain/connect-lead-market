@@ -8,7 +8,8 @@ import Footer from '@/components/Footer';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
-import LeadsChart from '@/components/dashboard/LeadsChart';
+import EnhancedLeadsChart from '@/components/dashboard/EnhancedLeadsChart';
+import PerformanceOverview from '@/components/dashboard/PerformanceOverview';
 import RecentLeadsList from '@/components/dashboard/RecentLeadsList';
 import InfoCard from '@/components/dashboard/InfoCard';
 
@@ -29,34 +30,42 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-600">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-gray-600 text-lg">
             {role === 'seller' 
               ? 'Monitor your lead sales and business performance' 
               : 'Track your lead purchases and conversion metrics'}
           </p>
         </div>
         
-        {/* Dashboard Metrics */}
+        {/* Enhanced Dashboard Metrics */}
         <DashboardMetrics data={dashboardData} role={role} />
         
-        {/* Chart */}
-        <LeadsChart 
-          title={role === 'seller' ? 'Lead Sales' : 'Lead Purchases'}
+        {/* Performance Overview */}
+        <PerformanceOverview data={dashboardData} role={role} />
+        
+        {/* Enhanced Chart */}
+        <EnhancedLeadsChart 
+          title={role === 'seller' ? 'Lead Sales Analytics' : 'Purchase Analytics'}
           description={role === 'seller' 
-            ? 'Number of leads sold per month'
-            : 'Number of leads purchased per month'
+            ? 'Track your lead sales performance and revenue over time'
+            : 'Monitor your lead purchases and spending patterns'
           }
           data={dashboardData.monthlyLeadData}
+          categoryData={dashboardData.categoryBreakdown}
           barName={role === 'seller' ? 'Leads Sold' : 'Leads Purchased'}
+          showRevenue={true}
         />
         
-        {/* Additional information section */}
+        {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <RecentLeadsList 
             title={role === 'seller' ? 'Recent Sales' : 'Recent Purchases'}
@@ -66,10 +75,10 @@ const Dashboard = () => {
           />
           
           <InfoCard
-            title={role === 'seller' ? 'Top Performing Leads' : 'Lead Performance'}
+            title={role === 'seller' ? 'Business Insights' : 'Performance Insights'}
             description={role === 'seller' 
-              ? 'Your best selling lead categories' 
-              : 'How your purchased leads are performing'}
+              ? 'Key metrics and growth opportunities' 
+              : 'Optimization tips and conversion insights'}
           />
         </div>
       </main>
