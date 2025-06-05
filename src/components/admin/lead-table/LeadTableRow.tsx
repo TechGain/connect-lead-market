@@ -12,18 +12,33 @@ interface LeadTableRowProps {
   lead: Lead;
   onDeleteClick: (lead: Lead) => void;
   onRefundClick: (lead: Lead) => void;
+  onRowClick: (lead: Lead) => void;
 }
 
-const LeadTableRow: React.FC<LeadTableRowProps> = ({ lead, onDeleteClick, onRefundClick }) => {
+const LeadTableRow: React.FC<LeadTableRowProps> = ({ 
+  lead, 
+  onDeleteClick, 
+  onRefundClick,
+  onRowClick 
+}) => {
   // Check if lead can be refunded (only sold leads can be refunded)
   const canBeRefunded = (lead: Lead) => {
     return lead.status === 'sold';
   };
 
+  const handleRowClick = () => {
+    onRowClick(lead);
+  };
+
+  const handleActionClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation(); // Prevent row click when clicking action buttons
+    action();
+  };
+
   return (
     <TableRow 
       key={lead.id} 
-      className={
+      className={`cursor-pointer hover:bg-gray-100 transition-colors ${
         lead.status === 'erased' 
           ? 'opacity-70 bg-red-50' 
           : lead.status === 'sold'
@@ -31,7 +46,8 @@ const LeadTableRow: React.FC<LeadTableRowProps> = ({ lead, onDeleteClick, onRefu
             : lead.status === 'refunded'
               ? 'bg-orange-50'
               : ''
-      }
+      }`}
+      onClick={handleRowClick}
     >
       <TableCell>{lead.type}</TableCell>
       <TableCell>{lead.location}</TableCell>
@@ -53,7 +69,7 @@ const LeadTableRow: React.FC<LeadTableRowProps> = ({ lead, onDeleteClick, onRefu
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onRefundClick(lead)}
+            onClick={(e) => handleActionClick(e, () => onRefundClick(lead))}
             className="h-8 w-8 text-orange-500 hover:text-orange-700 hover:bg-orange-50"
             title="Mark as Refunded"
           >
@@ -63,7 +79,7 @@ const LeadTableRow: React.FC<LeadTableRowProps> = ({ lead, onDeleteClick, onRefu
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onDeleteClick(lead)}
+          onClick={(e) => handleActionClick(e, () => onDeleteClick(lead))}
           disabled={lead.status === 'erased'}
           className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
           title="Delete Lead"

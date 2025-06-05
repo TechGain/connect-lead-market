@@ -8,9 +8,15 @@ interface LeadTableProps {
   leads: Lead[];
   onDeleteClick: (lead: Lead) => void;
   onRefundClick: (lead: Lead) => void;
+  onRowClick: (lead: Lead) => void;
 }
 
-const LeadTable: React.FC<LeadTableProps> = ({ leads, onDeleteClick, onRefundClick }) => {
+const LeadTable: React.FC<LeadTableProps> = ({ 
+  leads, 
+  onDeleteClick, 
+  onRefundClick,
+  onRowClick 
+}) => {
   if (!leads || leads.length === 0) {
     return (
       <div className="text-center py-12">
@@ -42,7 +48,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, onDeleteClick, onRefundCli
               key={lead.id}
               lead={lead} 
               onDeleteClick={onDeleteClick} 
-              onRefundClick={onRefundClick} 
+              onRefundClick={onRefundClick}
+              onRowClick={onRowClick}
             />
           ))}
         </TableBody>

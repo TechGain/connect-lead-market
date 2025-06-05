@@ -6,6 +6,7 @@ import { useAdminLeadRefund } from '@/hooks/use-admin-lead-refund';
 import LeadTable from './lead-table/LeadTable';
 import DeleteLeadDialog from './lead-table/DeleteLeadDialog';
 import RefundLeadDialog from './lead-table/RefundLeadDialog';
+import LeadDetailModal from './lead-table/LeadDetailModal';
 
 interface AdminLeadTableProps {
   leads: Lead[];
@@ -20,6 +21,7 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({
 }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const { deleteLead, isDeleting } = useAdminLeadDelete();
   const { refundLead, isRefunding } = useAdminLeadRefund();
@@ -32,6 +34,11 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({
   const handleRefundClick = (lead: Lead) => {
     setSelectedLead(lead);
     setIsRefundDialogOpen(true);
+  };
+
+  const handleRowClick = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsDetailModalOpen(true);
   };
 
   const confirmDeleteLead = async () => {
@@ -59,7 +66,8 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({
       <LeadTable 
         leads={leads} 
         onDeleteClick={handleDeleteClick} 
-        onRefundClick={handleRefundClick} 
+        onRefundClick={handleRefundClick}
+        onRowClick={handleRowClick}
       />
 
       <DeleteLeadDialog 
@@ -74,6 +82,12 @@ const AdminLeadTable: React.FC<AdminLeadTableProps> = ({
         onClose={() => setIsRefundDialogOpen(false)} 
         onConfirm={confirmRefundLead} 
         isRefunding={isRefunding} 
+      />
+
+      <LeadDetailModal
+        lead={selectedLead}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
       />
     </>
   );
