@@ -78,6 +78,23 @@ serve(async (req) => {
 
     logStep("Lead purchase completed", { leadId, buyerId: user.id });
 
+    // Send notification to seller about the sale (non-blocking)
+    try {
+      logStep("Triggering seller notification");
+      const sellerNotificationResult = await supabaseAdmin.functions.invoke('send-lead-sold-notification', {
+        body: { leadId }
+      });
+      
+      if (sellerNotificationResult.error) {
+        logStep("Seller notification failed", { error: sellerNotificationResult.error });
+      } else {
+        logStep("Seller notification triggered successfully", sellerNotificationResult.data);
+      }
+    } catch (notificationError) {
+      // Log but don't fail the purchase if notification fails
+      logStep("Seller notification exception (non-blocking)", { error: notificationError });
+    }
+
     // Return success response
     return new Response(
       JSON.stringify({ 
