@@ -89,6 +89,7 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           description: string | null
+          expiration_warning_sent: boolean | null
           id: string
           location: string
           price: number
@@ -111,6 +112,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          expiration_warning_sent?: boolean | null
           id?: string
           location: string
           price: number
@@ -133,6 +135,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          expiration_warning_sent?: boolean | null
           id?: string
           location?: string
           price?: number

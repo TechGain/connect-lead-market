@@ -37,3 +37,6 @@ secret = "your-jwt-secret"
 [functions]
 [functions.test-email-sending]
 verify_jwt = true
+
+[functions.send-lead-expiration-notification]
+verify_jwt = false
