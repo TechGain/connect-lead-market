@@ -8,6 +8,7 @@ interface LeadTableProps {
   leads: Lead[];
   onDeleteClick: (lead: Lead) => void;
   onRefundClick: (lead: Lead) => void;
+  onMarkPaidClick: (lead: Lead) => void;
   onRowClick: (lead: Lead) => void;
 }
 
@@ -15,6 +16,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   leads, 
   onDeleteClick, 
   onRefundClick,
+  onMarkPaidClick,
   onRowClick 
 }) => {
   if (!leads || leads.length === 0) {
@@ -49,6 +51,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
               lead={lead} 
               onDeleteClick={onDeleteClick} 
               onRefundClick={onRefundClick}
+              onMarkPaidClick={onMarkPaidClick}
               onRowClick={onRowClick}
             />
           ))}

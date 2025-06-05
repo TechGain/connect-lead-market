@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Lead, mapDbLeadToAppLead } from '@/types/lead';
 import { toast } from 'sonner';
 
-export type LeadStatusFilter = 'all' | 'active' | 'sold' | 'refunded' | 'erased';
+export type LeadStatusFilter = 'all' | 'active' | 'sold' | 'paid' | 'refunded' | 'erased';
 
 export const useAdminLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -29,6 +29,8 @@ export const useAdminLeads = () => {
         query = query.in('status', ['new', 'pending']);
       } else if (statusFilter === 'sold') {
         query = query.eq('status', 'sold');
+      } else if (statusFilter === 'paid') {
+        query = query.eq('status', 'paid');
       } else if (statusFilter === 'refunded') {
         query = query.eq('status', 'refunded');
       } else if (statusFilter === 'erased') {

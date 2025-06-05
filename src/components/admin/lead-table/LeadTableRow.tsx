@@ -3,7 +3,7 @@ import React from 'react';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { Lead } from '@/types/lead';
 import { Button } from '@/components/ui/button';
-import { Trash2, RefreshCcw } from 'lucide-react';
+import { Trash2, RefreshCcw, DollarSign } from 'lucide-react';
 import { formatCurrency } from '@/utils/format-helpers';
 import LeadStatusBadge from './LeadStatusBadge';
 import ConfirmationStatusBadge from './ConfirmationStatusBadge';
@@ -12,6 +12,7 @@ interface LeadTableRowProps {
   lead: Lead;
   onDeleteClick: (lead: Lead) => void;
   onRefundClick: (lead: Lead) => void;
+  onMarkPaidClick: (lead: Lead) => void;
   onRowClick: (lead: Lead) => void;
 }
 
@@ -19,10 +20,16 @@ const LeadTableRow: React.FC<LeadTableRowProps> = ({
   lead, 
   onDeleteClick, 
   onRefundClick,
+  onMarkPaidClick,
   onRowClick 
 }) => {
   // Check if lead can be refunded (only sold leads can be refunded)
   const canBeRefunded = (lead: Lead) => {
+    return lead.status === 'sold';
+  };
+
+  // Check if lead can be marked as paid (only sold leads can be marked as paid)
+  const canBeMarkedAsPaid = (lead: Lead) => {
     return lead.status === 'sold';
   };
 
@@ -43,9 +50,11 @@ const LeadTableRow: React.FC<LeadTableRowProps> = ({
           ? 'opacity-70 bg-red-50' 
           : lead.status === 'sold'
             ? 'bg-blue-50'
-            : lead.status === 'refunded'
-              ? 'bg-orange-50'
-              : ''
+            : lead.status === 'paid'
+              ? 'bg-green-50'
+              : lead.status === 'refunded'
+                ? 'bg-orange-50'
+                : ''
       }`}
       onClick={handleRowClick}
     >
@@ -65,6 +74,17 @@ const LeadTableRow: React.FC<LeadTableRowProps> = ({
           : '-'}
       </TableCell>
       <TableCell className="space-x-1">
+        {canBeMarkedAsPaid(lead) && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => handleActionClick(e, () => onMarkPaidClick(lead))}
+            className="h-8 w-8 text-green-500 hover:text-green-700 hover:bg-green-50"
+            title="Mark as Paid"
+          >
+            <DollarSign className="h-4 w-4" />
+          </Button>
+        )}
         {canBeRefunded(lead) && (
           <Button
             variant="ghost"
