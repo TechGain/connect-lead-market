@@ -15,7 +15,7 @@ serve(async (req: Request) => {
   }
   
   try {
-    console.log("Starting test-email-sending function");
+    console.log("=== TEST EMAIL FUNCTION STARTED ===");
     
     const apiKey = Deno.env.get("RESEND_API_KEY");
     
@@ -33,7 +33,7 @@ serve(async (req: Request) => {
       );
     }
     
-    console.log("RESEND_API_KEY is configured");
+    console.log("RESEND_API_KEY is configured (starts with:", apiKey.substring(0, 8) + "...)");
     
     // Parse request body
     const { email } = await req.json();
@@ -56,49 +56,53 @@ serve(async (req: Request) => {
     // Initialize Resend
     const resend = new Resend(apiKey);
     
-    // Explicitly log the raw DOMAIN_VERIFIED value for debugging
+    // Get environment variables for debugging
     const rawDomainVerifiedValue = Deno.env.get("DOMAIN_VERIFIED");
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "info@stayconnectus.com";
+    const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
+    
     console.log(`Raw DOMAIN_VERIFIED value: "${rawDomainVerifiedValue}"`);
+    console.log(`FROM_EMAIL: "${fromEmail}"`);
+    console.log(`VERIFIED_EMAIL: "${verifiedEmail}"`);
     
     // More robust checking for domain verification
-    // Check for various truthy values: "true", "TRUE", "1", "yes", etc.
-    const domainVerifiedValue = (Deno.env.get("DOMAIN_VERIFIED") || "").trim().toLowerCase();
+    const domainVerifiedValue = (rawDomainVerifiedValue || "").trim().toLowerCase();
     const domainVerified = ["true", "1", "yes", "y"].includes(domainVerifiedValue);
     
-    console.log(`Domain verified status (after checking): ${domainVerified}`);
+    console.log(`Domain verified status: ${domainVerified}`);
     
-    // Get the full FROM_EMAIL (don't split it)
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "info@stayconnectus.com";
+    // For testing, use Resend's default domain if our domain isn't verified
+    const useResendDefault = !domainVerified;
     const fromName = "Leads Marketplace";
     
-    // Set the from email based on domain verification status
-    const fromAddress = domainVerified 
-      ? `${fromName} <${fromEmail}>`
-      : "Leads Marketplace <onboarding@resend.dev>";
+    const fromAddress = useResendDefault 
+      ? "Leads Marketplace <onboarding@resend.dev>"
+      : `${fromName} <${fromEmail}>`;
     
     console.log(`Using from email: ${fromAddress}`);
     
     // Check if we need to redirect to the verified email
-    const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
     const needsRedirect = !domainVerified && email !== verifiedEmail;
     const effectiveRecipient = needsRedirect ? verifiedEmail : email;
     
     if (needsRedirect) {
-      console.warn(`IMPORTANT: Redirecting test email intended for ${email} to ${verifiedEmail} due to domain verification requirements`);
-      console.warn(`To send to any recipient, verify a domain at https://resend.com/domains and set DOMAIN_VERIFIED=true`);
+      console.warn(`Redirecting test email from ${email} to ${verifiedEmail} (domain not verified)`);
     }
     
-    // Send a test email 
-    const emailResult = await resend.emails.send({
+    if (useResendDefault) {
+      console.log(`Using Resend default domain due to domain verification status`);
+    }
+    
+    const emailPayload = {
       from: fromAddress,
       to: effectiveRecipient,
       subject: needsRedirect ? `[TEST MODE] Email Notification Test (intended for: ${email})` : "Email Notification Test",
       html: `
         <html>
           <body>
-            <h1>Email Test Successful</h1>
+            <h1>Email Test Successful ✅</h1>
             <p>This is a test email to verify that the email sending functionality is working properly.</p>
-            <p>If you're receiving this, it means the configuration is correct!</p>
+            <p>If you're receiving this, it means the configuration is working!</p>
             <p>Date and time of test: ${new Date().toLocaleString()}</p>
             <p><strong>Debug Information:</strong></p>
             <ul>
@@ -106,16 +110,26 @@ serve(async (req: Request) => {
               <li>Domain verified (processed): ${domainVerified}</li>
               <li>FROM_EMAIL value: "${fromEmail}"</li>
               <li>From address used: "${fromAddress}"</li>
+              <li>Using Resend default domain: ${useResendDefault}</li>
               <li>Email redirected: ${needsRedirect ? "Yes" : "No"}</li>
             </ul>
             ${needsRedirect ? `
-            <p><em>NOTE: This email was sent to ${verifiedEmail} instead of ${email} because your domain has not been verified yet.</em></p>
-            <p><em>To send emails to any recipient, please verify your domain at <a href="https://resend.com/domains">Resend's Domain Settings</a> and set DOMAIN_VERIFIED=true</em></p>
+            <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 15px 0; border-radius: 5px;">
+              <p><strong>NOTE:</strong> This email was sent to ${verifiedEmail} instead of ${email} because your domain has not been verified yet.</p>
+              <p>To send emails to any recipient, please verify your domain at <a href="https://resend.com/domains">Resend's Domain Settings</a> and set DOMAIN_VERIFIED=true</p>
+            </div>
             ` : ''}
           </body>
         </html>
       `,
-    });
+    };
+    
+    console.log('Email payload:', JSON.stringify(emailPayload, null, 2));
+    
+    // Send a test email 
+    const emailResult = await resend.emails.send(emailPayload);
+    
+    console.log("Resend API response:", JSON.stringify(emailResult, null, 2));
     
     // Handle the case where Resend returns an error object
     if ('error' in emailResult && emailResult.error) {
@@ -132,7 +146,8 @@ serve(async (req: Request) => {
               domainVerifiedRaw: rawDomainVerifiedValue,
               domainVerifiedProcessed: domainVerified,
               fromEmail,
-              fromAddress
+              fromAddress,
+              useResendDefault
             }
           }),
           { 
@@ -153,7 +168,8 @@ serve(async (req: Request) => {
             domainVerifiedRaw: rawDomainVerifiedValue,
             domainVerifiedProcessed: domainVerified,
             fromEmail,
-            fromAddress
+            fromAddress,
+            useResendDefault
           }
         }),
         { 
@@ -166,7 +182,7 @@ serve(async (req: Request) => {
       );
     }
     
-    console.log("Email sending response:", emailResult);
+    console.log("Email sent successfully!");
     
     return new Response(
       JSON.stringify({ 
@@ -178,7 +194,8 @@ serve(async (req: Request) => {
           domainVerifiedRaw: rawDomainVerifiedValue,
           domainVerifiedProcessed: domainVerified,
           fromEmail,
-          fromAddress
+          fromAddress,
+          useResendDefault
         }
       }),
       { 
@@ -191,6 +208,7 @@ serve(async (req: Request) => {
     );
     
   } catch (error) {
+    console.error("=== TEST EMAIL FUNCTION ERROR ===");
     console.error("Error in test-email-sending function:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),

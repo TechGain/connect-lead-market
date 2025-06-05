@@ -14,7 +14,7 @@ export function createEmailService() {
     console.error("RESEND_API_KEY environment variable is not set!");
     throw new Error("RESEND_API_KEY is not configured");
   } else {
-    console.log("Resend API key is configured properly");
+    console.log("Resend API key is configured properly (key starts with:", apiKey.substring(0, 8) + "...)");
   }
   
   const resend = new Resend(apiKey);
@@ -31,52 +31,69 @@ export async function sendEmail(
   htmlContent: string
 ) {
   try {
-    console.log(`Attempting to send email to ${recipient}`);
+    console.log(`=== SENDING EMAIL ===`);
+    console.log(`Recipient: ${recipient}`);
+    console.log(`Subject: ${subject}`);
     
     if (!recipient) {
       console.error("No recipient email provided");
       return { success: false, error: "No recipient email provided" };
     }
     
-    // Get the FROM email address configured properly - use the full email
+    // Get the FROM email address configured properly
     const fromName = "Leads Marketplace";
     const fromEmail = Deno.env.get("FROM_EMAIL") || "info@stayconnectus.com";
     const fromAddress = `${fromName} <${fromEmail}>`;
     
-    // For logging and debugging
-    console.log(`Using from email: ${fromAddress}`);
+    console.log(`From address: ${fromAddress}`);
     
+    // Get verification settings
     const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
-    
-    // Log the raw value of DOMAIN_VERIFIED for debugging
     const rawDomainVerifiedValue = Deno.env.get("DOMAIN_VERIFIED");
     console.log(`Raw DOMAIN_VERIFIED value: "${rawDomainVerifiedValue}"`);
     
     // More robust checking for domain verification
-    // Check for various truthy values: "true", "TRUE", "1", "yes", etc.
-    const domainVerifiedValue = (Deno.env.get("DOMAIN_VERIFIED") || "").trim().toLowerCase();
-    const isTestMode = !["true", "1", "yes", "y"].includes(domainVerifiedValue);
+    const domainVerifiedValue = (rawDomainVerifiedValue || "").trim().toLowerCase();
+    const isDomainVerified = ["true", "1", "yes", "y"].includes(domainVerifiedValue);
     
-    console.log(`Test mode (domain not verified): ${isTestMode}`);
+    console.log(`Domain verified: ${isDomainVerified}`);
     
-    const effectiveRecipient = isTestMode ? verifiedEmail : recipient;
+    // For testing, let's use Resend's default domain if domain isn't verified
+    const useResendDefault = !isDomainVerified;
+    const effectiveFromAddress = useResendDefault 
+      ? "Leads Marketplace <onboarding@resend.dev>" 
+      : fromAddress;
     
-    // If we're in test mode and not sending to the verified email, log a warning
-    if (isTestMode && recipient !== verifiedEmail) {
-      console.warn(`IMPORTANT: In test mode - redirecting email intended for ${recipient} to ${verifiedEmail} due to domain verification requirements`);
-      console.warn(`To send to all recipients, verify a domain at https://resend.com/domains and set DOMAIN_VERIFIED=true in your environment`);
+    const needsRedirect = !isDomainVerified && recipient !== verifiedEmail;
+    const effectiveRecipient = needsRedirect ? verifiedEmail : recipient;
+    
+    if (needsRedirect) {
+      console.warn(`Redirecting email from ${recipient} to ${verifiedEmail} (domain not verified)`);
     }
     
-    const emailResponse = await resend.emails.send({
-      from: isTestMode ? "Leads Marketplace <onboarding@resend.dev>" : fromAddress,
+    if (useResendDefault) {
+      console.log(`Using Resend default domain for sending`);
+    }
+    
+    console.log(`Final from address: ${effectiveFromAddress}`);
+    console.log(`Final recipient: ${effectiveRecipient}`);
+    
+    const emailPayload = {
+      from: effectiveFromAddress,
       to: effectiveRecipient,
-      subject: isTestMode && recipient !== verifiedEmail ? `[TEST MODE] ${subject} (intended for: ${recipient})` : subject,
+      subject: needsRedirect ? `[TEST MODE] ${subject} (intended for: ${recipient})` : subject,
       html: htmlContent,
-    });
+    };
+    
+    console.log('Email payload:', JSON.stringify(emailPayload, null, 2));
+    
+    const emailResponse = await resend.emails.send(emailPayload);
+    
+    console.log('Resend API response:', JSON.stringify(emailResponse, null, 2));
     
     // Handle the case where Resend returns an error object
     if ('error' in emailResponse && emailResponse.error) {
-      console.error(`Resend API Error: ${JSON.stringify(emailResponse.error)}`);
+      console.error(`Resend API Error:`, emailResponse.error);
       
       // Check if this is a domain verification error
       if (emailResponse.error.message && emailResponse.error.message.includes("verify a domain")) {
@@ -94,9 +111,11 @@ export async function sendEmail(
     }
     
     // If we're in test mode but not sending to the intended recipient, mark as redirected
-    const redirected = isTestMode && recipient !== verifiedEmail;
+    const redirected = needsRedirect;
     
-    console.log(`Email sent to ${redirected ? verifiedEmail + ' (redirected)' : recipient}`, emailResponse);
+    console.log(`Email sent successfully to ${redirected ? verifiedEmail + ' (redirected)' : recipient}`);
+    console.log('Email ID:', emailResponse.id);
+    
     return { 
       success: true, 
       id: emailResponse.id,
@@ -104,6 +123,9 @@ export async function sendEmail(
       intendedRecipient: redirected ? recipient : undefined
     };
   } catch (error) {
+    console.error(`=== EMAIL SENDING FAILED ===`);
+    console.error(`Failed to send email to ${recipient}:`, error);
+    
     // Handle rate limiting specifically
     if (error.message && error.message.includes("Too many requests")) {
       console.error(`Rate limit exceeded for ${recipient}:`, error);
@@ -114,7 +136,6 @@ export async function sendEmail(
       };
     }
     
-    console.error(`Failed to send email to ${recipient}:`, error);
     return { 
       success: false, 
       error: error.message 
