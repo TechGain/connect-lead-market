@@ -18,6 +18,7 @@ interface LeadCardProps {
   onEdit?: (lead: Lead) => void;
   onDelete?: (lead: Lead) => void;
   onRate?: (lead: Lead) => void;
+  adminView?: boolean;
 }
 
 const LeadCard = ({ 
@@ -28,7 +29,8 @@ const LeadCard = ({
   isOwner = false,
   onEdit,
   onDelete,
-  onRate
+  onRate,
+  adminView = false
 }: LeadCardProps) => {
   // Get the current user's role
   const { role } = useUserRole();
@@ -37,13 +39,13 @@ const LeadCard = ({
   const isSold = lead.status === 'sold' || lead.status === 'pending';
   const isErased = lead.status === 'erased';
   
-  // Don't render the card at all if it's erased
-  if (isErased) {
+  // Don't render the card at all if it's erased UNLESS it's in admin view
+  if (isErased && !adminView) {
     return null;
   }
   
   return (
-    <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'bg-gray-50' : ''}`}>
+    <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'bg-gray-50' : ''} ${isErased ? 'border-red-300 bg-red-50' : ''}`}>
       {/* Show date at the top of the card */}
       <div className="px-6 pt-6 pb-0">
         <LeadCardMetadata
