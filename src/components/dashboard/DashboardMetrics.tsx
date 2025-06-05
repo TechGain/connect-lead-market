@@ -9,7 +9,6 @@ import {
   TrendingUp, 
   ShoppingCart,
   RefreshCw,
-  Star,
   Target,
   Zap
 } from 'lucide-react';
@@ -75,16 +74,6 @@ const DashboardMetrics = ({ data, role }: DashboardMetricsProps) => {
           subtitle="Currently available"
           icon={Activity}
           gradient="orange"
-        />
-        
-        {/* Average Rating */}
-        <EnhancedMetricCard
-          title="Average Rating"
-          value={data.averageLeadRating > 0 ? data.averageLeadRating.toFixed(1) : 'N/A'}
-          subtitle="Lead quality score"
-          icon={Star}
-          gradient="blue"
-          suffix={data.averageLeadRating > 0 ? '/5' : ''}
         />
         
         {/* Refund Losses */}
@@ -176,15 +165,6 @@ const DashboardMetrics = ({ data, role }: DashboardMetricsProps) => {
         subtitle="Return on investment"
         icon={TrendingUp}
         gradient={data.roiPercentage > 0 ? 'green' : 'red'}
-      />
-      
-      {/* Ratings Given */}
-      <EnhancedMetricCard
-        title="Ratings Given"
-        value={data.ratingsGiven}
-        subtitle="Lead reviews"
-        icon={Star}
-        gradient="orange"
       />
       
       {/* Refunded Amount */}
