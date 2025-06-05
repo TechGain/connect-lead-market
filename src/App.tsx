@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { UserRoleProvider, useUserRole } from "./hooks/use-user-role";
 import { HelmetProvider } from 'react-helmet-async';
-import { useEffect } from "react";
 import { ChatWidget } from "./components/chat/ChatWidget";
 import { ScrollToTop } from "./components/ScrollToTop";
 import GoogleAnalytics from "./components/analytics/GoogleAnalytics";
@@ -42,10 +42,10 @@ const queryClient = new QueryClient({
 });
 
 // Buyer or Admin Route Guard - allows both buyers and admins
-const BuyerOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
+const BuyerOrAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isLoggedIn, role, isLoading, isAdmin } = useUserRole();
   
-  useEffect(() => {
+  React.useEffect(() => {
     console.log("BuyerOrAdminRoute - Current state:", { isLoggedIn, role, isAdmin, isLoading });
   }, [isLoggedIn, role, isAdmin, isLoading]);
   
@@ -69,7 +69,7 @@ const BuyerOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Seller or Admin Route Guard
-const SellerOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
+const SellerOrAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isLoggedIn, role, isLoading, isAdmin } = useUserRole();
   
   // Show loading state while determining role
@@ -92,10 +92,10 @@ const SellerOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Buyer Route Guard
-const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
+const BuyerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isLoggedIn, role, isLoading } = useUserRole();
   
-  useEffect(() => {
+  React.useEffect(() => {
     console.log("BuyerRoute - Current state:", { isLoggedIn, role, isLoading });
   }, [isLoggedIn, role, isLoading]);
   
@@ -119,7 +119,7 @@ const BuyerRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Admin Route Guard
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isLoggedIn, role, isLoading } = useUserRole();
   
   // Show loading state while determining role
@@ -141,7 +141,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => {
+const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
@@ -172,7 +172,6 @@ const App = () => {
                     </SellerOrAdminRoute>
                   } 
                 />
-                {/* Keep only one instance of the upload-leads route */}
                 <Route 
                   path="/upload-leads" 
                   element={
@@ -198,7 +197,6 @@ const App = () => {
                     </AdminRoute>
                   } 
                 />
-                {/* Admin Leads Route */}
                 <Route 
                   path="/admin/leads" 
                   element={
@@ -210,7 +208,6 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               
-              {/* Chat Widget */}
               <ChatWidget />
             </UserRoleProvider>
           </TooltipProvider>

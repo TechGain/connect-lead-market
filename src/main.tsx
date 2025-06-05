@@ -1,7 +1,8 @@
 
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
 // Log to verify script execution
 console.log('Main script executing, checking for Google Analytics presence...');
@@ -11,4 +12,10 @@ if (typeof window.gtag !== 'undefined') {
   console.warn('Google Analytics not detected in main.tsx. This is expected during development, but should work in production.');
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+const container = document.getElementById("root");
+if (!container) {
+  throw new Error('Root element not found');
+}
+
+const root = createRoot(container);
+root.render(<App />);
