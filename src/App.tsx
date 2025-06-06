@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { navItems } from "./nav-items";
 import { UserRoleProvider } from './providers/UserRoleProvider';
-import ScrollToTop from './components/ScrollToTop';
+import { ScrollToTop } from './components/ScrollToTop';
 import GoogleAnalytics from './components/analytics/GoogleAnalytics';
 
 const queryClient = new QueryClient();
