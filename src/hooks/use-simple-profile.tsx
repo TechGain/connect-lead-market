@@ -12,10 +12,8 @@ export interface ProfileData {
   rating: number;
   joinedDate: string;
   totalLeads: number;
+  phone?: string | null;
 }
-
-const MAX_RETRIES = 2;
-const RETRY_DELAY = 2000;
 
 export const useSimpleProfile = (isOffline = false) => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -24,7 +22,7 @@ export const useSimpleProfile = (isOffline = false) => {
   const { user } = useUserRole();
   
   // Direct profile fetch function
-  const fetchProfileData = useCallback(async (retryCount = 0) => {
+  const fetchProfileData = useCallback(async () => {
     if (isOffline) {
       // In offline mode, try to use cached data only
       try {
@@ -46,7 +44,8 @@ export const useSimpleProfile = (isOffline = false) => {
               joinedDate: cachedUser?.created_at ? 
                 new Date(cachedUser.created_at).toLocaleDateString('en-US', {year: 'numeric', month: 'long'}) : 
                 'Unknown',
-              totalLeads: cachedProfile?.total_leads || 0
+              totalLeads: cachedProfile?.total_leads || 0,
+              phone: cachedProfile?.phone || null
             };
             
             setProfileData(fallbackProfile);
@@ -68,29 +67,20 @@ export const useSimpleProfile = (isOffline = false) => {
       setIsLoading(true);
       setError(null);
       
+      console.log("useSimpleProfile: Starting fetch for user:", user?.id);
+      
       // Get user info first
       let currentUser = user;
-      if (!currentUser) {
-        try {
-          const { data: session } = await supabase.auth.getSession();
-          currentUser = session?.session?.user;
-          
-          if (currentUser) {
-            // Cache user for offline mode
-            localStorage.setItem('cachedUser', JSON.stringify(currentUser));
-          }
-        } catch (err) {
-          console.error('Error getting session:', err);
-          if (retryCount < MAX_RETRIES) {
-            setTimeout(() => fetchProfileData(retryCount + 1), RETRY_DELAY);
-            return;
-          }
-          throw new Error('Unable to authenticate user');
-        }
-      }
-      
       if (!currentUser?.id) {
-        throw new Error('User not authenticated');
+        console.log("useSimpleProfile: No user in context, trying session");
+        const { data: session } = await supabase.auth.getSession();
+        currentUser = session?.session?.user;
+        
+        if (!currentUser?.id) {
+          throw new Error('User not authenticated');
+        }
+        
+        console.log("useSimpleProfile: Got user from session:", currentUser.id);
       }
       
       // Direct, simple fetch from profiles table
@@ -101,9 +91,11 @@ export const useSimpleProfile = (isOffline = false) => {
         .single();
       
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        console.error('useSimpleProfile: Error fetching profile:', profileError);
         throw new Error(`Failed to fetch profile: ${profileError.message}`);
       }
+      
+      console.log("useSimpleProfile: Profile fetched successfully:", profile);
       
       // Cache profile for offline mode
       localStorage.setItem(`profile_${currentUser.id}`, JSON.stringify(profile));
@@ -112,16 +104,15 @@ export const useSimpleProfile = (isOffline = false) => {
       let totalLeads = 0;
       if (profile.role?.toLowerCase() === 'seller') {
         try {
-          // Count sold leads for sellers
+          // Count leads for sellers
           const { count } = await supabase
             .from('leads')
             .select('*', { count: 'exact', head: true })
-            .eq('seller_id', currentUser.id)
-            .eq('status', 'sold');
+            .eq('seller_id', currentUser.id);
           
           totalLeads = count || 0;
         } catch (err) {
-          console.warn('Error counting leads:', err);
+          console.warn('useSimpleProfile: Error counting leads:', err);
         }
       } else if (profile.role?.toLowerCase() === 'buyer') {
         try {
@@ -134,13 +125,13 @@ export const useSimpleProfile = (isOffline = false) => {
           
           totalLeads = count || 0;
         } catch (err) {
-          console.warn('Error counting leads:', err);
+          console.warn('useSimpleProfile: Error counting leads:', err);
         }
       }
       
       const formattedProfile: ProfileData = {
         name: profile.full_name || currentUser?.user_metadata?.full_name || 'User',
-        email: profile.email || currentUser.email || '', // Now prioritizing profile.email
+        email: profile.email || currentUser.email || '',
         company: profile.company || 'Not specified',
         role: (profile.role?.toLowerCase() === 'seller' ? 'seller' : 'buyer') as 'seller' | 'buyer',
         rating: profile.rating || 4.7,
@@ -148,12 +139,14 @@ export const useSimpleProfile = (isOffline = false) => {
           year: 'numeric',
           month: 'long'
         }),
-        totalLeads
+        totalLeads,
+        phone: profile.phone || null
       };
       
+      console.log("useSimpleProfile: Formatted profile:", formattedProfile);
       setProfileData(formattedProfile);
     } catch (err: any) {
-      console.error('Error in profile fetch:', err);
+      console.error('useSimpleProfile: Error in profile fetch:', err);
       setError(err.message || 'Failed to load profile data');
       
       // Try to get cached data as fallback
@@ -167,6 +160,7 @@ export const useSimpleProfile = (isOffline = false) => {
             const cachedProfile = JSON.parse(cachedProfileStr);
             const cachedUser = user || (cachedUserStr ? JSON.parse(cachedUserStr) : null);
             
+            console.log("useSimpleProfile: Using cached profile data");
             toast.warning('Using cached profile data due to connection issues');
             
             const fallbackProfile: ProfileData = {
@@ -178,19 +172,15 @@ export const useSimpleProfile = (isOffline = false) => {
               joinedDate: cachedUser?.created_at ? 
                 new Date(cachedUser.created_at).toLocaleDateString('en-US', {year: 'numeric', month: 'long'}) : 
                 'Unknown',
-              totalLeads: cachedProfile?.total_leads || 0
+              totalLeads: cachedProfile?.total_leads || 0,
+              phone: cachedProfile?.phone || null
             };
             
             setProfileData(fallbackProfile);
           }
         }
       } catch (cacheErr) {
-        console.error('Error retrieving cached profile:', cacheErr);
-      }
-      
-      // Auto-retry once if failed
-      if (retryCount < MAX_RETRIES) {
-        setTimeout(() => fetchProfileData(retryCount + 1), RETRY_DELAY);
+        console.error('useSimpleProfile: Error retrieving cached profile:', cacheErr);
       }
     } finally {
       setIsLoading(false);
@@ -199,12 +189,14 @@ export const useSimpleProfile = (isOffline = false) => {
   
   // Manual refresh function
   const refreshProfile = useCallback(() => {
+    console.log("useSimpleProfile: Manual refresh triggered");
     toast.info('Refreshing profile data...');
     fetchProfileData();
   }, [fetchProfileData]);
   
   // Fetch on mount
   useEffect(() => {
+    console.log("useSimpleProfile: useEffect triggered, user:", user?.id);
     fetchProfileData();
   }, [fetchProfileData]);
   

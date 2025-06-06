@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -8,115 +8,73 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSellerLeads } from '@/hooks/use-seller-leads';
 import LoadingState from '@/components/my-leads/LoadingState';
-import TimeoutState from '@/components/my-leads/TimeoutState';
 import RoleErrorState from '@/components/my-leads/RoleErrorState';
 import LeadsListTab from '@/components/my-leads/LeadsListTab';
 import UploadLeadTab from '@/components/my-leads/UploadLeadTab';
 
 const MyLeads = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { isLoggedIn, role, isAdmin, isLoading, user, refreshUserRole } = useUserRole();
+  const { isLoggedIn, role, isAdmin, isLoading, user } = useUserRole();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'leads');
-  const [hasChecked, setHasChecked] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
   
   const { leads } = useSellerLeads(user?.id);
   
+  console.log("MyLeads component - Current auth state:", { 
+    isLoggedIn, 
+    role,
+    isAdmin,
+    isLoading,
+    userId: user?.id,
+    activeTab
+  });
+  
   useEffect(() => {
-    // Log the current authentication state for debugging
-    console.log("MyLeads component - Current auth state:", { 
-      isLoggedIn, 
-      role,
-      isAdmin,
-      isLoading,
-      userId: user?.id,
-      hasChecked,
-      loadingTimeout,
-      activeTab,
-      currentPath: location.pathname + location.search
-    });
-    
-    // Force check to complete after a reasonable timeout to prevent infinite loading
-    const timer = setTimeout(() => {
-      if (!hasChecked || isLoading) {
-        console.log("Auth check timed out, proceeding with available info");
-        setHasChecked(true);
-        setLoadingTimeout(true);
-      }
-    }, 3000); // 3 seconds timeout
-    
-    // Wait until authentication is finished loading or timeout occurs
-    if (isLoading && !loadingTimeout) {
-      console.log("Auth is still loading, waiting...");
-      return () => clearTimeout(timer);
-    }
-    
-    setHasChecked(true);
-    clearTimeout(timer);
-    
-    // Check if user is logged in
-    if (!isLoggedIn) {
-      console.log("User is not logged in, redirecting to login");
-      toast.error("Please log in to view your leads");
-      navigate('/login');
-      return;
-    }
-    
-    // Check if user has a role
-    if (role === null) {
-      console.log("User role is null, showing fallback UI");
-      toast.error("Unable to determine your role. Please try again.");
-      return;
-    }
-    
-    // Check if user is a seller, admin or buyer
-    if (role !== 'seller' && role !== 'buyer' && !isAdmin) {
-      console.log("User is not a seller, buyer or admin, redirecting to home", { actualRole: role });
-      toast.error(`Only sellers, buyers and admins can view this page. Your current role is: ${role}`);
-      navigate('/');
-      return;
-    }
-    
     // Set active tab based on URL parameter
     const tabParam = searchParams.get('tab');
     if (tabParam && (tabParam === 'leads' || tabParam === 'upload')) {
       setActiveTab(tabParam);
     }
-    
-  }, [isLoggedIn, role, navigate, user?.id, isAdmin, isLoading, hasChecked, loadingTimeout, searchParams, location]);
+  }, [searchParams]);
   
   const handleTabChange = (value: string) => {
     console.log("Tab changed to:", value);
     setActiveTab(value);
     
-    // Update URL without causing a full page reload - use replace: true
+    // Update URL without causing a full page reload
     const newUrl = `/my-leads?tab=${value}`;
     navigate(newUrl, { replace: true });
   };
   
-  const handleRefresh = () => {
-    refreshUserRole();
-    toast.info("Refreshing user role...");
-    setLoadingTimeout(false);
-    setHasChecked(false);
-  };
-  
-  // Show a loading state with a timeout message
-  if (isLoading && !loadingTimeout) {
-    return <LoadingState onRefresh={handleRefresh} />;
+  // Show loading state while auth is being determined
+  if (isLoading) {
+    console.log("MyLeads: Auth is loading, showing loading state");
+    return <LoadingState onRefresh={() => window.location.reload()} />;
   }
   
-  // If loading has timed out but we're logged in, show a UI that allows manual refresh
-  if (loadingTimeout && isLoggedIn) {
-    return <TimeoutState onRefresh={handleRefresh} />;
+  // Check if user is logged in
+  if (!isLoggedIn) {
+    console.log("MyLeads: User is not logged in, redirecting to login");
+    toast.error("Please log in to view your leads");
+    navigate('/login');
+    return null;
   }
   
-  // If role is null after timeout, show an error message
-  if (role === null && hasChecked) {
-    return <RoleErrorState onRefresh={handleRefresh} />;
+  // Check if user has a valid role
+  if (!role) {
+    console.log("MyLeads: User role is null, showing error state");
+    return <RoleErrorState onRefresh={() => window.location.reload()} />;
   }
+  
+  // Check if user is authorized (seller, buyer, or admin)
+  if (role !== 'seller' && role !== 'buyer' && !isAdmin) {
+    console.log("MyLeads: User is not authorized, redirecting to home", { actualRole: role });
+    toast.error(`Only sellers, buyers and admins can view this page. Your current role is: ${role}`);
+    navigate('/');
+    return null;
+  }
+  
+  console.log("MyLeads: Rendering main content");
   
   return (
     <div className="flex flex-col min-h-screen">
