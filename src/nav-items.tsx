@@ -1,4 +1,3 @@
-
 import { HomeIcon, ShoppingCartIcon, UploadIcon, UserIcon, ContactIcon, ShieldCheckIcon, BookOpenIcon, MessageSquareIcon, BarChartIcon } from "lucide-react";
 import Index from "./pages/Index";
 import Marketplace from "./pages/Marketplace";
@@ -130,7 +129,7 @@ export const navItems = [
   },
   {
     title: "Admin Chat",
-    to: "/admin/chat",
+    to: "/admin/chats",
     icon: <MessageSquareIcon className="h-4 w-4" />,
     page: <AdminChatDashboard />,
   },
