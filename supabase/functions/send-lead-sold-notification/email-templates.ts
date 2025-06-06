@@ -66,9 +66,6 @@ export function generateLeadSoldEmailHtml(
               <div class="lead-detail">
                 <span class="label">Sold Date:</span> ${saleDate}
               </div>
-              <div class="lead-detail">
-                <span class="label">Buyer:</span> ${buyer.full_name || 'Anonymous Buyer'}
-              </div>
             </div>
             
             <p>The lead has been successfully transferred to the buyer and your earnings have been processed.</p>
