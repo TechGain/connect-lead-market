@@ -11,9 +11,12 @@ import GoogleAnalytics from './components/analytics/GoogleAnalytics';
 
 const queryClient = new QueryClient();
 
+// Create a helmet context to ensure proper initialization
+const helmetContext = {};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <HelmetProvider>
+    <HelmetProvider context={helmetContext}>
       <TooltipProvider>
         <UserRoleProvider>
           <Toaster />
