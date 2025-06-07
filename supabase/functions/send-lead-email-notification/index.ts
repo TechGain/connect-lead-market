@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -11,6 +10,9 @@ import {
   formatCurrency, 
   formatDate 
 } from "./utils.ts";
+
+// Import the buyer pricing utility
+import { applyBuyerPriceMarkup } from "./pricing-utils.ts";
 
 // Initialize services
 const resend = createEmailService();
@@ -81,11 +83,14 @@ async function processLeadNotification(leadId: string) {
     return { message: "No buyers to notify", results: [] };
   }
   
-  // Format the lead data for display in email
-  const formattedPrice = formatCurrency(lead.price);
+  // Apply buyer markup to the price for email display
+  const buyerPrice = applyBuyerPriceMarkup(lead.price);
+  const formattedPrice = formatCurrency(buyerPrice);
   const creationDate = formatDate(lead.created_at);
   
-  // Create email content
+  console.log(`Original price: ${lead.price}, Buyer price with markup: ${buyerPrice}, Formatted: ${formattedPrice}`);
+  
+  // Create email content with the marked-up price
   const emailSubject = generateLeadEmailSubject(lead);
   const emailHtml = generateLeadEmailHtml(lead, formattedPrice, creationDate, websiteUrl);
   
