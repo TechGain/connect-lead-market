@@ -21,23 +21,48 @@ const handler = async (req: Request): Promise<Response> => {
     const { email }: PasswordResetRequest = await req.json();
 
     if (!email) {
+      console.error("No email provided in request");
       return new Response(
         JSON.stringify({ error: "Email is required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Initialize Supabase client with service role
+    console.log("Processing password reset request for email:", email);
+
+    // Validate environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const fromEmail = Deno.env.get("FROM_EMAIL");
+    const websiteUrl = Deno.env.get("WEBSITE_URL");
+
+    console.log("Environment variables check:");
+    console.log("- SUPABASE_URL:", !!supabaseUrl);
+    console.log("- SUPABASE_SERVICE_ROLE_KEY:", !!supabaseServiceKey);
+    console.log("- RESEND_API_KEY:", !!resendApiKey);
+    console.log("- FROM_EMAIL:", fromEmail || "NOT SET");
+    console.log("- WEBSITE_URL:", websiteUrl || "NOT SET");
+
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase configuration");
       throw new Error("Missing Supabase configuration");
+    }
+
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY not configured");
+      throw new Error("RESEND_API_KEY not configured");
+    }
+
+    if (!fromEmail) {
+      console.error("FROM_EMAIL not configured");
+      throw new Error("FROM_EMAIL not configured - this is required for sending emails");
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if user exists
+    console.log("Checking if user exists...");
     const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
     
     if (userError) {
@@ -48,6 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
     const user = userData.users.find(u => u.email === email);
     
     if (!user) {
+      console.log("User not found, but returning success for security");
       // Don't reveal if user exists or not for security
       return new Response(
         JSON.stringify({ message: "If an account with that email exists, a reset link has been sent." }),
@@ -55,11 +81,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    console.log("User found, generating reset token...");
+
     // Generate secure reset token
     const resetToken = crypto.randomUUID() + crypto.randomUUID().replace(/-/g, '');
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
 
     // Store the reset token in database
+    console.log("Storing reset token in database...");
     const { error: tokenError } = await supabase
       .from('password_reset_tokens')
       .insert({
@@ -73,41 +102,80 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to generate reset token");
     }
 
-    // Initialize Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY not configured");
-    }
+    console.log("Reset token stored successfully");
 
+    // Initialize Resend
+    console.log("Initializing Resend with API key...");
     const resend = new Resend(resendApiKey);
-    const websiteUrl = Deno.env.get("WEBSITE_URL") || "http://localhost:8080";
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "noreply@example.com";
+    const finalWebsiteUrl = websiteUrl || "http://localhost:8080";
     
     // Create reset URL
-    const resetUrl = `${websiteUrl}/reset-password?token=${resetToken}`;
+    const resetUrl = `${finalWebsiteUrl}/reset-password?token=${resetToken}`;
+    console.log("Reset URL generated:", resetUrl);
 
-    // Send email using Resend
-    const emailResponse = await resend.emails.send({
+    // Prepare email data
+    const emailData = {
       from: fromEmail,
       to: [email],
       subject: "Reset Your Password",
       html: generatePasswordResetEmailHtml(resetUrl, user.email || email)
+    };
+
+    console.log("Sending email with data:", {
+      from: emailData.from,
+      to: emailData.to,
+      subject: emailData.subject,
+      html_length: emailData.html.length
     });
 
-    console.log("Password reset email sent successfully:", emailResponse);
+    // Send email using Resend
+    try {
+      const emailResponse = await resend.emails.send(emailData);
+      
+      console.log("Resend API response:", JSON.stringify(emailResponse, null, 2));
 
-    return new Response(
-      JSON.stringify({ 
-        message: "If an account with that email exists, a reset link has been sent.",
-        success: true 
-      }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+      if (emailResponse.error) {
+        console.error("Resend API returned error:", emailResponse.error);
+        throw new Error(`Resend API error: ${JSON.stringify(emailResponse.error)}`);
+      }
+
+      if (!emailResponse.data || !emailResponse.data.id) {
+        console.error("Resend API response missing expected data:", emailResponse);
+        throw new Error("Invalid response from email service");
+      }
+
+      console.log("Email sent successfully with ID:", emailResponse.data.id);
+
+      return new Response(
+        JSON.stringify({ 
+          message: "If an account with that email exists, a reset link has been sent.",
+          success: true,
+          emailId: emailResponse.data.id // Include for debugging
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+
+    } catch (resendError: any) {
+      console.error("Resend email sending failed:", resendError);
+      console.error("Resend error details:", {
+        name: resendError.name,
+        message: resendError.message,
+        stack: resendError.stack
+      });
+      
+      // Return a more specific error for debugging
+      throw new Error(`Email sending failed: ${resendError.message}`);
+    }
 
   } catch (error: any) {
     console.error("Error in send-password-reset-email function:", error);
+    console.error("Error stack:", error.stack);
+    
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ 
+        error: "Internal server error",
+        details: error.message // Include error details for debugging
+      }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
