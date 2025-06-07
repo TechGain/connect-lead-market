@@ -22,6 +22,9 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
   onRate,
   isPurchased = false
 }) => {
+  // Check if lead can be edited/deleted (not in post-purchase states)
+  const canEditLead = isOwner && !['sold', 'paid', 'refunded'].includes(lead.status);
+
   // Generate calendar link if lead has appointment time
   const handleAddToCalendar = () => {
     if (!lead.appointmentTime) return null;
@@ -85,7 +88,7 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
         </>
       )}
       
-      {isOwner && (
+      {canEditLead && (
         <>
           {onEdit && (
             <Button
