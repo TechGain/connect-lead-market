@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -61,19 +60,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Check if user exists
-    console.log("Checking if user exists...");
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+    // Check if user exists using the profiles table (much more efficient)
+    console.log("Checking if user exists in profiles table...");
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
     
-    if (userError) {
-      console.error("Error fetching users:", userError);
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error("Error querying profiles table:", profileError);
       throw new Error("Failed to verify user");
     }
 
-    const user = userData.users.find(u => u.email === email);
-    
-    if (!user) {
-      console.log("User not found, but returning success for security");
+    if (!profileData) {
+      console.log("User not found in profiles table, but returning success for security");
       // Don't reveal if user exists or not for security
       return new Response(
         JSON.stringify({ message: "If an account with that email exists, a reset link has been sent." }),
@@ -81,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("User found, generating reset token...");
+    console.log("User found in profiles table, generating reset token...");
 
     // Generate secure reset token
     const resetToken = crypto.randomUUID() + crypto.randomUUID().replace(/-/g, '');
@@ -92,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: tokenError } = await supabase
       .from('password_reset_tokens')
       .insert({
-        user_id: user.id,
+        user_id: profileData.id,
         token: resetToken,
         expires_at: expiresAt.toISOString()
       });
@@ -118,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: fromEmail,
       to: [email],
       subject: "Reset Your Password",
-      html: generatePasswordResetEmailHtml(resetUrl, user.email || email)
+      html: generatePasswordResetEmailHtml(resetUrl, email)
     };
 
     console.log("Sending email with data:", {
