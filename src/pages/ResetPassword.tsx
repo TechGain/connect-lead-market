@@ -16,25 +16,29 @@ const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isValidSession, setIsValidSession] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check if we have a valid session for password reset
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setIsValidSession(true);
-      } else {
-        toast.error('Invalid or expired reset link');
-        navigate('/forgot-password');
-      }
-    };
-
-    checkSession();
-  }, [navigate]);
+    const tokenFromUrl = searchParams.get('token');
+    
+    if (!tokenFromUrl) {
+      toast.error('Invalid reset link');
+      navigate('/forgot-password');
+      return;
+    }
+    
+    setToken(tokenFromUrl);
+    setIsValidToken(true); // We'll validate when the user submits
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!token) {
+      toast.error('Invalid reset token');
+      return;
+    }
     
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
@@ -49,26 +53,35 @@ const ResetPassword = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
+      // Call our custom edge function to reset the password
+      const { data, error } = await supabase.functions.invoke('reset-password-with-token', {
+        body: { 
+          token: token,
+          newPassword: password 
+        }
       });
       
       if (error) {
-        toast.error(error.message);
+        console.error('Password reset error:', error);
+        if (error.message?.includes('Invalid or expired')) {
+          toast.error('Reset link has expired or is invalid. Please request a new one.');
+          navigate('/forgot-password');
+        } else {
+          toast.error('Failed to reset password. Please try again.');
+        }
       } else {
-        toast.success('Password updated successfully!');
-        // Sign out to force fresh login with new password
-        await supabase.auth.signOut();
+        toast.success('Password updated successfully! Please log in with your new password.');
         navigate('/login');
       }
     } catch (error: any) {
+      console.error('Password reset exception:', error);
       toast.error('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!isValidSession) {
+  if (!token || isValidToken === false) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />

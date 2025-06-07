@@ -20,17 +20,20 @@ const ForgotPassword = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      // Call our custom edge function instead of Supabase's built-in reset
+      const { data, error } = await supabase.functions.invoke('send-password-reset-email', {
+        body: { email }
       });
       
       if (error) {
-        toast.error(error.message);
+        console.error('Password reset error:', error);
+        toast.error('Failed to send reset email. Please try again.');
       } else {
         setEmailSent(true);
         toast.success('Password reset email sent! Check your inbox.');
       }
     } catch (error: any) {
+      console.error('Password reset exception:', error);
       toast.error('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -55,6 +58,9 @@ const ForgotPassword = () => {
               <CardContent className="space-y-4">
                 <p className="text-sm text-gray-600 text-center">
                   Click the link in the email to reset your password. If you don't see it, check your spam folder.
+                </p>
+                <p className="text-sm text-gray-600 text-center">
+                  <strong>Note:</strong> The reset link will expire in 30 minutes for security.
                 </p>
               </CardContent>
               
