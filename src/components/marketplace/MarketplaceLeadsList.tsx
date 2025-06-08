@@ -1,14 +1,16 @@
+
 import React from 'react';
 import { Lead } from '@/types/lead';
-import LeadCard from '@/components/LeadCard';
-import { extractCityFromLocation } from '@/lib/utils';
+import { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
+import { LargeCardView, SmallCardView, ListView, CompactTableView } from '@/components/marketplace/view-modes';
 
 interface MarketplaceLeadsListProps {
   leads: Lead[];
-  viewMode: 'large-cards' | 'small-cards' | 'list' | 'compact-table';
+  viewMode: ViewMode;
   showFullDetails: boolean;
   onPurchase: (lead: Lead) => void;
   isLoading?: boolean;
+  onResetFilters: () => void;
 }
 
 const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
@@ -16,44 +18,40 @@ const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   viewMode,
   showFullDetails,
   onPurchase,
-  isLoading = false
+  isLoading = false,
+  onResetFilters
 }) => {
   if (isLoading) {
     return <p>Loading leads...</p>;
   }
 
   if (!leads || leads.length === 0) {
-    return <p>No leads available in the marketplace.</p>;
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500 mb-4">No leads available in the marketplace.</p>
+        <button 
+          onClick={onResetFilters}
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          Reset filters
+        </button>
+      </div>
+    );
   }
 
-  const renderLeadCard = (lead: Lead) => {
-    return (
-      <LeadCard
-        key={lead.id}
-        lead={lead}
-        viewMode={viewMode}
-        showFullDetails={showFullDetails}
-        isMarketplace={true}
-        onPurchase={onPurchase}
-        cityDisplay={getCityForLead(lead)}
-      />
-    );
-  };
-
-  // Fix the city extraction call - pass the address as fallback string instead of boolean
-  const getCityForLead = (lead: Lead) => {
-    return extractCityFromLocation(
-      lead.location, 
-      lead.zipCode || 'N/A', 
-      lead.address || '' // Pass address as string instead of showFullDetails boolean
-    );
-  };
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {leads.map(renderLeadCard)}
-    </div>
-  );
+  // Render different view modes using dedicated components
+  switch (viewMode) {
+    case 'largeCards':
+      return <LargeCardView leads={leads} onPurchase={onPurchase} />;
+    case 'smallCards':
+      return <SmallCardView leads={leads} onPurchase={onPurchase} />;
+    case 'list':
+      return <ListView leads={leads} onPurchase={onPurchase} />;
+    case 'compact':
+      return <CompactTableView leads={leads} onPurchase={onPurchase} />;
+    default:
+      return <LargeCardView leads={leads} onPurchase={onPurchase} />;
+  }
 };
 
 export default MarketplaceLeadsList;

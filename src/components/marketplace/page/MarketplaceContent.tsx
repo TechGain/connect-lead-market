@@ -126,7 +126,14 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
           </div>
         </div>}
       
-      <MarketplaceLeadsList leads={filteredLeads} isLoading={leadsLoading} onPurchase={handlePurchaseLead} onResetFilters={resetFilters} viewMode={viewMode} />
+      <MarketplaceLeadsList 
+        leads={filteredLeads} 
+        isLoading={leadsLoading} 
+        onPurchase={handlePurchaseLead} 
+        onResetFilters={resetFilters} 
+        viewMode={viewMode}
+        showFullDetails={false}
+      />
     </>;
 };
 
