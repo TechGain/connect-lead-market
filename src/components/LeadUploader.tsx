@@ -105,21 +105,64 @@ const LeadUploader = () => {
         appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
       }
       
-      // Create location string - use city if we have it, otherwise fall back to extracting from address
+      // Create location string with enhanced logic
       let locationString = '';
+      
       if (city && zipCode) {
-        // Use the extracted city name with state and ZIP
+        // We have extracted city - use it with proper state detection
         const statePart = address.includes(', CA') ? 'CA' : 
                           address.includes(', TX') ? 'TX' : 
                           address.includes(', FL') ? 'FL' : 
-                          address.includes(', NY') ? 'NY' : 'USA';
+                          address.includes(', NY') ? 'NY' : 
+                          address.includes(', WA') ? 'WA' : 
+                          address.includes(', OR') ? 'OR' : 
+                          address.includes(', NV') ? 'NV' : 
+                          address.includes(', AZ') ? 'AZ' : 'CA'; // Default to CA for most leads
+        
         locationString = `${city}, ${statePart} ${zipCode}`;
+        console.log('Creating location string with extracted city:', locationString);
+      } else if (address && zipCode) {
+        // Try to extract city from the full address string
+        console.log('Attempting to extract city from address:', address);
+        const addressParts = address.split(',').map(part => part.trim());
+        
+        if (addressParts.length >= 2) {
+          // For Google Maps format like "Street, City, State, Country"
+          let extractedCity = '';
+          let extractedState = '';
+          
+          if (addressParts.length >= 3) {
+            // Likely format: ["Street", "City", "State Country"] or ["Street", "City", "State", "Country"]
+            extractedCity = addressParts[1];
+            const stateCountryPart = addressParts[2];
+            
+            // Extract state from "CA, USA" or "CA USA" format
+            if (stateCountryPart.includes('CA')) extractedState = 'CA';
+            else if (stateCountryPart.includes('TX')) extractedState = 'TX';
+            else if (stateCountryPart.includes('FL')) extractedState = 'FL';
+            else if (stateCountryPart.includes('NY')) extractedState = 'NY';
+            else if (stateCountryPart.includes('WA')) extractedState = 'WA';
+            else if (stateCountryPart.includes('OR')) extractedState = 'OR';
+            else if (stateCountryPart.includes('NV')) extractedState = 'NV';
+            else if (stateCountryPart.includes('AZ')) extractedState = 'AZ';
+            else extractedState = 'CA'; // Default
+            
+            locationString = `${extractedCity}, ${extractedState} ${zipCode}`;
+            console.log('Extracted city from address parts:', extractedCity, 'State:', extractedState);
+          } else {
+            // Fallback to last parts of address
+            locationString = `${addressParts.slice(-2).join(', ')} ${zipCode}`.trim();
+          }
+        } else {
+          // Single part address - use it with default state
+          locationString = `${address}, CA ${zipCode}`;
+        }
       } else {
-        // Fallback to extracting from address
-        locationString = address.split(',').slice(-2).join(',').trim();
+        // Ultimate fallback - use ZIP code with state
+        locationString = `CA ${zipCode}`;
       }
       
-      console.log('Creating lead with city:', city, 'and location:', locationString);
+      console.log('Final location string:', locationString);
       
       const newLead: Omit<Lead, 'id'> = {
         type: leadType,

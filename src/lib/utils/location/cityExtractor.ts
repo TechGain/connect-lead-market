@@ -27,29 +27,66 @@ function extractCityFromZip(zipString: string): string | undefined {
 }
 
 /**
- * Greatly enhanced function to extract city names from various location string formats
+ * Enhanced function to extract city names from various location string formats
  * Now prioritizes ZIP code lookup and Google Maps format parsing
  * 
  * @param location The location string from which to extract the city
  * @param fallback Fallback value (usually ZIP code) to use if extraction fails
+ * @param fullAddress Optional full address string (often contains complete city info)
  * @param debug Optional flag to enable debug logging
  * @returns The extracted city name
  */
-export function extractCityFromLocation(location: string, fallback: string = 'Unknown', debug: boolean = false): string {
-  if (!location || typeof location !== 'string') {
-    if (debug) console.log(`[CityExtractor] Invalid location: "${location}", using fallback`);
-    return extractCityFromZip(fallback) || 'N/A';
+export function extractCityFromLocation(location: string, fallback: string = 'Unknown', fullAddress?: string, debug: boolean = false): string {
+  if (debug) {
+    console.log(`[CityExtractor] Processing location: "${location}", fallback: "${fallback}", fullAddress: "${fullAddress}"`);
+  }
+
+  // First, try to extract from the full address if provided (this often has the most complete info)
+  if (fullAddress && typeof fullAddress === 'string' && fullAddress.trim()) {
+    const cityFromFullAddress = extractCityFromString(fullAddress, debug);
+    if (cityFromFullAddress && cityFromFullAddress !== 'N/A') {
+      if (debug) console.log(`[CityExtractor] Found city from full address: "${cityFromFullAddress}"`);
+      return cityFromFullAddress;
+    }
+  }
+
+  // Then try the main location string
+  if (location && typeof location === 'string' && location.trim()) {
+    const cityFromLocation = extractCityFromString(location, debug);
+    if (cityFromLocation && cityFromLocation !== 'N/A') {
+      if (debug) console.log(`[CityExtractor] Found city from location: "${cityFromLocation}"`);
+      return cityFromLocation;
+    }
+  }
+
+  // Finally, try ZIP code lookup from fallback
+  const cityFromZip = extractCityFromZip(fallback);
+  if (cityFromZip) {
+    if (debug) console.log(`[CityExtractor] Found city from ZIP lookup: "${cityFromZip}"`);
+    return cityFromZip;
+  }
+
+  if (debug) console.log(`[CityExtractor] No city found, returning N/A`);
+  return 'N/A';
+}
+
+/**
+ * Extract city from a single location string using various patterns
+ */
+function extractCityFromString(locationString: string, debug: boolean = false): string | null {
+  if (!locationString || typeof locationString !== 'string') {
+    return null;
   }
   
   try {
     // Trim and normalize the location (remove extra spaces)
-    const trimmedLocation = location.trim().replace(/\s+/g, ' ');
+    const trimmedLocation = locationString.trim().replace(/\s+/g, ' ');
     
     if (debug) {
-      console.log(`[CityExtractor] Processing: "${trimmedLocation}"`);
+      console.log(`[CityExtractor] Processing string: "${trimmedLocation}"`);
     }
     
-    // First priority: Extract ZIP code from the location and look it up directly
+    // Priority 1: Extract ZIP code from the location and look it up directly
     const zipCodeRegex = /\b(\d{5}(-\d{4})?)\b/;
     const zipMatch = trimmedLocation.match(zipCodeRegex);
     
@@ -63,7 +100,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       }
     }
     
-    // NEW: Google Maps format - "Street, City, State, Country"
+    // Priority 2: Google Maps format - "Street, City, State, Country"
     // Example: "2341 Gloaming Way, Beverly Hills, CA, USA"
     const googleMapsRegex = /^[^,]+,\s*([^,]+),\s*[A-Z]{2},\s*USA$/i;
     const googleMapsMatch = trimmedLocation.match(googleMapsRegex);
@@ -74,7 +111,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       return city;
     }
     
-    // Format 1: "City, State ZIP" or "City, ST ZIP"
+    // Priority 3: "City, State ZIP" or "City, ST ZIP"
     // Example: "Los Angeles, CA 90001"
     const cityStateZipRegex = /^([^,]+),\s*([A-Z]{2})\s+(\d{5}(-\d{4})?)$/;
     const cityStateZipMatch = trimmedLocation.match(cityStateZipRegex);
@@ -85,7 +122,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       return city;
     }
     
-    // Format 2: "Street, City, State ZIP"
+    // Priority 4: "Street, City, State ZIP"
     // Example: "123 Main St, Los Angeles, CA 90001"
     const streetCityStateZipRegex = /^.+,\s*([^,]+),\s*([A-Z]{2})\s+(\d{5}(-\d{4})?)$/;
     const streetCityStateZipMatch = trimmedLocation.match(streetCityStateZipRegex);
@@ -96,23 +133,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       return city;
     }
     
-    // Format 3: "State ZIP" (with no city) - use ZIP code lookup
-    // Example: "CA 90001"
-    const stateZipRegex = /^([A-Z]{2})\s+(\d{5}(-\d{4})?)$/;
-    const stateZipMatch = trimmedLocation.match(stateZipRegex);
-    
-    if (stateZipMatch) {
-      const zip = stateZipMatch[2];
-      
-      // First check if we can get city from ZIP
-      if (zipToCityMap[zip.substring(0, 5)]) {
-        const mappedCity = zipToCityMap[zip.substring(0, 5)];
-        if (debug) console.log(`[CityExtractor] Format 3 ZIP lookup: "${mappedCity}"`);
-        return mappedCity;
-      }
-    }
-    
-    // Format 4: "City, State" with no ZIP
+    // Priority 5: "City, State" with no ZIP
     // Example: "Seattle, WA"
     const cityStateRegex = /^([^,]+),\s*([A-Z]{2})$/;
     const cityStateMatch = trimmedLocation.match(cityStateRegex);
@@ -123,7 +144,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       return city;
     }
     
-    // Format 5: Check for "City State ZIP" without commas
+    // Priority 6: Check for "City State ZIP" without commas
     // Example: "Los Angeles CA 90001"
     const cityStateZipNoCommaRegex = /^([A-Za-z\s.]+)\s+([A-Z]{2})\s+(\d{5}(-\d{4})?)$/;
     const cityStateZipNoCommaMatch = trimmedLocation.match(cityStateZipNoCommaRegex);
@@ -134,7 +155,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       return city;
     }
     
-    // Format 6: Pipe-separated address with city
+    // Priority 7: Pipe-separated address with city
     // Example: "1493 Enderby WAY | Sunnyvale | 94087"
     const pipeSeparatedRegex = /\|\s*([^|]+?)\s*\|/;
     const pipeSeparatedMatch = trimmedLocation.match(pipeSeparatedRegex);
@@ -147,7 +168,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       }
     }
     
-    // Format 7: Multi-part address with city in middle
+    // Priority 8: Multi-part address with city in middle
     // Split by commas and examine each part
     const parts = trimmedLocation.split(',').map(part => part.trim());
     
@@ -163,7 +184,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       }
     }
     
-    // Format 8: If we just have two parts, assume first is city (when no street address)
+    // Priority 9: If we just have two parts, assume first is city (when no street address)
     // Example: "San Francisco, CA"
     if (parts.length === 2) {
       const potentialCity = parts[0];
@@ -173,24 +194,17 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
       }
     }
     
-    // Format 9: Simple city name (no state/ZIP)
+    // Priority 10: Simple city name (no state/ZIP)
     // Example: "Chicago"
     if (parts.length === 1 && !/\d/.test(parts[0]) && parts[0].length > 2) {
       if (debug) console.log(`[CityExtractor] Format 9 matched: "${parts[0]}"`);
       return parts[0];
     }
     
-    // If we get here, handle fallback to ZIP code lookup
-    const cityFromZip = extractCityFromZip(fallback);
-    if (cityFromZip) {
-      return cityFromZip;
-    }
-    
-    // If all methods fail, return N/A instead of state/country
-    return 'N/A';
+    return null;
     
   } catch (error) {
     console.error("[CityExtractor] Error extracting city:", error);
-    return 'N/A';
+    return null;
   }
 }

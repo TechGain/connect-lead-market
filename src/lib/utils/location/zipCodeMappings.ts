@@ -123,8 +123,24 @@ export const zipToCityMap: Record<string, string> = {
 
   // Bay Area
   '94579': 'Richmond',
+  '94602': 'Oakland',
   '94947': 'Novato',
   '95687': 'Vacaville',
+
+  // Missing ZIP codes from database
+  '93551': 'Palmdale',
+  '93536': 'Lancaster',
+  '93534': 'Lancaster',
+  '93560': 'Rosamond',
+  '93591': 'Valyermo',
+  '93543': 'Lancaster',
+  '93535': 'Lancaster',
+  '93550': 'Palmdale',
+  '93552': 'Palmdale',
+  '93553': 'Palmdale',
+  '93563': 'Tehachapi',
+  '93584': 'Acton',
+  '93590': 'Westwood',
 
   // Orange County
   '92602': 'Irvine',
@@ -228,6 +244,41 @@ export const zipToCityMap: Record<string, string> = {
   // Texas
   '78626': 'Georgetown',
 
+  // Additional California cities
+  '93012': 'Camarillo',
+  '93063': 'Simi Valley',
+  '91367': 'Woodland Hills',
+  '91364': 'Woodland Hills',
+  '91362': 'Thousand Oaks',
+  '91361': 'Thousand Oaks',
+  '91360': 'Thousand Oaks',
+  '91359': 'Westlake Village',
+  '91356': 'Tarzana',
+  '91355': 'Valencia',
+  '91354': 'Valencia',
+  '91351': 'Canyon Country',
+  '91350': 'Santa Clarita',
+  '91344': 'Granada Hills',
+  '91343': 'North Hills',
+  '91342': 'Sylmar',
+  '91341': 'San Fernando',
+  '91340': 'San Fernando',
+  '91335': 'Reseda',
+  '91334': 'Pacoima',
+  '91331': 'Arleta',
+  '91330': 'Northridge',
+  '91326': 'Northridge',
+  '91325': 'Northridge',
+  '91324': 'Northridge',
+  '91316': 'Encino',
+  '91311': 'Chatsworth',
+  '91307': 'West Hills',
+  '91306': 'Winnetka',
+  '91304': 'Canoga Park',
+  '91303': 'Canoga Park',
+  '91302': 'Calabasas',
+  '91301': 'Agoura Hills',
+
   // Add more ZIP codes as needed...
 };
 
@@ -241,8 +292,11 @@ export const stateCityMap: Record<string, Record<string, string[]>> = {
     'Lake Elsinore': ['92530'],
     'Yorba Linda': ['92886'],
     'Richmond': ['94579'],
+    'Oakland': ['94602'],
     'Novato': ['94947'],
     'Vacaville': ['95687'],
+    'Palmdale': ['93551', '93550', '93552', '93553'],
+    'Lancaster': ['93536', '93534', '93543', '93535'],
     'Irvine': ['92602', '92603', '92604', '92606', '92612', '92614', '92616', '92617', '92618', '92619', '92620', '92623', '92697'],
     'Beverly Hills': ['90210', '90211', '90212', '90213'],
     'Sunnyvale': ['94085', '94086', '94087', '94088', '94089'],
