@@ -6,6 +6,8 @@ import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import RegistrationForm from '@/components/auth/RegistrationForm';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -152,38 +154,44 @@ const Register = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Create an account</CardTitle>
-            <CardDescription>
-              Choose your account type and enter your details below.
-            </CardDescription>
-          </CardHeader>
-          <RegistrationForm
-            onSubmit={handleSubmit}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            confirmPassword={confirmPassword}
-            setConfirmPassword={setConfirmPassword}
-            name={name}
-            setName={setName}
-            companyName={companyName}
-            setCompanyName={setCompanyName}
-            phoneNumber={phoneNumber}
-            setPhoneNumber={setPhoneNumber}
-            selectedRole={selectedRole}
-            setSelectedRole={setSelectedRole}
-            registrationError={registrationError}
-            isLoading={isLoading}
-            referralSource={referralSource}
-            setReferralSource={setReferralSource}
-          />
-        </Card>
-      </div>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1">
+        <div className="flex flex-col items-center justify-center py-2">
+          <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>Create an account</CardTitle>
+                <CardDescription>
+                  Choose your account type and enter your details below.
+                </CardDescription>
+              </CardHeader>
+              <RegistrationForm
+                onSubmit={handleSubmit}
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                confirmPassword={confirmPassword}
+                setConfirmPassword={setConfirmPassword}
+                name={name}
+                setName={setName}
+                companyName={companyName}
+                setCompanyName={setCompanyName}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                selectedRole={selectedRole}
+                setSelectedRole={setSelectedRole}
+                registrationError={registrationError}
+                isLoading={isLoading}
+                referralSource={referralSource}
+                setReferralSource={setReferralSource}
+              />
+            </Card>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 };
