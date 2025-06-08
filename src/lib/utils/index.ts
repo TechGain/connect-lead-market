@@ -23,7 +23,10 @@ export {
 // Re-export from datetime utilities
 export {
   isAppointmentPassed,
+  extractAppointmentDate,
+  isAppointmentToday,
+  isAppointmentTomorrow,
+  isAppointmentTodayOrTomorrow,
   formatDate,
   generateGoogleCalendarUrl
 } from './datetime';
-
