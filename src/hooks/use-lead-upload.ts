@@ -20,7 +20,7 @@ export const useLeadUpload = () => {
   const trackNotificationAttempt = async (
     leadId: string, 
     type: 'email' | 'sms', 
-    status: 'pending' | 'success' | 'failed',
+    status: 'pending' | 'success' | 'failed' | 'retrying',
     errorDetails?: string,
     functionResponse?: any
   ) => {
@@ -54,7 +54,7 @@ export const useLeadUpload = () => {
     functionName: string, 
     type: 'email' | 'sms',
     maxRetries = 3
-  ) => {
+  ): Promise<{ success: boolean; error: any; data: any }> => {
     let attempt = 0;
     let lastError = null;
 
@@ -102,7 +102,7 @@ export const useLeadUpload = () => {
           
           // Track successful attempt
           await trackNotificationAttempt(leadId, type, 'success', null, result.data);
-          return { success: true, data: result.data };
+          return { success: true, data: result.data, error: null };
         }
       } catch (error: any) {
         lastError = error;
@@ -126,7 +126,7 @@ export const useLeadUpload = () => {
     }
 
     console.error(`All ${maxRetries} attempts failed for ${functionName}`);
-    return { success: false, error: lastError };
+    return { success: false, error: lastError, data: null };
   };
 
   const uploadLead = async (lead: Omit<Lead, 'id'>) => {
