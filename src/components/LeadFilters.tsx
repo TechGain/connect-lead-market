@@ -14,7 +14,7 @@ interface LeadFiltersProps {
     location: string;
     minPrice: number;
     maxPrice: number;
-    minRating: number;
+    appointmentDateFilter: string;
   }) => void;
   compact?: boolean;
 }
@@ -24,7 +24,7 @@ const LeadFilters = ({ onFilterChange, compact = false }: LeadFiltersProps) => {
   const [type, setType] = React.useState('');
   const [location, setLocation] = React.useState('');
   const [priceRange, setPriceRange] = React.useState([0, 500]);
-  const [minRating, setMinRating] = React.useState(0);
+  const [appointmentDateFilter, setAppointmentDateFilter] = React.useState('all');
   const [isExpanded, setIsExpanded] = React.useState(false);
   
   const applyFilters = () => {
@@ -34,7 +34,7 @@ const LeadFilters = ({ onFilterChange, compact = false }: LeadFiltersProps) => {
       location,
       minPrice: priceRange[0],
       maxPrice: priceRange[1],
-      minRating,
+      appointmentDateFilter,
     });
   };
   
@@ -43,7 +43,7 @@ const LeadFilters = ({ onFilterChange, compact = false }: LeadFiltersProps) => {
     setType('');
     setLocation('');
     setPriceRange([0, 500]);
-    setMinRating(0);
+    setAppointmentDateFilter('all');
     
     onFilterChange({
       search: '',
@@ -51,7 +51,7 @@ const LeadFilters = ({ onFilterChange, compact = false }: LeadFiltersProps) => {
       location: '',
       minPrice: 0,
       maxPrice: 500,
-      minRating: 0,
+      appointmentDateFilter: 'all',
     });
   };
 
@@ -132,18 +132,16 @@ const LeadFilters = ({ onFilterChange, compact = false }: LeadFiltersProps) => {
           </div>
           
           <div className="space-y-2">
-            <Label>Minimum Rating</Label>
-            <Select value={minRating.toString()} onValueChange={(value) => setMinRating(Number(value))}>
+            <Label>Appointment Date</Label>
+            <Select value={appointmentDateFilter} onValueChange={setAppointmentDateFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Any Rating" />
+                <SelectValue placeholder="All Dates" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">Any Rating</SelectItem>
-                <SelectItem value="1">★ and above</SelectItem>
-                <SelectItem value="2">★★ and above</SelectItem>
-                <SelectItem value="3">★★★ and above</SelectItem>
-                <SelectItem value="4">★★★★ and above</SelectItem>
-                <SelectItem value="5">★★★★★ only</SelectItem>
+                <SelectItem value="all">All Dates</SelectItem>
+                <SelectItem value="today">Today Only</SelectItem>
+                <SelectItem value="tomorrow">Tomorrow Only</SelectItem>
+                <SelectItem value="today-tomorrow">Today & Tomorrow</SelectItem>
               </SelectContent>
             </Select>
           </div>

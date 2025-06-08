@@ -2,7 +2,7 @@
  * Utility functions for date and time operations
  */
 
-import { format, parse, isAfter, isBefore, differenceInHours, differenceInMinutes } from 'date-fns';
+import { format, parse, isAfter, isBefore, differenceInHours, differenceInMinutes, isToday, isTomorrow, isSameDay } from 'date-fns';
 
 /**
  * Checks if an appointment time string has passed the current time
@@ -68,6 +68,70 @@ export function isAppointmentPassed(appointmentTimeStr: string | null | undefine
     console.error('Error checking if appointment has passed:', error);
     return false;
   }
+}
+
+/**
+ * Extracts just the date from an appointment time string
+ * @param appointmentTimeStr The appointment time string in the format "Month Day, Year at Time Slot"
+ * @returns Date object representing just the date, or null if parsing fails
+ */
+export function extractAppointmentDate(appointmentTimeStr: string | null | undefined): Date | null {
+  if (!appointmentTimeStr) {
+    return null;
+  }
+  
+  try {
+    // Extract date part from the appointment string
+    const dateTimeRegex = /^(.*?) at (.*)$/;
+    const match = appointmentTimeStr.match(dateTimeRegex);
+    
+    if (!match || match.length < 3) {
+      console.warn('Invalid appointment time format:', appointmentTimeStr);
+      return null;
+    }
+    
+    const [_, datePart] = match;
+    
+    // Parse the date part
+    try {
+      return parse(datePart, 'PPP', new Date());
+    } catch (e) {
+      console.error('Failed to parse appointment date:', datePart, e);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error extracting appointment date:', error);
+    return null;
+  }
+}
+
+/**
+ * Checks if an appointment is scheduled for today
+ * @param appointmentTimeStr The appointment time string
+ * @returns true if the appointment is today, false otherwise
+ */
+export function isAppointmentToday(appointmentTimeStr: string | null | undefined): boolean {
+  const appointmentDate = extractAppointmentDate(appointmentTimeStr);
+  return appointmentDate ? isToday(appointmentDate) : false;
+}
+
+/**
+ * Checks if an appointment is scheduled for tomorrow
+ * @param appointmentTimeStr The appointment time string
+ * @returns true if the appointment is tomorrow, false otherwise
+ */
+export function isAppointmentTomorrow(appointmentTimeStr: string | null | undefined): boolean {
+  const appointmentDate = extractAppointmentDate(appointmentTimeStr);
+  return appointmentDate ? isTomorrow(appointmentDate) : false;
+}
+
+/**
+ * Checks if an appointment is scheduled for today or tomorrow
+ * @param appointmentTimeStr The appointment time string
+ * @returns true if the appointment is today or tomorrow, false otherwise
+ */
+export function isAppointmentTodayOrTomorrow(appointmentTimeStr: string | null | undefined): boolean {
+  return isAppointmentToday(appointmentTimeStr) || isAppointmentTomorrow(appointmentTimeStr);
 }
 
 /**

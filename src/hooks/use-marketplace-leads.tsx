@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { Lead, mapDbLeadToAppLead } from '@/types/lead';
 import { supabase } from '@/integrations/supabase/client';
-import { isAppointmentPassed } from '@/lib/utils';
+import { isAppointmentPassed, isAppointmentToday, isAppointmentTomorrow, isAppointmentTodayOrTomorrow } from '@/lib/utils';
 
 export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -149,8 +149,24 @@ export const useMarketplaceLeads = (shouldLoad: boolean, role: string | null) =>
       lead.price <= filters.maxPrice
     );
     
-    if (filters.minRating > 0) {
-      filtered = filtered.filter(lead => lead.qualityRating >= filters.minRating);
+    // Apply appointment date filter
+    if (filters.appointmentDateFilter && filters.appointmentDateFilter !== 'all') {
+      filtered = filtered.filter(lead => {
+        if (!lead.appointmentTime) {
+          return false; // Exclude leads without appointment times when filtering by date
+        }
+        
+        switch (filters.appointmentDateFilter) {
+          case 'today':
+            return isAppointmentToday(lead.appointmentTime);
+          case 'tomorrow':
+            return isAppointmentTomorrow(lead.appointmentTime);
+          case 'today-tomorrow':
+            return isAppointmentTodayOrTomorrow(lead.appointmentTime);
+          default:
+            return true;
+        }
+      });
     }
     
     // After applying all filters, re-sort to maintain the order (available first, then sold)

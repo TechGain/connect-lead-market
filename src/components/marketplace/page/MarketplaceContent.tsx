@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import LeadFilters from '@/components/LeadFilters';
 import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
@@ -10,10 +11,18 @@ import { format } from 'date-fns';
 import { extractCityFromLocation } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 interface MarketplaceContentProps {
   filteredLeads: Lead[];
   leadsLoading: boolean;
-  handleFilterChange: (filters: any) => void;
+  handleFilterChange: (filters: {
+    search: string;
+    type: string;
+    location: string;
+    minPrice: number;
+    maxPrice: number;
+    appointmentDateFilter: string;
+  }) => void;
   resetFilters: () => void;
   handlePurchaseLead: (lead: Lead) => void;
   lastRefreshed: Date;
@@ -21,6 +30,7 @@ interface MarketplaceContentProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
+
 const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   filteredLeads,
   leadsLoading,
@@ -123,4 +133,5 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
       <MarketplaceLeadsList leads={filteredLeads} isLoading={leadsLoading} onPurchase={handlePurchaseLead} onResetFilters={resetFilters} viewMode={viewMode} showFullDetails={false} />
     </>;
 };
+
 export default MarketplaceContent;
