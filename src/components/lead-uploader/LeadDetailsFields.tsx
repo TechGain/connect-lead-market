@@ -19,10 +19,12 @@ interface LeadDetailsFieldsProps {
 
 // Define lead types in an array for easy sorting
 const leadTypes = [
+  { value: 'adu', label: 'ADU' },
   { value: 'air-dryer', label: 'Air Dryer' },
   { value: 'air-duct', label: 'Air Duct' },
   { value: 'bathroom-remodel', label: 'Bathroom Remodel' },
   { value: 'concrete', label: 'Concrete' },
+  { value: 'deck', label: 'Deck' },
   { value: 'electrical', label: 'Electrical' },
   { value: 'exterior-paint', label: 'Exterior Paint' },
   { value: 'flooring-services', label: 'Flooring Services' },
@@ -38,6 +40,7 @@ const leadTypes = [
   { value: 'landscaping', label: 'Landscaping' },
   { value: 'locksmith-services', label: 'Locksmith Services' },
   { value: 'new-construction', label: 'New Construction' },
+  { value: 'patio', label: 'Patio' },
   { value: 'plumbing', label: 'Plumbing' },
   { value: 'pool-services', label: 'Pool Services' },
   { value: 'roofing', label: 'Roofing' },
