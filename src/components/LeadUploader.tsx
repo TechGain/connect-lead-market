@@ -25,7 +25,7 @@ const LeadUploader = () => {
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [address, setAddress] = useState('');
   const [zipCode, setZipCode] = useState('');
-  // Fixed: Use the proper union type instead of string
+  const [city, setCity] = useState('');
   const [confirmationStatus, setConfirmationStatus] = useState<'confirmed' | 'unconfirmed'>('confirmed');
   
   const { uploadLead, isUploading } = useLeadUpload();
@@ -71,7 +71,12 @@ const LeadUploader = () => {
     setZipCode(foundZipCode);
   };
 
-  // Fixed: Ensure the confirmationStatus handler uses the proper union type
+  // Handle city found from autocomplete
+  const handleCityFound = (foundCity: string) => {
+    console.log("City found in LeadUploader:", foundCity);
+    setCity(foundCity);
+  };
+
   const handleConfirmationStatusChange = (value: 'confirmed' | 'unconfirmed') => {
     setConfirmationStatus(value);
   };
@@ -100,21 +105,37 @@ const LeadUploader = () => {
         appointmentInfo = format(appointmentDate, 'PPP') + ' at ' + appointmentTimeSlot;
       }
       
+      // Create location string - use city if we have it, otherwise fall back to extracting from address
+      let locationString = '';
+      if (city && zipCode) {
+        // Use the extracted city name with state and ZIP
+        const statePart = address.includes(', CA') ? 'CA' : 
+                          address.includes(', TX') ? 'TX' : 
+                          address.includes(', FL') ? 'FL' : 
+                          address.includes(', NY') ? 'NY' : 'USA';
+        locationString = `${city}, ${statePart} ${zipCode}`;
+      } else {
+        // Fallback to extracting from address
+        locationString = address.split(',').slice(-2).join(',').trim();
+      }
+      
+      console.log('Creating lead with city:', city, 'and location:', locationString);
+      
       const newLead: Omit<Lead, 'id'> = {
         type: leadType,
-        location: address.split(',').slice(-2).join(',').trim(), // Extract location from address
+        location: locationString,
         description,
         contactName,
         contactEmail,
         contactPhone,
         price: Number(price),
-        qualityRating: null, // Set to null instead of a number
+        qualityRating: null,
         status: 'new',
         createdAt: new Date().toISOString(),
         appointmentTime: appointmentInfo,
         address,
         zipCode,
-        confirmationStatus, // This is now properly typed
+        confirmationStatus,
         sellerId: '', // Initialize with empty string, will be set by the upload function
       };
       
@@ -134,6 +155,7 @@ const LeadUploader = () => {
         setAppointmentTimeSlot('');
         setAddress('');
         setZipCode('');
+        setCity('');
         setConfirmationStatus('confirmed');
       }
     } catch (error) {
@@ -158,6 +180,7 @@ const LeadUploader = () => {
             onDescriptionChange={setDescription}
             onAddressSelect={handleAddressSelect}
             onZipCodeFound={handleZipCodeFound}
+            onCityFound={handleCityFound}
           />
           
           <ConfirmationStatusSelect 

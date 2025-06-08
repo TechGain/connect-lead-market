@@ -7,12 +7,14 @@ import { useAddressAutocomplete, Prediction } from '@/hooks/use-address-autocomp
 interface AddressAutocompleteInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onAddressSelect: (address: string, placeId?: string) => void;
   onZipCodeFound?: (zipCode: string) => void;
+  onCityFound?: (city: string) => void;
 }
 
 export function AddressAutocompleteInput({
   className,
   onAddressSelect,
   onZipCodeFound,
+  onCityFound,
   ...props
 }: AddressAutocompleteInputProps) {
   const [inputValue, setInputValue] = useState(props.value as string || '');
@@ -87,7 +89,7 @@ export function AddressAutocompleteInput({
     console.log('Prediction selected:', prediction.description);
     setInputValue(prediction.description);
     setShowSuggestions(false);
-    handleSelectPrediction(prediction, onAddressSelect, onZipCodeFound);
+    handleSelectPrediction(prediction, onAddressSelect, onZipCodeFound, onCityFound);
   };
 
   return (

@@ -20,7 +20,7 @@ interface AddressAutocompleteHook {
   apiStatus: 'idle' | 'loading' | 'success' | 'error';
   setShowSuggestions: (show: boolean) => void;
   getPlacePredictions: (input: string) => void;
-  handleSelectPrediction: (prediction: Prediction, onAddressSelect: (address: string, placeId?: string) => void, onZipCodeFound?: (zipCode: string) => void) => void;
+  handleSelectPrediction: (prediction: Prediction, onAddressSelect: (address: string, placeId?: string) => void, onZipCodeFound?: (zipCode: string) => void, onCityFound?: (city: string) => void) => void;
 }
 
 export function useAddressAutocomplete(): AddressAutocompleteHook {
@@ -161,11 +161,12 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
     }
   }, [isGoogleLoading, googleError, autocompleteService, createNewSessionToken]);
 
-  // Get place details including ZIP code when a prediction is selected
+  // Get place details including ZIP code and city when a prediction is selected
   const handleSelectPrediction = useCallback((
     prediction: Prediction, 
     onAddressSelect: (address: string, placeId?: string) => void, 
-    onZipCodeFound?: (zipCode: string) => void
+    onZipCodeFound?: (zipCode: string) => void,
+    onCityFound?: (city: string) => void
   ) => {
     const description = prediction.description;
     const placeId = prediction.place_id;
@@ -183,7 +184,7 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
       placesService.current.getDetails(
         {
           placeId,
-          fields: ['address_components'],
+          fields: ['address_components', 'formatted_address'],
           sessionToken: autocompleteSessionToken.current,
         },
         (result, status) => {
@@ -200,18 +201,59 @@ export function useAddressAutocomplete(): AddressAutocompleteHook {
           }
 
           console.log('Place details found:', result);
+          console.log('Address components:', result.address_components);
 
-          // Find ZIP code in address components
-          const zipComponent = result.address_components?.find(
-            component => component.types.includes('postal_code')
-          );
+          // Extract information from address components
+          let zipCode = '';
+          let city = '';
 
-          if (zipComponent && onZipCodeFound) {
-            const zipCode = zipComponent.short_name;
-            console.log('ZIP code found:', zipCode);
+          if (result.address_components) {
+            result.address_components.forEach(component => {
+              console.log('Processing component:', component.long_name, 'Types:', component.types);
+              
+              // Extract ZIP code
+              if (component.types.includes('postal_code')) {
+                zipCode = component.short_name;
+                console.log('ZIP code found from component:', zipCode);
+              }
+              
+              // Extract city - prioritize locality, then administrative_area_level_1
+              if (component.types.includes('locality')) {
+                city = component.long_name;
+                console.log('City found from locality:', city);
+              } else if (component.types.includes('administrative_area_level_1') && !city) {
+                city = component.long_name;
+                console.log('City found from administrative_area_level_1:', city);
+              }
+            });
+          }
+
+          // If we didn't find city in components, try to extract from the description
+          if (!city) {
+            console.log('City not found in components, trying to extract from description:', description);
+            const parts = description.split(',').map(part => part.trim());
+            console.log('Description parts:', parts);
+            
+            // For format like "Street, City, State, Country"
+            if (parts.length >= 3) {
+              // The city is typically the second part (index 1)
+              const potentialCity = parts[1];
+              if (potentialCity && !potentialCity.match(/\d/) && potentialCity.length > 1) {
+                city = potentialCity;
+                console.log('City extracted from description:', city);
+              }
+            }
+          }
+
+          // Call the callbacks with the extracted information
+          if (zipCode && onZipCodeFound) {
+            console.log('Calling onZipCodeFound with:', zipCode);
             onZipCodeFound(zipCode);
-          } else {
-            console.log('No ZIP code found in address components');
+          }
+
+          if (city && onCityFound) {
+            console.log('Calling onCityFound with:', city);
+            onCityFound(city);
           }
 
           // Pass the selected address back to the parent component

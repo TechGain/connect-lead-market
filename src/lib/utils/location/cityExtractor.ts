@@ -28,7 +28,7 @@ function extractCityFromZip(zipString: string): string | undefined {
 
 /**
  * Greatly enhanced function to extract city names from various location string formats
- * Now prioritizes ZIP code lookup for more accurate city identification
+ * Now prioritizes ZIP code lookup and Google Maps format parsing
  * 
  * @param location The location string from which to extract the city
  * @param fallback Fallback value (usually ZIP code) to use if extraction fails
@@ -50,18 +50,28 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
     }
     
     // First priority: Extract ZIP code from the location and look it up directly
-    // This is now our preferred method as it's the most reliable
     const zipCodeRegex = /\b(\d{5}(-\d{4})?)\b/;
     const zipMatch = trimmedLocation.match(zipCodeRegex);
     
     if (zipMatch) {
-      const zipCode = zipMatch[1];
+      const zipCode = zipMatch[1].substring(0, 5);
       const cityFromZip = zipToCityMap[zipCode];
       
       if (cityFromZip) {
         if (debug) console.log(`[CityExtractor] Found via ZIP lookup: "${cityFromZip}" from ZIP: ${zipCode}`);
         return cityFromZip;
       }
+    }
+    
+    // NEW: Google Maps format - "Street, City, State, Country"
+    // Example: "2341 Gloaming Way, Beverly Hills, CA, USA"
+    const googleMapsRegex = /^[^,]+,\s*([^,]+),\s*[A-Z]{2},\s*USA$/i;
+    const googleMapsMatch = trimmedLocation.match(googleMapsRegex);
+    
+    if (googleMapsMatch) {
+      const city = googleMapsMatch[1].trim();
+      if (debug) console.log(`[CityExtractor] Google Maps format matched: "${city}"`);
+      return city;
     }
     
     // Format 1: "City, State ZIP" or "City, ST ZIP"

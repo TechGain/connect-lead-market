@@ -15,6 +15,7 @@ interface LeadDetailsFieldsProps {
   onDescriptionChange: (value: string) => void;
   onAddressSelect: (address: string) => void;
   onZipCodeFound: (zipCode: string) => void;
+  onCityFound?: (city: string) => void;
 }
 
 // Define lead types in an array for easy sorting
@@ -63,6 +64,7 @@ const LeadDetailsFields = ({
   onDescriptionChange,
   onAddressSelect,
   onZipCodeFound,
+  onCityFound,
 }: LeadDetailsFieldsProps) => {
   return (
     <>
@@ -102,6 +104,7 @@ const LeadDetailsFields = ({
             required
             onAddressSelect={onAddressSelect}
             onZipCodeFound={onZipCodeFound}
+            onCityFound={onCityFound}
           />
           <p className="text-xs text-muted-foreground">Start typing to see address suggestions</p>
         </div>
