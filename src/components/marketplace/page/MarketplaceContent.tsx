@@ -67,7 +67,7 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
       
       {/* Responsive Layout for Filters, Stats and View Controls */}
       <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center'} mb-4`}>
-        <div className={`${isMobile ? 'w-full' : 'w-[250px]'}`}>
+        <div className={`${isMobile ? 'w-full' : 'w-[350px]'}`}>
           <LeadFilters onFilterChange={handleFilterChange} compact={true} />
         </div>
         
