@@ -1,79 +1,57 @@
-
 import React from 'react';
 import { Lead } from '@/types/lead';
-import { ViewMode } from './MarketplaceViewSelector';
-import { 
-  LargeCardView, 
-  SmallCardView, 
-  ListView, 
-  CompactTableView 
-} from './view-modes';
-import { LoadingState, EmptyState } from './states';
-import { extractCityFromLocation } from '@/lib/utils/location/cityExtractor';
+import LeadCard from '@/components/LeadCard';
+import { extractCityFromLocation } from '@/lib/utils';
 
 interface MarketplaceLeadsListProps {
   leads: Lead[];
-  isLoading: boolean;
+  viewMode: 'large-cards' | 'small-cards' | 'list' | 'compact-table';
+  showFullDetails: boolean;
   onPurchase: (lead: Lead) => void;
-  onResetFilters: () => void;
-  viewMode: ViewMode;
+  isLoading?: boolean;
 }
 
 const MarketplaceLeadsList: React.FC<MarketplaceLeadsListProps> = ({
   leads,
-  isLoading,
+  viewMode,
+  showFullDetails,
   onPurchase,
-  onResetFilters,
-  viewMode
+  isLoading = false
 }) => {
-  // Debug information
-  console.log('MarketplaceLeadsList: Displaying leads:', leads.length);
-  console.log('Lead statuses being displayed:', leads.map(l => l.status).join(', '));
-  console.log('Current view mode:', viewMode);
-  
-  // Enhanced city extraction debugging
-  const CITY_EXTRACTION_DEBUG = true; // Enable city extraction debug by default
-  
-  if (CITY_EXTRACTION_DEBUG && leads.length > 0) {
-    console.group('========== CITY EXTRACTION RESULTS ==========');
-    leads.slice(0, 10).forEach(lead => {
-      const cityResult = extractCityFromLocation(lead.location, lead.zipCode || 'N/A', true);
-      console.log(`Location: "${lead.location || 'N/A'}" | ZIP: "${lead.zipCode || 'N/A'}" | Result: "${cityResult}"`);
-    });
-    console.groupEnd();
-  }
-
   if (isLoading) {
-    return <LoadingState />;
+    return <p>Loading leads...</p>;
   }
 
-  if (leads.length === 0) {
-    return <EmptyState onResetFilters={onResetFilters} />;
+  if (!leads || leads.length === 0) {
+    return <p>No leads available in the marketplace.</p>;
   }
 
-  // Render the leads according to the selected view mode
-  const renderLeads = () => {
-    switch (viewMode) {
-      case 'largeCards':
-        return <LargeCardView leads={leads} onPurchase={onPurchase} />;
-        
-      case 'smallCards':
-        return <SmallCardView leads={leads} onPurchase={onPurchase} />;
-        
-      case 'list':
-        return <ListView leads={leads} onPurchase={onPurchase} />;
-        
-      case 'compact':
-        return <CompactTableView leads={leads} onPurchase={onPurchase} />;
-        
-      default:
-        return <LargeCardView leads={leads} onPurchase={onPurchase} />;
-    }
+  const renderLeadCard = (lead: Lead) => {
+    return (
+      <LeadCard
+        key={lead.id}
+        lead={lead}
+        viewMode={viewMode}
+        showFullDetails={showFullDetails}
+        isMarketplace={true}
+        onPurchase={onPurchase}
+        cityDisplay={getCityForLead(lead)}
+      />
+    );
+  };
+
+  // Fix the city extraction call - pass the address as fallback string instead of boolean
+  const getCityForLead = (lead: Lead) => {
+    return extractCityFromLocation(
+      lead.location, 
+      lead.zipCode || 'N/A', 
+      lead.address || '' // Pass address as string instead of showFullDetails boolean
+    );
   };
 
   return (
-    <div className="space-y-6">
-      {renderLeads()}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {leads.map(renderLeadCard)}
     </div>
   );
 };

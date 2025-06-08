@@ -4,6 +4,6 @@
  */
 
 // Export from each module
-export { zipToCityMap, stateCityMap } from './zipCodeMappings';
+export { zipToCityMap, stateCityMap } from './zipMappings';
 export { applyBuyerPriceMarkup } from './pricingUtils';
 export { extractCityFromLocation } from './cityExtractor';
