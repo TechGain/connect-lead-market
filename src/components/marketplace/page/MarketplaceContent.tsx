@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import LeadFilters from '@/components/LeadFilters';
 import MarketplaceViewSelector, { ViewMode } from '@/components/marketplace/MarketplaceViewSelector';
@@ -11,7 +10,6 @@ import { format } from 'date-fns';
 import { extractCityFromLocation } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 interface MarketplaceContentProps {
   filteredLeads: Lead[];
   leadsLoading: boolean;
@@ -23,7 +21,6 @@ interface MarketplaceContentProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
-
 const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   filteredLeads,
   leadsLoading,
@@ -42,7 +39,6 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   const totalLeads = filteredLeads.length;
   const availableLeads = filteredLeads.filter(lead => lead.status === 'new').length;
   const soldLeads = filteredLeads.filter(lead => lead.status === 'sold' || lead.status === 'pending').length;
-
   return <>
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -51,9 +47,7 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">
-            Last updated: {format(lastRefreshed, 'h:mm:ss a')}
-          </span>
+          
           <Button variant="outline" size="sm" onClick={handleRefresh} className="flex items-center gap-2">
             <RefreshCcw size={16} />
             Refresh Data
@@ -126,15 +120,7 @@ const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
           </div>
         </div>}
       
-      <MarketplaceLeadsList 
-        leads={filteredLeads} 
-        isLoading={leadsLoading} 
-        onPurchase={handlePurchaseLead} 
-        onResetFilters={resetFilters} 
-        viewMode={viewMode}
-        showFullDetails={false}
-      />
+      <MarketplaceLeadsList leads={filteredLeads} isLoading={leadsLoading} onPurchase={handlePurchaseLead} onResetFilters={resetFilters} viewMode={viewMode} showFullDetails={false} />
     </>;
 };
-
 export default MarketplaceContent;
