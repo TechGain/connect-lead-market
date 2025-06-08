@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -27,6 +28,45 @@ const websiteUrl = Deno.env.get('WEBSITE_URL') || 'https://stayconnectus.com';
 
 interface LeadEmailNotificationRequest {
   leadId: string;
+}
+
+async function updateNotificationAttempt(
+  leadId: string, 
+  status: 'success' | 'failed',
+  errorDetails?: string,
+  functionResponse?: any
+) {
+  try {
+    console.log(`Updating notification attempt: ${leadId} -> ${status}`);
+    
+    const updateData: any = {
+      status,
+      completed_at: new Date().toISOString()
+    };
+
+    if (errorDetails) {
+      updateData.error_details = errorDetails;
+    }
+
+    if (functionResponse) {
+      updateData.function_response = functionResponse;
+    }
+
+    const { error } = await supabase
+      .from('notification_attempts')
+      .update(updateData)
+      .eq('lead_id', leadId)
+      .eq('notification_type', 'email')
+      .eq('status', 'pending');
+
+    if (error) {
+      console.error('Failed to update notification attempt:', error);
+    } else {
+      console.log('Notification attempt updated successfully');
+    }
+  } catch (err) {
+    console.error('Exception updating notification attempt:', err);
+  }
 }
 
 async function fetchLeadDetails(leadId: string) {
@@ -68,145 +108,186 @@ async function fetchActiveBuyers() {
 }
 
 async function processLeadNotification(leadId: string) {
+  console.log("=== EMAIL NOTIFICATION FUNCTION STARTED ===");
   console.log("Processing lead notification for lead ID:", leadId);
+  console.log("Timestamp:", new Date().toISOString());
   
-  // Fetch the lead details
-  const lead = await fetchLeadDetails(leadId);
-  console.log("Lead details fetched:", lead.id, lead.type);
-  
-  // Get all active buyers who have enabled email notifications
-  const buyers = await fetchActiveBuyers();
-  console.log(`Found ${buyers.length} buyers with email notifications enabled`);
-  
-  if (buyers.length === 0) {
-    console.log("No buyers found with email notifications enabled");
-    return { message: "No buyers to notify", results: [] };
-  }
-  
-  // Apply buyer markup to the price for email display
-  const buyerPrice = applyBuyerPriceMarkup(lead.price);
-  const formattedPrice = formatCurrency(buyerPrice);
-  const creationDate = formatDate(lead.created_at);
-  
-  console.log(`Original price: ${lead.price}, Buyer price with markup: ${buyerPrice}, Formatted: ${formattedPrice}`);
-  
-  // Create email content with the marked-up price
-  const emailSubject = generateLeadEmailSubject(lead);
-  const emailHtml = generateLeadEmailHtml(lead, formattedPrice, creationDate, websiteUrl);
-  
-  console.log("Email content prepared:", { subject: emailSubject });
-  
-  // Send emails to all buyers with rate limiting
-  const emailResults = [];
-  
-  // Use a more conservative delay between email sends to avoid rate limiting
-  // Increase from 500ms to 2000ms (2 seconds) to ensure we stay well under Resend's rate limit
-  const delayBetweenEmails = 2000; // milliseconds
-  
-  // Maximum number of retry attempts per email
-  const maxRetries = 2;
-  
-  // Check if we're in test mode without domain verification
-  const isTestMode = !Deno.env.get("DOMAIN_VERIFIED");
-  const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
-  
-  if (isTestMode) {
-    console.warn("======== IMPORTANT NOTICE ========");
-    console.warn("Running in TEST MODE: Only emails to the verified address will be sent.");
-    console.warn(`Verified email: ${verifiedEmail}`);
-    console.warn("To send emails to all buyers, verify a domain at https://resend.com/domains");
-    console.warn("Then set DOMAIN_VERIFIED=true in your environment variables");
-    console.warn("==================================");
-  }
-  
-  for (const buyer of buyers) {
-    console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
+  try {
+    // Fetch the lead details
+    const lead = await fetchLeadDetails(leadId);
+    console.log("Lead details fetched:", lead.id, lead.type, lead.location);
     
-    let attempts = 0;
-    let result;
+    // Get all active buyers who have enabled email notifications
+    const buyers = await fetchActiveBuyers();
+    console.log(`Found ${buyers.length} buyers with email notifications enabled`);
     
-    // Try sending the email with retries for rate-limited requests
-    while (attempts <= maxRetries) {
-      try {
-        // If this is a retry attempt, add an additional delay
-        if (attempts > 0) {
-          // Exponential backoff - wait longer for each retry
-          const retryDelay = delayBetweenEmails * (attempts * 2);
-          console.log(`Retry attempt ${attempts} for ${buyer.email}, waiting ${retryDelay}ms`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-        }
-        
-        result = await sendEmail(resend, buyer.email, emailSubject, emailHtml);
-        
-        console.log(`Email result for ${buyer.email}:`, result);
-        
-        // If successful or error is not related to rate limiting, break the retry loop
-        if (result.success || !result.rateLimited) {
+    if (buyers.length === 0) {
+      console.log("No buyers found with email notifications enabled");
+      await updateNotificationAttempt(leadId, 'failed', 'No buyers with email notifications enabled');
+      return { 
+        message: "No buyers to notify", 
+        results: [],
+        success: false,
+        reason: 'no_buyers'
+      };
+    }
+    
+    // Apply buyer markup to the price for email display
+    const buyerPrice = applyBuyerPriceMarkup(lead.price);
+    const formattedPrice = formatCurrency(buyerPrice);
+    const creationDate = formatDate(lead.created_at);
+    
+    console.log(`Original price: ${lead.price}, Buyer price with markup: ${buyerPrice}, Formatted: ${formattedPrice}`);
+    
+    // Create email content with the marked-up price
+    const emailSubject = generateLeadEmailSubject(lead);
+    const emailHtml = generateLeadEmailHtml(lead, formattedPrice, creationDate, websiteUrl);
+    
+    console.log("Email content prepared:", { subject: emailSubject });
+    
+    // Send emails to all buyers with rate limiting
+    const emailResults = [];
+    
+    // Use a more conservative delay between email sends to avoid rate limiting
+    const delayBetweenEmails = 2000; // milliseconds
+    const maxRetries = 2;
+    
+    // Check if we're in test mode without domain verification
+    const isTestMode = !Deno.env.get("DOMAIN_VERIFIED");
+    const verifiedEmail = Deno.env.get("VERIFIED_EMAIL") || "stayconnectorg@gmail.com";
+    
+    if (isTestMode) {
+      console.warn("======== IMPORTANT NOTICE ========");
+      console.warn("Running in TEST MODE: Only emails to the verified address will be sent.");
+      console.warn(`Verified email: ${verifiedEmail}`);
+      console.warn("To send emails to all buyers, verify a domain at https://resend.com/domains");
+      console.warn("Then set DOMAIN_VERIFIED=true in your environment variables");
+      console.warn("==================================");
+    }
+    
+    for (const buyer of buyers) {
+      console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
+      
+      let attempts = 0;
+      let result;
+      
+      // Try sending the email with retries for rate-limited requests
+      while (attempts <= maxRetries) {
+        try {
+          // If this is a retry attempt, add an additional delay
+          if (attempts > 0) {
+            const retryDelay = delayBetweenEmails * (attempts * 2);
+            console.log(`Retry attempt ${attempts} for ${buyer.email}, waiting ${retryDelay}ms`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          }
+          
+          result = await sendEmail(resend, buyer.email, emailSubject, emailHtml);
+          
+          console.log(`Email result for ${buyer.email}:`, result);
+          
+          // If successful or error is not related to rate limiting, break the retry loop
+          if (result.success || !result.rateLimited) {
+            break;
+          }
+          
+          attempts++;
+        } catch (error) {
+          console.error(`Exception sending email to ${buyer.email}:`, error);
+          result = {
+            success: false,
+            error: error.message
+          };
           break;
         }
-        
-        attempts++;
-      } catch (error) {
-        console.error(`Exception sending email to ${buyer.email}:`, error);
-        result = {
-          success: false,
-          error: error.message
-        };
-        break;
+      }
+      
+      // Record the result
+      emailResults.push({
+        buyer: buyer.id,
+        email: buyer.email,
+        ...result,
+        attempts
+      });
+      
+      // If this wasn't the last buyer and wasn't rate limited, add the standard delay
+      if (buyer !== buyers[buyers.length - 1] && (!result || !result.rateLimited)) {
+        await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
       }
     }
     
-    // Record the result
-    emailResults.push({
-      buyer: buyer.id,
-      email: buyer.email,
-      ...result,
-      attempts
-    });
+    // Count successful emails
+    const successCount = emailResults.filter(r => r.success).length;
+    const rateLimitedCount = emailResults.filter(r => r.rateLimited).length;
+    const redirectedCount = emailResults.filter(r => r.redirected).length;
+    const domainVerificationCount = emailResults.filter(r => r.domainVerificationRequired).length;
+    const totalAttempts = emailResults.reduce((sum, r) => sum + (r.attempts || 0), 0);
     
-    // If this wasn't the last buyer and wasn't rate limited, add the standard delay
-    if (buyer !== buyers[buyers.length - 1] && (!result || !result.rateLimited)) {
-      await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
+    // Create appropriate message
+    let message = `Notification sent to ${successCount} buyers`;
+    let success = successCount > 0;
+    
+    if (rateLimitedCount > 0) {
+      message += `. ${rateLimitedCount} emails couldn't be sent due to rate limiting.`;
     }
-  }
-  
-  // Count successful emails
-  const successCount = emailResults.filter(r => r.success).length;
-  const rateLimitedCount = emailResults.filter(r => r.rateLimited).length;
-  const redirectedCount = emailResults.filter(r => r.redirected).length;
-  const domainVerificationCount = emailResults.filter(r => r.domainVerificationRequired).length;
-  const totalAttempts = emailResults.reduce((sum, r) => sum + (r.attempts || 0), 0);
-  
-  // Create appropriate message
-  let message = `Notification sent to ${successCount} buyers`;
-  if (rateLimitedCount > 0) {
-    message += `. ${rateLimitedCount} emails couldn't be sent due to rate limiting.`;
-  }
-  if (redirectedCount > 0) {
-    message += `. ${redirectedCount} emails were redirected to the verified email because domain verification is required.`;
-  }
-  if (domainVerificationCount > 0) {
-    message += `. Domain verification is required to send emails to all buyers.`;
-  }
-  
-  console.log(`Email notification complete: ${successCount} successful, ${rateLimitedCount} rate limited, ${redirectedCount} redirected, total attempts: ${totalAttempts}`);
-  
-  return {
-    message,
-    results: emailResults,
-    rateLimited: rateLimitedCount > 0,
-    redirected: redirectedCount > 0,
-    domainVerificationRequired: domainVerificationCount > 0,
-    testMode: isTestMode,
-    stats: {
-      total: buyers.length,
-      successful: successCount,
-      rateLimited: rateLimitedCount,
-      redirected: redirectedCount,
-      domainVerificationRequired: domainVerificationCount,
-      totalAttempts
+    if (redirectedCount > 0) {
+      message += `. ${redirectedCount} emails were redirected to the verified email because domain verification is required.`;
     }
-  };
+    if (domainVerificationCount > 0) {
+      message += `. Domain verification is required to send emails to all buyers.`;
+    }
+    
+    console.log(`Email notification complete: ${successCount} successful, ${rateLimitedCount} rate limited, ${redirectedCount} redirected, total attempts: ${totalAttempts}`);
+    
+    // Update notification attempt status
+    if (success) {
+      await updateNotificationAttempt(leadId, 'success', null, {
+        message,
+        results: emailResults,
+        stats: {
+          total: buyers.length,
+          successful: successCount,
+          rateLimited: rateLimitedCount,
+          redirected: redirectedCount,
+          totalAttempts
+        }
+      });
+    } else {
+      await updateNotificationAttempt(leadId, 'failed', 'No emails sent successfully', {
+        message,
+        results: emailResults,
+        stats: {
+          total: buyers.length,
+          successful: successCount,
+          rateLimited: rateLimitedCount,
+          redirected: redirectedCount,
+          totalAttempts
+        }
+      });
+    }
+    
+    return {
+      message,
+      results: emailResults,
+      rateLimited: rateLimitedCount > 0,
+      redirected: redirectedCount > 0,
+      domainVerificationRequired: domainVerificationCount > 0,
+      testMode: isTestMode,
+      success,
+      stats: {
+        total: buyers.length,
+        successful: successCount,
+        rateLimited: rateLimitedCount,
+        redirected: redirectedCount,
+        domainVerificationRequired: domainVerificationCount,
+        totalAttempts
+      }
+    };
+
+  } catch (error) {
+    console.error("Error processing lead notification:", error);
+    await updateNotificationAttempt(leadId, 'failed', error.message);
+    throw error;
+  }
 }
 
 // Main request handler

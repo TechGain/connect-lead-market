@@ -187,6 +187,53 @@ export type Database = {
           },
         ]
       }
+      notification_attempts: {
+        Row: {
+          attempt_count: number
+          attempted_at: string
+          completed_at: string | null
+          created_at: string
+          error_details: string | null
+          function_response: Json | null
+          id: string
+          lead_id: string
+          notification_type: string
+          status: string
+        }
+        Insert: {
+          attempt_count?: number
+          attempted_at?: string
+          completed_at?: string | null
+          created_at?: string
+          error_details?: string | null
+          function_response?: Json | null
+          id?: string
+          lead_id: string
+          notification_type: string
+          status: string
+        }
+        Update: {
+          attempt_count?: number
+          attempted_at?: string
+          completed_at?: string | null
+          created_at?: string
+          error_details?: string | null
+          function_response?: Json | null
+          id?: string
+          lead_id?: string
+          notification_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_attempts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       password_reset_tokens: {
         Row: {
           created_at: string
@@ -274,6 +321,16 @@ export type Database = {
           email: string
           full_name: string
           id: string
+        }[]
+      }
+      get_notification_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_attempts: number
+          successful_attempts: number
+          failed_attempts: number
+          pending_attempts: number
+          success_rate: number
         }[]
       }
       is_admin_user: {

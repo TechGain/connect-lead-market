@@ -1,10 +1,11 @@
 
 import React, { useEffect } from 'react';
-import { Check, Trash2, Circle, CircleCheck, FileText, RefreshCcw, DollarSign } from 'lucide-react';
+import { Check, Trash2, Circle, CircleCheck, FileText, RefreshCw, DollarSign, Bell } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminLeads, LeadStatusFilter } from '@/hooks/use-admin-leads';
 import AdminLeadTable from '@/components/admin/AdminLeadTable';
+import NotificationMonitor from '@/components/admin/NotificationMonitor';
 import { Helmet } from 'react-helmet-async';
 
 const AdminLeadsPage: React.FC = () => {
@@ -81,7 +82,7 @@ const AdminLeadsPage: React.FC = () => {
         ) : (
           <div className="space-y-6">
             <Tabs defaultValue={statusFilter} onValueChange={handleTabChange}>
-              <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+              <TabsList className="grid grid-cols-7 w-full max-w-5xl">
                 <TabsTrigger value="all">
                   <Circle className="mr-2 h-4 w-4" />
                   All ({leads.length})
@@ -99,12 +100,16 @@ const AdminLeadsPage: React.FC = () => {
                   Paid ({paidLeadsCount})
                 </TabsTrigger>
                 <TabsTrigger value="refunded">
-                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Refunded ({refundedLeadsCount})
                 </TabsTrigger>
                 <TabsTrigger value="erased">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Erased ({erasedLeadsCount})
+                </TabsTrigger>
+                <TabsTrigger value="notifications">
+                  <Bell className="mr-2 h-4 w-4" />
+                  Notifications
                 </TabsTrigger>
               </TabsList>
 
@@ -169,6 +174,11 @@ const AdminLeadsPage: React.FC = () => {
                   onLeadMarkedPaid={handleLeadUpdated}
                 />
               </TabsContent>
+
+              <TabsContent value="notifications" className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">Notification Monitor</h2>
+                <NotificationMonitor />
+              </TabsContent>
             </Tabs>
             
             <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-sm text-gray-600">
@@ -179,6 +189,7 @@ const AdminLeadsPage: React.FC = () => {
                 <li><span className="font-semibold">Paid:</span> Leads that have been sold and payment has been processed</li>
                 <li><span className="font-semibold">Refunded:</span> Leads that were sold but have been refunded</li>
                 <li><span className="font-semibold">Erased:</span> Leads that have been deleted by sellers or admins</li>
+                <li><span className="font-semibold">Notifications:</span> Monitor email and SMS notification delivery status</li>
               </ul>
             </div>
           </div>
