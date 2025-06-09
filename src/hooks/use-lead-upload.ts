@@ -70,8 +70,18 @@ export const useLeadUpload = () => {
         const startTime = Date.now();
         console.log(`Invoking ${functionName} at ${new Date().toISOString()}`);
 
+        // Use the full project URL for edge function invocation
+        const projectRef = 'bfmxxuarnqmxqqnpxqjf';
+        const functionUrl = `https://${projectRef}.supabase.co/functions/v1/${functionName}`;
+        
+        console.log(`Calling function at: ${functionUrl}`);
+
         const result = await supabase.functions.invoke(functionName, {
-          body: { leadId }
+          body: { leadId },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXh4dWFybnFteHFxbnB4cWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTc4ODMsImV4cCI6MjA2MTY5Mzg4M30.MAQZ7I3pshciBJANhlPThK6XBxGemIPgflsMDz3OB_4'}`
+          }
         });
 
         const duration = Date.now() - startTime;
@@ -155,7 +165,7 @@ export const useLeadUpload = () => {
       console.log('Lead data prepared for database:', leadData);
       
       // Insert the lead into the database
-      const { data, error } = await supabase
+      const { data: insertedLead, error } = await supabase
         .from('leads')
         .insert(leadData)
         .select()
@@ -166,8 +176,40 @@ export const useLeadUpload = () => {
         throw error;
       }
       
-      console.log('Lead uploaded successfully to database:', data);
+      console.log('Lead uploaded successfully to database:', insertedLead);
       console.log('Database trigger should have created notification attempt records');
+
+      // Wait a moment for the database trigger to create notification attempts
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Check if notification attempts were created by the trigger
+      const { data: notificationAttempts, error: notificationError } = await supabase
+        .from('notification_attempts')
+        .select('*')
+        .eq('lead_id', insertedLead.id);
+
+      if (notificationError) {
+        console.error('Error checking notification attempts:', notificationError);
+      } else {
+        console.log('Notification attempts found:', notificationAttempts);
+      }
+
+      // If no notification attempts were created by trigger, create them manually
+      if (!notificationAttempts || notificationAttempts.length === 0) {
+        console.log('No notification attempts found, creating them manually...');
+        const { error: manualInsertError } = await supabase
+          .from('notification_attempts')
+          .insert([
+            { lead_id: insertedLead.id, notification_type: 'email', status: 'pending' },
+            { lead_id: insertedLead.id, notification_type: 'sms', status: 'pending' }
+          ]);
+
+        if (manualInsertError) {
+          console.error('Error creating manual notification attempts:', manualInsertError);
+        } else {
+          console.log('Manual notification attempts created successfully');
+        }
+      }
 
       // Store notification results
       const notificationResults = {
@@ -178,7 +220,7 @@ export const useLeadUpload = () => {
       // Try to invoke email notifications
       console.log('=== STARTING EMAIL NOTIFICATIONS ===');
       const emailResult = await invokeNotificationFunction(
-        data.id, 
+        insertedLead.id, 
         'send-lead-email-notification', 
         'email'
       );
@@ -187,7 +229,7 @@ export const useLeadUpload = () => {
       // Try to invoke SMS notifications
       console.log('=== STARTING SMS NOTIFICATIONS ===');
       const smsResult = await invokeNotificationFunction(
-        data.id, 
+        insertedLead.id, 
         'send-lead-notification', 
         'sms'
       );

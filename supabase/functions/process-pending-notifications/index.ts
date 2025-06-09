@@ -3,8 +3,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 // Initialize Supabase client with admin privileges
@@ -17,106 +17,116 @@ async function processPendingNotifications() {
   console.log("Timestamp:", new Date().toISOString());
 
   try {
-    // Find pending notifications older than 5 minutes
+    // Get all pending notification attempts older than 5 minutes
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     
-    const { data: pendingNotifications, error } = await supabase
+    const { data: pendingAttempts, error: fetchError } = await supabase
       .from('notification_attempts')
       .select('*')
       .eq('status', 'pending')
       .lt('attempted_at', fiveMinutesAgo)
-      .limit(10); // Process up to 10 at a time
+      .order('attempted_at', { ascending: true })
+      .limit(10); // Process 10 at a time to avoid overwhelming the system
 
-    if (error) {
-      console.error("Error fetching pending notifications:", error);
-      return { error: error.message };
+    if (fetchError) {
+      console.error('Error fetching pending notifications:', fetchError);
+      return { error: fetchError.message };
     }
 
-    console.log(`Found ${pendingNotifications?.length || 0} pending notifications to process`);
-
-    if (!pendingNotifications || pendingNotifications.length === 0) {
-      return { 
-        message: "No pending notifications to process",
-        processed: 0 
-      };
+    if (!pendingAttempts || pendingAttempts.length === 0) {
+      console.log('No pending notifications to process');
+      return { message: 'No pending notifications found', processed: 0 };
     }
 
+    console.log(`Found ${pendingAttempts.length} pending notifications to process`);
+
+    let processedCount = 0;
     const results = [];
 
-    for (const notification of pendingNotifications) {
-      console.log(`Processing notification: ${notification.id} (${notification.notification_type})`);
-
+    for (const attempt of pendingAttempts) {
+      console.log(`Processing notification: ${attempt.id} for lead: ${attempt.lead_id}`);
+      
       try {
         let functionName = '';
-        if (notification.notification_type === 'email') {
+        if (attempt.notification_type === 'email') {
           functionName = 'send-lead-email-notification';
-        } else if (notification.notification_type === 'sms') {
+        } else if (attempt.notification_type === 'sms') {
           functionName = 'send-lead-notification';
         } else {
-          console.error(`Unknown notification type: ${notification.notification_type}`);
+          console.error(`Unknown notification type: ${attempt.notification_type}`);
           continue;
         }
 
-        // Update status to retrying
+        // Mark as processing
         await supabase
           .from('notification_attempts')
           .update({ 
             status: 'retrying',
-            attempt_count: notification.attempt_count + 1
+            attempt_count: (attempt.attempt_count || 0) + 1
           })
-          .eq('id', notification.id);
+          .eq('id', attempt.id);
 
-        // Invoke the appropriate notification function
+        // Invoke the notification function
         const result = await supabase.functions.invoke(functionName, {
-          body: { leadId: notification.lead_id }
+          body: { leadId: attempt.lead_id }
         });
 
-        console.log(`Notification ${notification.id} result:`, result);
+        if (result.error) {
+          // Mark as failed
+          await supabase
+            .from('notification_attempts')
+            .update({
+              status: 'failed',
+              error_details: result.error.message || JSON.stringify(result.error),
+              completed_at: new Date().toISOString(),
+              function_response: result
+            })
+            .eq('id', attempt.id);
 
-        results.push({
-          id: notification.id,
-          type: notification.notification_type,
-          leadId: notification.lead_id,
-          success: !result.error,
-          result: result.error || result.data
-        });
+          console.error(`Failed to process notification ${attempt.id}:`, result.error);
+          results.push({ id: attempt.id, status: 'failed', error: result.error });
+        } else {
+          // Mark as success
+          await supabase
+            .from('notification_attempts')
+            .update({
+              status: 'success',
+              completed_at: new Date().toISOString(),
+              function_response: result.data
+            })
+            .eq('id', attempt.id);
 
+          console.log(`Successfully processed notification ${attempt.id}`);
+          results.push({ id: attempt.id, status: 'success' });
+          processedCount++;
+        }
       } catch (error) {
-        console.error(`Error processing notification ${notification.id}:`, error);
+        console.error(`Exception processing notification ${attempt.id}:`, error);
         
         // Mark as failed
         await supabase
           .from('notification_attempts')
-          .update({ 
+          .update({
             status: 'failed',
-            error_details: error.message,
+            error_details: error.message || 'Unknown error',
             completed_at: new Date().toISOString()
           })
-          .eq('id', notification.id);
+          .eq('id', attempt.id);
 
-        results.push({
-          id: notification.id,
-          type: notification.notification_type,
-          leadId: notification.lead_id,
-          success: false,
-          error: error.message
-        });
+        results.push({ id: attempt.id, status: 'failed', error: error.message });
       }
     }
 
-    const successCount = results.filter(r => r.success).length;
-    
-    console.log(`Processed ${results.length} notifications, ${successCount} successful`);
-
+    console.log(`Processed ${processedCount} notifications successfully`);
     return {
-      message: `Processed ${results.length} pending notifications`,
-      processed: results.length,
-      successful: successCount,
+      message: `Processed ${processedCount} out of ${pendingAttempts.length} notifications`,
+      processed: processedCount,
+      total: pendingAttempts.length,
       results
     };
 
   } catch (error) {
-    console.error("Error in process-pending-notifications:", error);
+    console.error('Error in processPendingNotifications:', error);
     return { error: error.message };
   }
 }
@@ -129,25 +139,20 @@ serve(async (req: Request) => {
   }
 
   try {
+    console.log("Received request to process-pending-notifications");
+    
     const result = await processPendingNotifications();
+    console.log("Processing completed:", result);
     
     return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
     console.error("Error in process-pending-notifications function:", error);
-    
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
   }
 });
