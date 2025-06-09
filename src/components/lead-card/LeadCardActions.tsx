@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, Pencil, Trash2, RefreshCcw } from 'lucide-react';
 import { Lead } from '@/types/lead';
 import { generateGoogleCalendarUrl } from '@/lib/utils';
 
@@ -22,8 +22,10 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
   onRate,
   isPurchased = false
 }) => {
-  // Check if lead can be edited/deleted (not in post-purchase states)
+  // Check if lead can be edited/deleted
+  const isErased = lead.status === 'erased';
   const canEditLead = isOwner && !['sold', 'paid', 'refunded'].includes(lead.status);
+  const canDeleteLead = isOwner; // Allow deletion even for erased leads
 
   // Generate calendar link if lead has appointment time
   const handleAddToCalendar = () => {
@@ -88,31 +90,30 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
         </>
       )}
       
-      {canEditLead && (
-        <>
-          {onEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-1 h-auto"
-              onClick={() => onEdit(lead)}
-              title="Edit Lead"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-1 h-auto text-red-500 hover:text-red-700 hover:bg-red-50"
-              onClick={() => onDelete(lead)}
-              title="Delete Lead"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </>
+      {/* Show edit button for all editable leads, including erased ones */}
+      {canEditLead && onEdit && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="p-1 h-auto"
+          onClick={() => onEdit(lead)}
+          title={isErased ? "Edit & Reactivate Lead" : "Edit Lead"}
+        >
+          {isErased ? <RefreshCcw className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+        </Button>
+      )}
+      
+      {/* Show delete button for all leads, but change text for erased ones */}
+      {canDeleteLead && onDelete && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="p-1 h-auto text-red-500 hover:text-red-700 hover:bg-red-50"
+          onClick={() => onDelete(lead)}
+          title={isErased ? "Delete Permanently" : "Delete Lead"}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       )}
     </div>
   );

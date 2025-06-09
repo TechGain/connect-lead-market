@@ -47,8 +47,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, onLeadUpdated }) => {
     }
   };
   
-  // Filter out erased leads
-  const visibleLeads = leads.filter(lead => lead.status !== 'erased');
+  // Show all leads including erased ones - sellers can now see and edit erased leads
+  const visibleLeads = leads;
   
   if (!visibleLeads || visibleLeads.length === 0) {
     return (
@@ -85,13 +85,16 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, onLeadUpdated }) => {
           <DialogHeader>
             <DialogTitle>Delete Lead</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this lead? This action cannot be undone.
+              {selectedLead?.status === 'erased' 
+                ? 'This lead is already erased. Are you sure you want to permanently delete it from your account?'
+                : 'Are you sure you want to delete this lead? This action cannot be undone.'
+              }
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={confirmDeleteLead} disabled={isDeleting}>
-              {isDeleting ? 'Deleting...' : 'Delete Lead'}
+              {isDeleting ? 'Deleting...' : selectedLead?.status === 'erased' ? 'Delete Permanently' : 'Delete Lead'}
             </Button>
           </DialogFooter>
         </DialogContent>

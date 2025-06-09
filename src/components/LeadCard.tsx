@@ -8,6 +8,8 @@ import LeadCardDetails from './lead-card/LeadCardDetails';
 import LeadCardFooter from './lead-card/LeadCardFooter';
 import { formatLeadType } from '@/lib/utils';
 import { useUserRole } from '@/hooks/use-user-role';
+import { Button } from '@/components/ui/button';
+import { RefreshCcw } from 'lucide-react';
 
 interface LeadCardProps {
   lead: Lead;
@@ -39,13 +41,47 @@ const LeadCard = ({
   const isSold = lead.status === 'sold' || lead.status === 'pending';
   const isErased = lead.status === 'erased';
   
-  // Don't render the card at all if it's erased UNLESS it's in admin view
-  if (isErased && !adminView) {
+  // Don't render the card at all if it's erased UNLESS it's in admin view OR the user is the owner
+  if (isErased && !adminView && !isOwner) {
     return null;
   }
   
+  // Handle reactivating an erased lead
+  const handleReactivateLead = () => {
+    if (onEdit) {
+      onEdit(lead);
+    }
+  };
+  
   return (
-    <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${isSold ? 'bg-gray-50' : ''} ${isErased ? 'border-red-300 bg-red-50' : ''}`}>
+    <Card className={`h-full flex flex-col hover:shadow-md transition-shadow relative ${
+      isSold ? 'bg-gray-50' : ''
+    } ${
+      isErased ? 'border-red-300 bg-red-50 opacity-80' : ''
+    }`}>
+      {/* Show special header for erased leads when owner views them */}
+      {isErased && isOwner && (
+        <div className="bg-red-100 border-b border-red-200 px-4 py-2 rounded-t-lg">
+          <div className="flex items-center justify-between">
+            <span className="text-red-700 text-sm font-medium">
+              Lead Expired/Erased
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReactivateLead}
+              className="h-6 px-2 text-xs bg-white hover:bg-red-50"
+            >
+              <RefreshCcw className="h-3 w-3 mr-1" />
+              Reactivate
+            </Button>
+          </div>
+          <p className="text-red-600 text-xs mt-1">
+            Click "Reactivate" or "Edit" to update appointment time and make this lead available again
+          </p>
+        </div>
+      )}
+      
       {/* Show date at the top of the card */}
       <div className="px-6 pt-6 pb-0">
         <LeadCardMetadata
