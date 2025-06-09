@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +19,7 @@ const LeadUploader = () => {
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [contactPhone2, setContactPhone2] = useState('');
   const [price, setPrice] = useState('');
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
@@ -84,7 +84,7 @@ const LeadUploader = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Updated required fields to exclude email
+    // Updated required fields to exclude email and contactPhone2
     const requiredFields = [leadType, description, contactName, contactPhone, price, address, zipCode];
     
     // If confirmed, also require appointment date and time
@@ -164,13 +164,19 @@ const LeadUploader = () => {
       
       console.log('Final location string:', locationString);
       
+      // Create contact phone string with optional second number
+      let contactPhoneString = contactPhone;
+      if (contactPhone2.trim()) {
+        contactPhoneString += ` / ${contactPhone2}`;
+      }
+      
       const newLead: Omit<Lead, 'id'> = {
         type: leadType,
         location: locationString,
         description,
         contactName,
         contactEmail,
-        contactPhone,
+        contactPhone: contactPhoneString,
         price: Number(price),
         qualityRating: null,
         status: 'new',
@@ -193,6 +199,7 @@ const LeadUploader = () => {
         setContactName('');
         setContactEmail('');
         setContactPhone('');
+        setContactPhone2('');
         setPrice('');
         setAppointmentDate(undefined);
         setAppointmentTimeSlot('');
@@ -245,9 +252,11 @@ const LeadUploader = () => {
             contactName={contactName}
             contactEmail={contactEmail}
             contactPhone={contactPhone}
+            contactPhone2={contactPhone2}
             onContactNameChange={setContactName}
             onContactEmailChange={setContactEmail}
             onContactPhoneChange={setContactPhone}
+            onContactPhone2Change={setContactPhone2}
           />
           
           <PriceQualityFields

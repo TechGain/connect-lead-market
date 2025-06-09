@@ -7,18 +7,22 @@ interface ContactInfoFieldsProps {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  contactPhone2: string;
   onContactNameChange: (value: string) => void;
   onContactEmailChange: (value: string) => void;
   onContactPhoneChange: (value: string) => void;
+  onContactPhone2Change: (value: string) => void;
 }
 
 const ContactInfoFields = ({
   contactName,
   contactEmail,
   contactPhone,
+  contactPhone2,
   onContactNameChange,
   onContactEmailChange,
   onContactPhoneChange,
+  onContactPhone2Change,
 }: ContactInfoFieldsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -52,6 +56,17 @@ const ContactInfoFields = ({
           onChange={(e) => onContactPhoneChange(e.target.value)}
           placeholder="(123) 456-7890"
           required
+        />
+      </div>
+      
+      <div className="space-y-2 md:col-span-3">
+        <Label htmlFor="contact-phone2">Second Phone Number (Optional)</Label>
+        <Input
+          id="contact-phone2"
+          value={contactPhone2}
+          onChange={(e) => onContactPhone2Change(e.target.value)}
+          placeholder="(123) 456-7890"
+          className="md:max-w-md"
         />
       </div>
     </div>
