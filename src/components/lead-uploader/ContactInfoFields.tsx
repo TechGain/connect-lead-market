@@ -25,7 +25,7 @@ const ContactInfoFields = ({
   onContactPhone2Change,
 }: ContactInfoFieldsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="space-y-2">
         <Label htmlFor="contact-name">Contact Name *</Label>
         <Input
@@ -59,14 +59,13 @@ const ContactInfoFields = ({
         />
       </div>
       
-      <div className="space-y-2 md:col-span-3">
-        <Label htmlFor="contact-phone2">Second Phone Number (Optional)</Label>
+      <div className="space-y-2">
+        <Label htmlFor="contact-phone2">Second Phone (Optional)</Label>
         <Input
           id="contact-phone2"
           value={contactPhone2}
           onChange={(e) => onContactPhone2Change(e.target.value)}
           placeholder="(123) 456-7890"
-          className="md:max-w-md"
         />
       </div>
     </div>
