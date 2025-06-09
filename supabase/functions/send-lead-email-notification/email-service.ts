@@ -34,6 +34,7 @@ export async function sendEmail(
     console.log(`=== SENDING EMAIL ===`);
     console.log(`Recipient: ${recipient}`);
     console.log(`Subject: ${subject}`);
+    console.log(`Timestamp: ${new Date().toISOString()}`);
     
     if (!recipient) {
       console.error("No recipient email provided");
@@ -57,6 +58,7 @@ export async function sendEmail(
     const isDomainVerified = ["true", "1", "yes", "y"].includes(domainVerifiedValue);
     
     console.log(`Domain verified: ${isDomainVerified}`);
+    console.log(`Verified email: ${verifiedEmail}`);
     
     // For testing, let's use Resend's default domain if domain isn't verified
     const useResendDefault = !isDomainVerified;
@@ -85,11 +87,17 @@ export async function sendEmail(
       html: htmlContent,
     };
     
-    console.log('Email payload:', JSON.stringify(emailPayload, null, 2));
+    console.log('Email payload prepared:', JSON.stringify({
+      from: emailPayload.from,
+      to: emailPayload.to,
+      subject: emailPayload.subject,
+      htmlLength: htmlContent.length
+    }, null, 2));
     
+    console.log('Calling Resend API...');
     const emailResponse = await resend.emails.send(emailPayload);
     
-    console.log('Resend API response:', JSON.stringify(emailResponse, null, 2));
+    console.log('Resend API response received:', JSON.stringify(emailResponse, null, 2));
     
     // Handle the case where Resend returns an error object
     if ('error' in emailResponse && emailResponse.error) {
@@ -104,16 +112,26 @@ export async function sendEmail(
         };
       }
       
+      // Check for API key issues
+      if (emailResponse.error.message && emailResponse.error.message.includes("API key")) {
+        return {
+          success: false,
+          error: "Invalid API key. Please check your RESEND_API_KEY configuration.",
+          apiKeyError: true
+        };
+      }
+      
       return { 
         success: false, 
-        error: emailResponse.error.message || "Unknown error from Resend API" 
+        error: emailResponse.error.message || "Unknown error from Resend API",
+        resendError: emailResponse.error
       };
     }
     
     // If we're in test mode but not sending to the intended recipient, mark as redirected
     const redirected = needsRedirect;
     
-    console.log(`Email sent successfully to ${redirected ? verifiedEmail + ' (redirected)' : recipient}`);
+    console.log(`✅ Email sent successfully to ${redirected ? verifiedEmail + ' (redirected)' : recipient}`);
     console.log('Email ID:', emailResponse.id);
     
     return { 
@@ -125,6 +143,11 @@ export async function sendEmail(
   } catch (error) {
     console.error(`=== EMAIL SENDING FAILED ===`);
     console.error(`Failed to send email to ${recipient}:`, error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     
     // Handle rate limiting specifically
     if (error.message && error.message.includes("Too many requests")) {
@@ -136,9 +159,23 @@ export async function sendEmail(
       };
     }
     
+    // Handle network issues
+    if (error.message && (error.message.includes("fetch") || error.message.includes("network"))) {
+      return {
+        success: false,
+        error: "Network error occurred while sending email. Please try again.",
+        networkError: true
+      };
+    }
+    
     return { 
       success: false, 
-      error: error.message 
+      error: error.message,
+      exception: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      }
     };
   }
 }

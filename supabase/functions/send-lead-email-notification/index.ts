@@ -70,7 +70,8 @@ async function updateNotificationAttempt(
 }
 
 async function fetchLeadDetails(leadId: string) {
-  // Modified query to not use the foreign key relationship that was causing errors
+  console.log(`Fetching lead details for: ${leadId}`);
+  
   const { data: lead, error: leadError } = await supabase
     .from('leads')
     .select('*')
@@ -82,12 +83,21 @@ async function fetchLeadDetails(leadId: string) {
     throw new Error(leadError?.message || "Lead not found");
   }
   
+  console.log(`Lead details fetched:`, {
+    id: lead.id,
+    type: lead.type,
+    location: lead.location,
+    price: lead.price,
+    status: lead.status
+  });
+  
   return lead;
 }
 
 async function fetchActiveBuyers() {
   try {
-    // Use a direct query instead of the function that might be problematic
+    console.log('Fetching active buyers with email notifications enabled...');
+    
     const { data: buyers, error: buyersError } = await supabase
       .from('profiles')
       .select('email, full_name, id')
@@ -100,6 +110,8 @@ async function fetchActiveBuyers() {
       throw new Error(buyersError.message);
     }
     
+    console.log(`Found ${buyers?.length || 0} buyers with email notifications enabled`);
+    
     return buyers || [];
   } catch (error) {
     console.error("Exception fetching buyers:", error);
@@ -111,15 +123,20 @@ async function processLeadNotification(leadId: string) {
   console.log("=== EMAIL NOTIFICATION FUNCTION STARTED ===");
   console.log("Processing lead notification for lead ID:", leadId);
   console.log("Timestamp:", new Date().toISOString());
+  console.log("Environment check:");
+  console.log("- SUPABASE_URL:", Deno.env.get('SUPABASE_URL') ? 'SET' : 'NOT SET');
+  console.log("- SUPABASE_SERVICE_ROLE_KEY:", Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'SET' : 'NOT SET');
+  console.log("- RESEND_API_KEY:", Deno.env.get('RESEND_API_KEY') ? 'SET' : 'NOT SET');
+  console.log("- DOMAIN_VERIFIED:", Deno.env.get('DOMAIN_VERIFIED') || 'NOT SET');
+  console.log("- FROM_EMAIL:", Deno.env.get('FROM_EMAIL') || 'NOT SET');
+  console.log("- VERIFIED_EMAIL:", Deno.env.get('VERIFIED_EMAIL') || 'NOT SET');
   
   try {
     // Fetch the lead details
     const lead = await fetchLeadDetails(leadId);
-    console.log("Lead details fetched:", lead.id, lead.type, lead.location);
     
     // Get all active buyers who have enabled email notifications
     const buyers = await fetchActiveBuyers();
-    console.log(`Found ${buyers.length} buyers with email notifications enabled`);
     
     if (buyers.length === 0) {
       console.log("No buyers found with email notifications enabled");
@@ -137,13 +154,15 @@ async function processLeadNotification(leadId: string) {
     const formattedPrice = formatCurrency(buyerPrice);
     const creationDate = formatDate(lead.created_at);
     
-    console.log(`Original price: ${lead.price}, Buyer price with markup: ${buyerPrice}, Formatted: ${formattedPrice}`);
+    console.log(`Price calculation: Original: ${lead.price}, With markup: ${buyerPrice}, Formatted: ${formattedPrice}`);
     
     // Create email content with the marked-up price
     const emailSubject = generateLeadEmailSubject(lead);
     const emailHtml = generateLeadEmailHtml(lead, formattedPrice, creationDate, websiteUrl);
     
-    console.log("Email content prepared:", { subject: emailSubject });
+    console.log("Email content prepared:");
+    console.log("- Subject:", emailSubject);
+    console.log("- HTML length:", emailHtml.length);
     
     // Send emails to all buyers with rate limiting
     const emailResults = [];
@@ -166,7 +185,7 @@ async function processLeadNotification(leadId: string) {
     }
     
     for (const buyer of buyers) {
-      console.log(`Sending email to buyer: ${buyer.id}, email: ${buyer.email}`);
+      console.log(`\n--- Processing buyer ${buyer.id} (${buyer.email}) ---`);
       
       let attempts = 0;
       let result;
@@ -181,6 +200,7 @@ async function processLeadNotification(leadId: string) {
             await new Promise(resolve => setTimeout(resolve, retryDelay));
           }
           
+          console.log(`Sending email attempt ${attempts + 1} to ${buyer.email}`);
           result = await sendEmail(resend, buyer.email, emailSubject, emailHtml);
           
           console.log(`Email result for ${buyer.email}:`, result);
@@ -195,7 +215,8 @@ async function processLeadNotification(leadId: string) {
           console.error(`Exception sending email to ${buyer.email}:`, error);
           result = {
             success: false,
-            error: error.message
+            error: error.message,
+            exception: true
           };
           break;
         }
@@ -206,11 +227,12 @@ async function processLeadNotification(leadId: string) {
         buyer: buyer.id,
         email: buyer.email,
         ...result,
-        attempts
+        attempts: attempts + 1
       });
       
       // If this wasn't the last buyer and wasn't rate limited, add the standard delay
       if (buyer !== buyers[buyers.length - 1] && (!result || !result.rateLimited)) {
+        console.log(`Waiting ${delayBetweenEmails}ms before next email...`);
         await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
       }
     }
@@ -220,12 +242,20 @@ async function processLeadNotification(leadId: string) {
     const rateLimitedCount = emailResults.filter(r => r.rateLimited).length;
     const redirectedCount = emailResults.filter(r => r.redirected).length;
     const domainVerificationCount = emailResults.filter(r => r.domainVerificationRequired).length;
+    const apiKeyErrorCount = emailResults.filter(r => r.apiKeyError).length;
+    const networkErrorCount = emailResults.filter(r => r.networkError).length;
     const totalAttempts = emailResults.reduce((sum, r) => sum + (r.attempts || 0), 0);
     
     // Create appropriate message
     let message = `Notification sent to ${successCount} buyers`;
     let success = successCount > 0;
     
+    if (apiKeyErrorCount > 0) {
+      message += `. ${apiKeyErrorCount} emails failed due to API key issues.`;
+    }
+    if (networkErrorCount > 0) {
+      message += `. ${networkErrorCount} emails failed due to network issues.`;
+    }
     if (rateLimitedCount > 0) {
       message += `. ${rateLimitedCount} emails couldn't be sent due to rate limiting.`;
     }
@@ -236,7 +266,17 @@ async function processLeadNotification(leadId: string) {
       message += `. Domain verification is required to send emails to all buyers.`;
     }
     
-    console.log(`Email notification complete: ${successCount} successful, ${rateLimitedCount} rate limited, ${redirectedCount} redirected, total attempts: ${totalAttempts}`);
+    console.log(`\n=== EMAIL NOTIFICATION SUMMARY ===`);
+    console.log(`Total buyers: ${buyers.length}`);
+    console.log(`Successful emails: ${successCount}`);
+    console.log(`Rate limited: ${rateLimitedCount}`);
+    console.log(`Redirected: ${redirectedCount}`);
+    console.log(`API key errors: ${apiKeyErrorCount}`);
+    console.log(`Network errors: ${networkErrorCount}`);
+    console.log(`Domain verification issues: ${domainVerificationCount}`);
+    console.log(`Total attempts: ${totalAttempts}`);
+    console.log(`Test mode: ${isTestMode}`);
+    console.log("==================================");
     
     // Update notification attempt status
     if (success) {
@@ -248,6 +288,8 @@ async function processLeadNotification(leadId: string) {
           successful: successCount,
           rateLimited: rateLimitedCount,
           redirected: redirectedCount,
+          apiKeyErrors: apiKeyErrorCount,
+          networkErrors: networkErrorCount,
           totalAttempts
         }
       });
@@ -260,6 +302,8 @@ async function processLeadNotification(leadId: string) {
           successful: successCount,
           rateLimited: rateLimitedCount,
           redirected: redirectedCount,
+          apiKeyErrors: apiKeyErrorCount,
+          networkErrors: networkErrorCount,
           totalAttempts
         }
       });
@@ -271,6 +315,8 @@ async function processLeadNotification(leadId: string) {
       rateLimited: rateLimitedCount > 0,
       redirected: redirectedCount > 0,
       domainVerificationRequired: domainVerificationCount > 0,
+      apiKeyError: apiKeyErrorCount > 0,
+      networkError: networkErrorCount > 0,
       testMode: isTestMode,
       success,
       stats: {
@@ -279,12 +325,20 @@ async function processLeadNotification(leadId: string) {
         rateLimited: rateLimitedCount,
         redirected: redirectedCount,
         domainVerificationRequired: domainVerificationCount,
+        apiKeyErrors: apiKeyErrorCount,
+        networkErrors: networkErrorCount,
         totalAttempts
       }
     };
 
   } catch (error) {
+    console.error("=== CRITICAL ERROR IN LEAD NOTIFICATION ===");
     console.error("Error processing lead notification:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     await updateNotificationAttempt(leadId, 'failed', error.message);
     throw error;
   }
@@ -298,23 +352,38 @@ serve(async (req: Request) => {
   }
 
   try {
-    console.log("Received request to send-lead-email-notification");
+    console.log("=== NEW REQUEST RECEIVED ===");
+    console.log("Method:", req.method);
+    console.log("URL:", req.url);
+    console.log("Headers:", Object.fromEntries(req.headers.entries()));
     
     const body = await req.json();
     const { leadId } = body as LeadEmailNotificationRequest;
 
     if (!leadId) {
-      console.error("Missing leadId in request");
+      console.error("Missing leadId in request body");
       return createJsonResponse({ error: "Lead ID is required" }, 400);
     }
 
     console.log(`Processing notification for lead: ${leadId}`);
     const result = await processLeadNotification(leadId);
-    console.log("Notification processing completed:", result);
+    console.log("Notification processing completed successfully:", result);
     return createJsonResponse(result);
 
   } catch (error) {
+    console.error("=== UNHANDLED ERROR IN REQUEST HANDLER ===");
     console.error("Error in send-lead-email-notification function:", error);
-    return createJsonResponse({ error: error.message }, 500);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    return createJsonResponse({ 
+      error: error.message,
+      details: {
+        name: error.name,
+        stack: error.stack
+      }
+    }, 500);
   }
 });
