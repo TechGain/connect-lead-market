@@ -108,6 +108,7 @@ export const losAngelesCountyZips: Record<string, string> = {
   '90211': 'Beverly Hills',
   '90212': 'Beverly Hills',
   '90213': 'Beverly Hills',
+  '90807': 'Long Beach',
 };
 
 // Orange County ZIP codes
@@ -243,6 +244,9 @@ export const bayAreaZips: Record<string, string> = {
   '94602': 'Oakland',
   '94947': 'Novato',
   '95687': 'Vacaville',
+  '94568': 'Dublin',
+  '94505': 'Discovery Bay',
+  '95620': 'Dixon',
 };
 
 // San Fernando Valley ZIP codes

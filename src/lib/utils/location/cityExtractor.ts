@@ -28,7 +28,7 @@ function extractCityFromZip(zipString: string): string | undefined {
 
 /**
  * Enhanced function to extract city names from various location string formats
- * Now prioritizes ZIP code lookup and Google Maps format parsing
+ * Now prioritizes address field first, then ZIP code lookup and Google Maps format parsing
  * 
  * @param location The location string from which to extract the city
  * @param fallback Fallback value (usually ZIP code) to use if extraction fails
@@ -41,7 +41,7 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
     console.log(`[CityExtractor] Processing location: "${location}", fallback: "${fallback}", fullAddress: "${fullAddress}"`);
   }
 
-  // First, try to extract from the full address if provided (this often has the most complete info)
+  // PRIORITY 1: Try to extract from the full address first (this often has the most complete info)
   if (fullAddress && typeof fullAddress === 'string' && fullAddress.trim()) {
     const cityFromFullAddress = extractCityFromString(fullAddress, debug);
     if (cityFromFullAddress && cityFromFullAddress !== 'N/A') {
@@ -50,20 +50,29 @@ export function extractCityFromLocation(location: string, fallback: string = 'Un
     }
   }
 
-  // Then try the main location string
+  // PRIORITY 2: Try ZIP code lookup from the location string first (most reliable)
   if (location && typeof location === 'string' && location.trim()) {
-    const cityFromLocation = extractCityFromString(location, debug);
-    if (cityFromLocation && cityFromLocation !== 'N/A') {
-      if (debug) console.log(`[CityExtractor] Found city from location: "${cityFromLocation}"`);
-      return cityFromLocation;
+    const cityFromLocationZip = extractCityFromZip(location);
+    if (cityFromLocationZip) {
+      if (debug) console.log(`[CityExtractor] Found city from location ZIP lookup: "${cityFromLocationZip}"`);
+      return cityFromLocationZip;
     }
   }
 
-  // Finally, try ZIP code lookup from fallback
-  const cityFromZip = extractCityFromZip(fallback);
-  if (cityFromZip) {
-    if (debug) console.log(`[CityExtractor] Found city from ZIP lookup: "${cityFromZip}"`);
-    return cityFromZip;
+  // PRIORITY 3: Try ZIP code lookup from fallback
+  const cityFromFallbackZip = extractCityFromZip(fallback);
+  if (cityFromFallbackZip) {
+    if (debug) console.log(`[CityExtractor] Found city from fallback ZIP lookup: "${cityFromFallbackZip}"`);
+    return cityFromFallbackZip;
+  }
+
+  // PRIORITY 4: Try standard extraction from the main location string
+  if (location && typeof location === 'string' && location.trim()) {
+    const cityFromLocation = extractCityFromString(location, debug);
+    if (cityFromLocation && cityFromLocation !== 'N/A') {
+      if (debug) console.log(`[CityExtractor] Found city from location string: "${cityFromLocation}"`);
+      return cityFromLocation;
+    }
   }
 
   if (debug) console.log(`[CityExtractor] No city found, returning N/A`);
