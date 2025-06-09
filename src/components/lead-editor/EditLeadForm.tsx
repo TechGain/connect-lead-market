@@ -22,6 +22,7 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
     contactName,
     contactEmail,
     contactPhone,
+    contactPhone2,
     price,
     appointmentDate,
     appointmentTimeSlot,
@@ -35,6 +36,7 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
     setContactName,
     setContactEmail,
     setContactPhone,
+    setContactPhone2,
     setPrice,
     setAppointmentDate,
     setAppointmentTimeSlot,
@@ -82,9 +84,11 @@ const EditLeadForm = ({ lead, onClose, onLeadUpdated }: EditLeadFormProps) => {
         contactName={contactName}
         contactEmail={contactEmail}
         contactPhone={contactPhone}
+        contactPhone2={contactPhone2}
         onContactNameChange={setContactName}
         onContactEmailChange={setContactEmail}
         onContactPhoneChange={setContactPhone}
+        onContactPhone2Change={setContactPhone2}
       />
       
       <PriceQualityFields

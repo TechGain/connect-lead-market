@@ -12,6 +12,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [contactPhone2, setContactPhone2] = useState('');
   const [price, setPrice] = useState('');
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
   const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
@@ -36,7 +37,18 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       setDescription(leadData.description || '');
       setContactName(leadData.contactName || '');
       setContactEmail(leadData.contactEmail || '');
-      setContactPhone(leadData.contactPhone || '');
+      
+      // Handle contact phone - split if it contains " / "
+      const phoneString = leadData.contactPhone || '';
+      if (phoneString.includes(' / ')) {
+        const [phone1, phone2] = phoneString.split(' / ');
+        setContactPhone(phone1 || '');
+        setContactPhone2(phone2 || '');
+      } else {
+        setContactPhone(phoneString);
+        setContactPhone2('');
+      }
+      
       setPrice(leadData.price?.toString() || '');
       setAddress(leadData.address || '');
       setZipCode(leadData.zipCode || '');
@@ -79,7 +91,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       return;
     }
     
-    // Updated required fields to exclude email
+    // Updated required fields to exclude email and contactPhone2
     const requiredFields = [leadType, description, contactName, contactPhone, price, address, zipCode];
     
     // If confirmed, also require appointment date and time
@@ -113,6 +125,12 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
       // Extract location from address
       const location = address.split(',').slice(-2).join(',').trim();
       
+      // Create contact phone string with optional second number
+      let contactPhoneString = contactPhone;
+      if (contactPhone2.trim()) {
+        contactPhoneString += ` / ${contactPhone2}`;
+      }
+      
       // Determine the appropriate status
       // If the lead was erased (due to passed appointment) and now has a future appointment,
       // restore it to 'new' status
@@ -136,7 +154,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
           description: description,
           contact_name: contactName,
           contact_email: contactEmail,
-          contact_phone: contactPhone,
+          contact_phone: contactPhoneString,
           price: parseFloat(price),
           quality_rating: null, // Set to null instead of using a number
           address: address,
@@ -169,6 +187,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
     contactName, 
     contactEmail,
     contactPhone,
+    contactPhone2,
     price,
     appointmentDate,
     appointmentTimeSlot,
@@ -182,6 +201,7 @@ export const useEditLead = (lead: Lead | null, onLeadUpdated: () => void, onClos
     setContactName,
     setContactEmail,
     setContactPhone,
+    setContactPhone2,
     setPrice,
     setAppointmentDate,
     setAppointmentTimeSlot,
