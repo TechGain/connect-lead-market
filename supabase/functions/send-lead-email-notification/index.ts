@@ -357,12 +357,46 @@ serve(async (req: Request) => {
     console.log("URL:", req.url);
     console.log("Headers:", Object.fromEntries(req.headers.entries()));
     
-    const body = await req.json();
-    const { leadId } = body as LeadEmailNotificationRequest;
+    // Handle empty body case
+    const contentLength = req.headers.get('content-length');
+    console.log("Content-Length:", contentLength);
+    
+    let body;
+    let leadId;
+    
+    if (contentLength === '0' || !contentLength) {
+      console.log("Empty request body detected");
+      return createJsonResponse({ error: "Request body is required. Please provide { leadId: 'your-lead-id' }" }, 400);
+    }
+    
+    try {
+      const bodyText = await req.text();
+      console.log("Request body text:", bodyText);
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.log("Empty or whitespace-only body detected");
+        return createJsonResponse({ error: "Request body is empty. Please provide { leadId: 'your-lead-id' }" }, 400);
+      }
+      
+      body = JSON.parse(bodyText);
+      leadId = body.leadId;
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      console.error("Raw body that failed to parse:", await req.text().catch(() => "Could not read body"));
+      return createJsonResponse({ 
+        error: "Invalid JSON in request body", 
+        details: parseError.message,
+        hint: "Please provide valid JSON like { \"leadId\": \"your-lead-id\" }"
+      }, 400);
+    }
 
     if (!leadId) {
-      console.error("Missing leadId in request body");
-      return createJsonResponse({ error: "Lead ID is required" }, 400);
+      console.error("Missing leadId in request body:", body);
+      return createJsonResponse({ 
+        error: "Lead ID is required", 
+        received: body,
+        hint: "Please provide { \"leadId\": \"your-lead-id\" }"
+      }, 400);
     }
 
     console.log(`Processing notification for lead: ${leadId}`);

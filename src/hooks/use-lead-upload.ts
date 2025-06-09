@@ -7,7 +7,7 @@ import { Lead, mapAppLeadToDbLead } from '@/types/lead';
 interface NotificationAttempt {
   id: string;
   leadId: string;
-  notificationType: 'email' | 'sms';
+  notificationType: 'email';
   status: 'pending' | 'success' | 'failed' | 'retrying';
   attemptCount: number;
   errorDetails?: string;
@@ -19,7 +19,7 @@ export const useLeadUpload = () => {
 
   const trackNotificationAttempt = async (
     leadId: string, 
-    type: 'email' | 'sms', 
+    type: 'email', 
     status: 'pending' | 'success' | 'failed' | 'retrying',
     errorDetails?: string,
     functionResponse?: any
@@ -49,10 +49,8 @@ export const useLeadUpload = () => {
     }
   };
 
-  const invokeNotificationFunction = async (
-    leadId: string, 
-    functionName: string, 
-    type: 'email' | 'sms',
+  const invokeEmailNotificationFunction = async (
+    leadId: string,
     maxRetries = 3
   ): Promise<{ success: boolean; error: any; data: any }> => {
     let attempt = 0;
@@ -60,42 +58,36 @@ export const useLeadUpload = () => {
 
     while (attempt < maxRetries) {
       attempt++;
-      console.log(`=== NOTIFICATION ATTEMPT ${attempt}/${maxRetries} ===`);
-      console.log(`Function: ${functionName}, Type: ${type}, Lead: ${leadId}`);
+      console.log(`=== EMAIL NOTIFICATION ATTEMPT ${attempt}/${maxRetries} ===`);
+      console.log(`Lead ID: ${leadId}`);
 
       try {
         // Track the attempt as pending
-        await trackNotificationAttempt(leadId, type, 'pending');
+        await trackNotificationAttempt(leadId, 'email', 'pending');
 
         const startTime = Date.now();
-        console.log(`Invoking ${functionName} at ${new Date().toISOString()}`);
+        console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
+        console.log(`Sending leadId: ${leadId}`);
 
-        // Use the full project URL for edge function invocation
-        const projectRef = 'bfmxxuarnqmxqqnpxqjf';
-        const functionUrl = `https://${projectRef}.supabase.co/functions/v1/${functionName}`;
-        
-        console.log(`Calling function at: ${functionUrl}`);
-
-        const result = await supabase.functions.invoke(functionName, {
-          body: { leadId },
+        const result = await supabase.functions.invoke('send-lead-email-notification', {
+          body: JSON.stringify({ leadId }),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXh4dWFybnFteHFxbnB4cWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTc4ODMsImV4cCI6MjA2MTY5Mzg4M30.MAQZ7I3pshciBJANhlPThK6XBxGemIPgflsMDz3OB_4'}`
           }
         });
 
         const duration = Date.now() - startTime;
-        console.log(`${functionName} completed in ${duration}ms`);
+        console.log(`Email notification function completed in ${duration}ms`);
         console.log('Function result:', result);
 
         if (result.error) {
           lastError = result.error;
-          console.error(`${functionName} returned error:`, result.error);
+          console.error(`Email notification function returned error:`, result.error);
           
           // Track failed attempt
           await trackNotificationAttempt(
             leadId, 
-            type, 
+            'email', 
             attempt === maxRetries ? 'failed' : 'retrying',
             result.error.message || JSON.stringify(result.error),
             result
@@ -108,20 +100,20 @@ export const useLeadUpload = () => {
             continue;
           }
         } else {
-          console.log(`${functionName} succeeded:`, result.data);
+          console.log(`Email notification function succeeded:`, result.data);
           
           // Track successful attempt
-          await trackNotificationAttempt(leadId, type, 'success', null, result.data);
+          await trackNotificationAttempt(leadId, 'email', 'success', null, result.data);
           return { success: true, data: result.data, error: null };
         }
       } catch (error: any) {
         lastError = error;
-        console.error(`Exception in ${functionName} attempt ${attempt}:`, error);
+        console.error(`Exception in email notification attempt ${attempt}:`, error);
         
         // Track failed attempt
         await trackNotificationAttempt(
           leadId, 
-          type, 
+          'email', 
           attempt === maxRetries ? 'failed' : 'retrying',
           error.message || 'Unknown error',
           { error: error.message, stack: error.stack }
@@ -135,7 +127,7 @@ export const useLeadUpload = () => {
       }
     }
 
-    console.error(`All ${maxRetries} attempts failed for ${functionName}`);
+    console.error(`All ${maxRetries} attempts failed for email notification`);
     return { success: false, error: lastError, data: null };
   };
 
@@ -194,63 +186,35 @@ export const useLeadUpload = () => {
         console.log('Notification attempts found:', notificationAttempts);
       }
 
-      // If no notification attempts were created by trigger, create them manually
-      if (!notificationAttempts || notificationAttempts.length === 0) {
-        console.log('No notification attempts found, creating them manually...');
+      // If no email notification attempts were created by trigger, create one manually
+      const emailAttempts = notificationAttempts?.filter(na => na.notification_type === 'email') || [];
+      if (emailAttempts.length === 0) {
+        console.log('No email notification attempts found, creating one manually...');
         const { error: manualInsertError } = await supabase
           .from('notification_attempts')
           .insert([
-            { lead_id: insertedLead.id, notification_type: 'email', status: 'pending' },
-            { lead_id: insertedLead.id, notification_type: 'sms', status: 'pending' }
+            { lead_id: insertedLead.id, notification_type: 'email', status: 'pending' }
           ]);
 
         if (manualInsertError) {
-          console.error('Error creating manual notification attempts:', manualInsertError);
+          console.error('Error creating manual email notification attempt:', manualInsertError);
         } else {
-          console.log('Manual notification attempts created successfully');
+          console.log('Manual email notification attempt created successfully');
         }
       }
 
-      // Store notification results
-      const notificationResults = {
-        email: { success: false, error: null, data: null },
-        sms: { success: false, error: null, data: null }
-      };
-
       // Try to invoke email notifications
       console.log('=== STARTING EMAIL NOTIFICATIONS ===');
-      const emailResult = await invokeNotificationFunction(
-        insertedLead.id, 
-        'send-lead-email-notification', 
-        'email'
-      );
-      notificationResults.email = emailResult;
-
-      // Try to invoke SMS notifications
-      console.log('=== STARTING SMS NOTIFICATIONS ===');
-      const smsResult = await invokeNotificationFunction(
-        insertedLead.id, 
-        'send-lead-notification', 
-        'sms'
-      );
-      notificationResults.sms = smsResult;
+      const emailResult = await invokeEmailNotificationFunction(insertedLead.id);
 
       // Analyze results and show appropriate messages
       console.log('=== NOTIFICATION RESULTS SUMMARY ===');
-      console.log('Email result:', notificationResults.email);
-      console.log('SMS result:', notificationResults.sms);
+      console.log('Email result:', emailResult);
 
-      const emailSuccess = notificationResults.email.success;
-      const smsSuccess = notificationResults.sms.success;
-
-      if (emailSuccess && smsSuccess) {
-        toast.success('Lead uploaded and all notifications sent successfully!');
-      } else if (emailSuccess || smsSuccess) {
-        const successType = emailSuccess ? 'email' : 'SMS';
-        const failType = emailSuccess ? 'SMS' : 'email';
-        toast.warning(`Lead uploaded and ${successType} notifications sent. ${failType} notifications may be delayed.`);
+      if (emailResult.success) {
+        toast.success('Lead uploaded and email notifications sent successfully!');
       } else {
-        toast.warning('Lead uploaded successfully, but notifications may be delayed. Our backup system will ensure buyers are notified.');
+        toast.warning('Lead uploaded successfully, but email notifications may be delayed. Our backup system will ensure buyers are notified.');
       }
       
       console.log('=== LEAD UPLOAD COMPLETED ===');
