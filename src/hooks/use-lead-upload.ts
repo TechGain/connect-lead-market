@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -69,8 +68,12 @@ export const useLeadUpload = () => {
         console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
         console.log(`Sending leadId: ${leadId}`);
 
+        // Fixed invocation with proper body and headers
+        const requestBody = { leadId };
+        console.log('Request body being sent:', JSON.stringify(requestBody));
+
         const result = await supabase.functions.invoke('send-lead-email-notification', {
-          body: JSON.stringify({ leadId }),
+          body: requestBody,
           headers: {
             'Content-Type': 'application/json',
           }

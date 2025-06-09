@@ -357,45 +357,87 @@ serve(async (req: Request) => {
     console.log("URL:", req.url);
     console.log("Headers:", Object.fromEntries(req.headers.entries()));
     
-    // Handle empty body case
+    // Improved body parsing with multiple fallback strategies
     const contentLength = req.headers.get('content-length');
+    const contentType = req.headers.get('content-type');
     console.log("Content-Length:", contentLength);
+    console.log("Content-Type:", contentType);
     
     let body;
     let leadId;
     
-    if (contentLength === '0' || !contentLength) {
-      console.log("Empty request body detected");
-      return createJsonResponse({ error: "Request body is required. Please provide { leadId: 'your-lead-id' }" }, 400);
+    // Strategy 1: Try to read body text first
+    let bodyText = '';
+    try {
+      bodyText = await req.text();
+      console.log("Raw body text:", bodyText);
+      console.log("Body text length:", bodyText.length);
+    } catch (readError) {
+      console.error("Failed to read request body text:", readError);
     }
     
-    try {
-      const bodyText = await req.text();
-      console.log("Request body text:", bodyText);
+    if (!bodyText || bodyText.trim() === '') {
+      console.log("Empty body detected, checking URL params and headers for leadId...");
       
-      if (!bodyText || bodyText.trim() === '') {
-        console.log("Empty or whitespace-only body detected");
-        return createJsonResponse({ error: "Request body is empty. Please provide { leadId: 'your-lead-id' }" }, 400);
+      // Strategy 2: Check URL parameters
+      const url = new URL(req.url);
+      const urlLeadId = url.searchParams.get('leadId');
+      if (urlLeadId) {
+        console.log("Found leadId in URL params:", urlLeadId);
+        leadId = urlLeadId;
+      } else {
+        // Strategy 3: Check headers
+        const headerLeadId = req.headers.get('x-lead-id');
+        if (headerLeadId) {
+          console.log("Found leadId in headers:", headerLeadId);
+          leadId = headerLeadId;
+        } else {
+          console.error("No leadId found in body, URL params, or headers");
+          return createJsonResponse({ 
+            error: "Lead ID is required", 
+            hint: "Please provide leadId in request body as JSON, URL parameter, or x-lead-id header",
+            debug: {
+              bodyLength: bodyText.length,
+              contentLength,
+              contentType,
+              urlParams: Object.fromEntries(url.searchParams.entries()),
+              method: req.method
+            }
+          }, 400);
+        }
       }
-      
-      body = JSON.parse(bodyText);
-      leadId = body.leadId;
-    } catch (parseError) {
-      console.error("JSON parsing error:", parseError);
-      console.error("Raw body that failed to parse:", await req.text().catch(() => "Could not read body"));
-      return createJsonResponse({ 
-        error: "Invalid JSON in request body", 
-        details: parseError.message,
-        hint: "Please provide valid JSON like { \"leadId\": \"your-lead-id\" }"
-      }, 400);
+    } else {
+      // Strategy 4: Parse JSON body
+      try {
+        body = JSON.parse(bodyText);
+        leadId = body.leadId;
+        console.log("Successfully parsed JSON body:", body);
+      } catch (parseError) {
+        console.error("JSON parsing error:", parseError);
+        console.error("Failed to parse body:", bodyText);
+        
+        // Strategy 5: Try to extract leadId from malformed JSON
+        const leadIdMatch = bodyText.match(/"?leadId"?\s*:\s*"?([^",}\s]+)"?/i);
+        if (leadIdMatch) {
+          leadId = leadIdMatch[1];
+          console.log("Extracted leadId from malformed JSON:", leadId);
+        } else {
+          return createJsonResponse({ 
+            error: "Invalid JSON in request body", 
+            details: parseError.message,
+            bodyReceived: bodyText,
+            hint: "Please provide valid JSON like { \"leadId\": \"your-lead-id\" }"
+          }, 400);
+        }
+      }
     }
 
     if (!leadId) {
-      console.error("Missing leadId in request body:", body);
+      console.error("No leadId found after all parsing strategies");
       return createJsonResponse({ 
         error: "Lead ID is required", 
-        received: body,
-        hint: "Please provide { \"leadId\": \"your-lead-id\" }"
+        received: { body, bodyText, contentLength, contentType },
+        hint: "Please provide leadId in request body, URL parameter, or header"
       }, 400);
     }
 
