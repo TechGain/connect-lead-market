@@ -25,6 +25,37 @@ const LEAD_TYPES = [
   'Handyman Services', 'Tree Services', 'Gutter Services', 'Siding', 'Foundation Repair'
 ];
 
+// Extract state from location string
+const extractStateFromLocation = (location: string): string => {
+  // Handle "City, State" format
+  if (location.includes(',')) {
+    const parts = location.split(',');
+    return parts[parts.length - 1].trim();
+  }
+  
+  // For single word locations, map known cities to states
+  const cityToStateMap: Record<string, string> = {
+    'Las Vegas': 'Nevada',
+    'Los Angeles': 'California',
+    'San Francisco': 'California',
+    'San Bernardino': 'California',
+    'Riverside': 'California',
+    'Palmdale': 'California',
+    'Lancaster': 'California',
+    'Irvine': 'California',
+    'Beverly Hills': 'California',
+    'Sunnyvale': 'California',
+    'Palo Alto': 'California',
+    'Oakland': 'California',
+    'Richmond': 'California',
+    'Novato': 'California',
+    'Vacaville': 'California',
+    'Georgetown': 'Texas'
+  };
+  
+  return cityToStateMap[location] || location;
+};
+
 export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificationPreferencesProps) => {
   const { user } = useUserRole();
   const userId = user?.id;
@@ -38,12 +69,12 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
     updateLocations
   } = useEnhancedNotificationPreferences(userId);
 
-  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  const [availableStates, setAvailableStates] = useState<string[]>([]);
   const [leadTypesOpen, setLeadTypesOpen] = useState(false);
-  const [locationsOpen, setLocationsOpen] = useState(false);
+  const [statesOpen, setStatesOpen] = useState(false);
 
   useEffect(() => {
-    const fetchLocations = async () => {
+    const fetchStates = async () => {
       try {
         const { data, error } = await supabase
           .from('leads')
@@ -55,14 +86,23 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
           return;
         }
 
-        const uniqueLocations = [...new Set(data.map(lead => lead.location))].sort();
-        setAvailableLocations(uniqueLocations);
+        // Extract unique states from locations
+        const states = new Set<string>();
+        data.forEach(lead => {
+          if (lead.location) {
+            const state = extractStateFromLocation(lead.location);
+            states.add(state);
+          }
+        });
+
+        const sortedStates = Array.from(states).sort();
+        setAvailableStates(sortedStates);
       } catch (error) {
-        console.error('Exception fetching locations:', error);
+        console.error('Exception fetching states:', error);
       }
     };
 
-    fetchLocations();
+    fetchStates();
   }, []);
 
   const handleEmailToggle = async (checked: boolean) => {
@@ -82,17 +122,17 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
     updateLeadTypes(newTypes);
   };
 
-  const handleLocationChange = (location: string, checked: boolean) => {
-    const currentLocations = preferences.preferred_locations || [];
-    let newLocations;
+  const handleStateChange = (state: string, checked: boolean) => {
+    const currentStates = preferences.preferred_locations || [];
+    let newStates;
     
     if (checked) {
-      newLocations = [...currentLocations, location];
+      newStates = [...currentStates, state];
     } else {
-      newLocations = currentLocations.filter(loc => loc !== location);
+      newStates = currentStates.filter(s => s !== state);
     }
     
-    updateLocations(newLocations);
+    updateLocations(newStates);
   };
 
   const handleSelectAllLeadTypes = () => {
@@ -103,17 +143,17 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
     updateLeadTypes([]);
   };
 
-  const handleSelectAllLocations = () => {
-    updateLocations(availableLocations);
+  const handleSelectAllStates = () => {
+    updateLocations(availableStates);
   };
 
-  const handleClearAllLocations = () => {
+  const handleClearAllStates = () => {
     updateLocations([]);
   };
 
   const getSelectionText = (selected: string[], total: number) => {
     if (selected.length === 0) {
-      return 'All types (default)';
+      return 'All states (default)';
     }
     if (selected.length === total) {
       return 'All selected';
@@ -126,7 +166,7 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
       <CardHeader>
         <CardTitle>Email Notification Preferences</CardTitle>
         <CardDescription>
-          Choose which types of leads and locations you want to receive email notifications for
+          Choose which types of leads and states you want to receive email notifications for
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -207,37 +247,37 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
               </Collapsible>
             )}
 
-            {/* Locations Selection */}
+            {/* States Selection */}
             {preferences.email_notifications_enabled && userEmail && (
-              <Collapsible open={locationsOpen} onOpenChange={setLocationsOpen}>
+              <Collapsible open={statesOpen} onOpenChange={setStatesOpen}>
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-gray-50">
                   <div className="text-left">
-                    <h4 className="font-medium">Service Areas</h4>
+                    <h4 className="font-medium">Service States</h4>
                     <p className="text-sm text-gray-500">
-                      {getSelectionText(preferences.preferred_locations, availableLocations.length)}
+                      {getSelectionText(preferences.preferred_locations, availableStates.length)}
                     </p>
                   </div>
-                  {locationsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {statesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-4 space-y-4">
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleSelectAllLocations}>
+                    <Button variant="outline" size="sm" onClick={handleSelectAllStates}>
                       Select All
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleClearAllLocations}>
+                    <Button variant="outline" size="sm" onClick={handleClearAllStates}>
                       Clear All
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
-                    {availableLocations.map((location) => (
-                      <div key={location} className="flex items-center space-x-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    {availableStates.map((state) => (
+                      <div key={state} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`location-${location}`}
-                          checked={preferences.preferred_locations.includes(location)}
-                          onCheckedChange={(checked) => handleLocationChange(location, checked as boolean)}
+                          id={`state-${state}`}
+                          checked={preferences.preferred_locations.includes(state)}
+                          onCheckedChange={(checked) => handleStateChange(state, checked as boolean)}
                         />
-                        <Label htmlFor={`location-${location}`} className="text-sm">
-                          {location}
+                        <Label htmlFor={`state-${state}`} className="text-sm">
+                          {state}
                         </Label>
                       </div>
                     ))}
@@ -249,7 +289,7 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
             {/* Info about empty selections */}
             {preferences.email_notifications_enabled && userEmail && (
               <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-lg">
-                <p><strong>Note:</strong> If no lead types or locations are selected, you'll receive notifications for all leads (default behavior).</p>
+                <p><strong>Note:</strong> If no lead types or states are selected, you'll receive notifications for all leads (default behavior).</p>
               </div>
             )}
           </>
