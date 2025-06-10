@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import ProfileInfoCard from './ProfileInfoCard';
 import ProfileSettingsCard from './ProfileSettingsCard';
-import NotificationPreferences from './NotificationPreferences';
+import EnhancedNotificationPreferences from './EnhancedNotificationPreferences';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPhoneToE164 } from '@/utils/format-helpers';
@@ -119,10 +119,9 @@ const ProfileContent = ({
         />
       </div>
       
-      {userData?.id && !isOffline && (
+      {userData?.id && !isOffline && role === 'buyer' && (
         <div className="mt-6">
-          <NotificationPreferences 
-            userPhone={formattedPhone || phoneNumber} 
+          <EnhancedNotificationPreferences 
             userEmail={userEmail}
           />
         </div>

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -93,11 +94,12 @@ async function fetchLeadDetails(leadId: string) {
   return lead;
 }
 
-async function fetchActiveBuyers() {
+async function fetchQualifiedBuyers(leadType: string, leadLocation: string) {
   try {
-    console.log('Fetching active buyers with email notifications enabled...');
+    console.log('Fetching qualified buyers for lead type:', leadType, 'and location:', leadLocation);
     
-    const { data: buyers, error: buyersError } = await supabase
+    // First get all buyers with email notifications enabled
+    const { data: allBuyers, error: buyersError } = await supabase
       .from('profiles')
       .select('email, full_name, id')
       .eq('role', 'buyer')
@@ -109,11 +111,59 @@ async function fetchActiveBuyers() {
       throw new Error(buyersError.message);
     }
     
-    console.log(`Found ${buyers?.length || 0} buyers with email notifications enabled`);
+    if (!allBuyers || allBuyers.length === 0) {
+      console.log('No buyers found with email notifications enabled');
+      return [];
+    }
+
+    // Now check notification preferences for each buyer
+    const qualifiedBuyers = [];
     
-    return buyers || [];
+    for (const buyer of allBuyers) {
+      const { data: preferences, error: prefError } = await supabase
+        .from('user_notification_preferences')
+        .select('*')
+        .eq('user_id', buyer.id)
+        .maybeSingle();
+
+      if (prefError) {
+        console.error(`Error fetching preferences for buyer ${buyer.id}:`, prefError);
+        continue;
+      }
+
+      // If no preferences exist, include the buyer (default behavior)
+      if (!preferences) {
+        console.log(`No preferences found for buyer ${buyer.id}, including by default`);
+        qualifiedBuyers.push(buyer);
+        continue;
+      }
+
+      // Check if email notifications are enabled in preferences
+      if (!preferences.email_notifications_enabled) {
+        console.log(`Email notifications disabled for buyer ${buyer.id}`);
+        continue;
+      }
+
+      // Check lead type preferences
+      const preferredTypes = preferences.preferred_lead_types || [];
+      const typeMatches = preferredTypes.length === 0 || preferredTypes.includes(leadType);
+
+      // Check location preferences
+      const preferredLocations = preferences.preferred_locations || [];
+      const locationMatches = preferredLocations.length === 0 || preferredLocations.includes(leadLocation);
+
+      if (typeMatches && locationMatches) {
+        console.log(`Buyer ${buyer.id} qualifies for this lead (type: ${typeMatches}, location: ${locationMatches})`);
+        qualifiedBuyers.push(buyer);
+      } else {
+        console.log(`Buyer ${buyer.id} does not qualify (type: ${typeMatches}, location: ${locationMatches})`);
+      }
+    }
+    
+    console.log(`Found ${qualifiedBuyers.length} qualified buyers out of ${allBuyers.length} total buyers`);
+    return qualifiedBuyers;
   } catch (error) {
-    console.error("Exception fetching buyers:", error);
+    console.error("Exception fetching qualified buyers:", error);
     throw error;
   }
 }
@@ -134,17 +184,17 @@ async function processLeadNotification(leadId: string) {
     // Fetch the lead details
     const lead = await fetchLeadDetails(leadId);
     
-    // Get all active buyers who have enabled email notifications
-    const buyers = await fetchActiveBuyers();
+    // Get qualified buyers based on lead type and location preferences
+    const buyers = await fetchQualifiedBuyers(lead.type, lead.location);
     
     if (buyers.length === 0) {
-      console.log("No buyers found with email notifications enabled");
-      await updateNotificationAttempt(leadId, 'failed', 'No buyers with email notifications enabled');
+      console.log("No qualified buyers found for this lead");
+      await updateNotificationAttempt(leadId, 'failed', 'No qualified buyers found for this lead type and location');
       return { 
-        message: "No buyers to notify", 
+        message: "No qualified buyers to notify", 
         results: [],
         success: false,
-        reason: 'no_buyers'
+        reason: 'no_qualified_buyers'
       };
     }
     
@@ -163,7 +213,7 @@ async function processLeadNotification(leadId: string) {
     console.log("- Subject:", emailSubject);
     console.log("- HTML length:", emailHtml.length);
     
-    // Send emails to all buyers with rate limiting
+    // Send emails to all qualified buyers with rate limiting
     const emailResults = [];
     
     // Use a more conservative delay between email sends to avoid rate limiting
@@ -246,7 +296,7 @@ async function processLeadNotification(leadId: string) {
     const totalAttempts = emailResults.reduce((sum, r) => sum + (r.attempts || 0), 0);
     
     // Create appropriate message
-    let message = `Notification sent to ${successCount} buyers`;
+    let message = `Notification sent to ${successCount} qualified buyers`;
     let success = successCount > 0;
     
     if (apiKeyErrorCount > 0) {
@@ -266,7 +316,7 @@ async function processLeadNotification(leadId: string) {
     }
     
     console.log(`\n=== EMAIL NOTIFICATION SUMMARY ===`);
-    console.log(`Total buyers: ${buyers.length}`);
+    console.log(`Total qualified buyers: ${buyers.length}`);
     console.log(`Successful emails: ${successCount}`);
     console.log(`Rate limited: ${rateLimitedCount}`);
     console.log(`Redirected: ${redirectedCount}`);
