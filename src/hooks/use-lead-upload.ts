@@ -3,92 +3,15 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Lead, mapAppLeadToDbLead } from '@/types/lead';
+import { sendEmailNotificationAsync } from '@/services/email-notification';
 
 export const useLeadUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
-
-  const trackNotificationAttempt = async (
-    leadId: string, 
-    type: 'email', 
-    status: 'pending' | 'success' | 'failed' | 'retrying',
-    errorDetails?: string,
-    functionResponse?: any
-  ) => {
-    try {
-      console.log(`=== TRACKING NOTIFICATION ATTEMPT ===`);
-      console.log(`Lead ID: ${leadId}, Type: ${type}, Status: ${status}`);
-      
-      const { error } = await supabase
-        .from('notification_attempts')
-        .insert({
-          lead_id: leadId,
-          notification_type: type,
-          status,
-          error_details: errorDetails,
-          function_response: functionResponse,
-          completed_at: status !== 'pending' ? new Date().toISOString() : null
-        });
-
-      if (error) {
-        console.error('Failed to track notification attempt:', error);
-      } else {
-        console.log('Notification attempt tracked successfully');
-      }
-    } catch (err) {
-      console.error('Exception tracking notification attempt:', err);
-    }
-  };
-
-  const sendEmailNotificationAsync = async (leadId: string) => {
-    console.log(`=== STARTING ASYNC EMAIL NOTIFICATION ===`);
-    console.log(`Lead ID: ${leadId}`);
-
-    try {
-      // Track the attempt as pending
-      await trackNotificationAttempt(leadId, 'email', 'pending');
-
-      console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
-
-      // Use URL parameter approach as primary method to avoid CORS issues
-      const result = await supabase.functions.invoke('send-lead-email-notification', {
-        body: { leadId },
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      console.log('Email notification function result:', result);
-
-      if (result.error) {
-        console.error(`Email notification failed:`, result.error);
-        await trackNotificationAttempt(
-          leadId, 
-          'email', 
-          'failed',
-          result.error.message || JSON.stringify(result.error),
-          result
-        );
-      } else {
-        console.log(`Email notification succeeded:`, result.data);
-        await trackNotificationAttempt(leadId, 'email', 'success', null, result.data);
-      }
-    } catch (error: any) {
-      console.error(`Exception in email notification:`, error);
-      await trackNotificationAttempt(
-        leadId, 
-        'email', 
-        'failed',
-        error.message || 'Unknown error',
-        { error: error.message, stack: error.stack }
-      );
-    }
-  };
 
   const uploadLead = async (lead: Omit<Lead, 'id'>) => {
     console.log('=== LEAD UPLOAD STARTED ===');
     console.log('Upload timestamp:', new Date().toISOString());
     
-    // Ensure we always reset loading state
     setIsUploading(true);
     
     try {
