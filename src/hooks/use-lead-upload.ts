@@ -69,53 +69,32 @@ export const useLeadUpload = () => {
         console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
         console.log(`Sending leadId: ${leadId}`);
 
-        // SIMPLIFIED APPROACH: Use the function with leadId as a query parameter
-        // This is more reliable than headers or body parsing
-        console.log('Using simplified URL parameter approach for maximum reliability');
+        // Use the Supabase client method with leadId in header
+        console.log('Using Supabase client with custom header approach');
 
         const result = await supabase.functions.invoke('send-lead-email-notification', {
-          body: {}, // Empty body to avoid serialization issues
+          body: { leadId }, // Also include in body as fallback
           headers: {
             'Content-Type': 'application/json',
+            'x-lead-id': leadId, // Custom header with leadId
           }
-        });
-
-        // Add leadId as query parameter in the function URL (handled by supabase client)
-        const manualResult = await fetch(`${supabase.supabaseUrl}/functions/v1/send-lead-email-notification?leadId=${encodeURIComponent(leadId)}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
-            'apikey': supabase.supabaseKey,
-          },
-          body: JSON.stringify({ leadId }) // Keep leadId in body as backup
         });
 
         const duration = Date.now() - startTime;
         console.log(`Email notification function completed in ${duration}ms`);
-        
-        let finalResult;
-        if (manualResult.ok) {
-          const responseData = await manualResult.json();
-          finalResult = { data: responseData, error: null };
-          console.log('Manual fetch succeeded:', responseData);
-        } else {
-          const errorText = await manualResult.text();
-          finalResult = { data: null, error: { message: errorText, status: manualResult.status } };
-          console.error('Manual fetch failed:', errorText);
-        }
+        console.log('Function result:', result);
 
-        if (finalResult.error) {
-          lastError = finalResult.error;
-          console.error(`Email notification function returned error:`, finalResult.error);
+        if (result.error) {
+          lastError = result.error;
+          console.error(`Email notification function returned error:`, result.error);
           
           // Track failed attempt
           await trackNotificationAttempt(
             leadId, 
             'email', 
             attempt === maxRetries ? 'failed' : 'retrying',
-            finalResult.error.message || JSON.stringify(finalResult.error),
-            finalResult
+            result.error.message || JSON.stringify(result.error),
+            result
           );
 
           if (attempt < maxRetries) {
@@ -125,11 +104,11 @@ export const useLeadUpload = () => {
             continue;
           }
         } else {
-          console.log(`Email notification function succeeded:`, finalResult.data);
+          console.log(`Email notification function succeeded:`, result.data);
           
           // Track successful attempt
-          await trackNotificationAttempt(leadId, 'email', 'success', null, finalResult.data);
-          return { success: true, data: finalResult.data, error: null };
+          await trackNotificationAttempt(leadId, 'email', 'success', null, result.data);
+          return { success: true, data: result.data, error: null };
         }
       } catch (error: any) {
         lastError = error;
@@ -228,7 +207,7 @@ export const useLeadUpload = () => {
         }
       }
 
-      // Try to invoke email notifications with simplified approach
+      // Try to invoke email notifications with the simplified approach
       console.log('=== STARTING EMAIL NOTIFICATIONS ===');
       console.log(`About to call invokeEmailNotificationFunction with leadId: ${insertedLead.id}`);
       const emailResult = await invokeEmailNotificationFunction(insertedLead.id);

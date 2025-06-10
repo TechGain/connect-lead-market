@@ -25,11 +25,11 @@ export function formatDate(dateString: string): string {
 }
 
 /**
- * CORS headers for Edge Function responses
+ * CORS headers for Edge Function responses - Updated to include x-lead-id
  */
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-lead-id",
 };
 
 /**
