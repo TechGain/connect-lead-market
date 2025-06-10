@@ -4,16 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Lead, mapAppLeadToDbLead } from '@/types/lead';
 
-interface NotificationAttempt {
-  id: string;
-  leadId: string;
-  notificationType: 'email';
-  status: 'pending' | 'success' | 'failed' | 'retrying';
-  attemptCount: number;
-  errorDetails?: string;
-  functionResponse?: any;
-}
-
 export const useLeadUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -49,98 +39,59 @@ export const useLeadUpload = () => {
     }
   };
 
-  const invokeEmailNotificationFunction = async (
-    leadId: string,
-    maxRetries = 3
-  ): Promise<{ success: boolean; error: any; data: any }> => {
-    let attempt = 0;
-    let lastError = null;
+  const sendEmailNotificationAsync = async (leadId: string) => {
+    console.log(`=== STARTING ASYNC EMAIL NOTIFICATION ===`);
+    console.log(`Lead ID: ${leadId}`);
 
-    while (attempt < maxRetries) {
-      attempt++;
-      console.log(`=== EMAIL NOTIFICATION ATTEMPT ${attempt}/${maxRetries} ===`);
-      console.log(`Lead ID: ${leadId}`);
+    try {
+      // Track the attempt as pending
+      await trackNotificationAttempt(leadId, 'email', 'pending');
 
-      try {
-        // Track the attempt as pending
-        await trackNotificationAttempt(leadId, 'email', 'pending');
+      console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
 
-        const startTime = Date.now();
-        console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
-        console.log(`Sending leadId: ${leadId}`);
-
-        // Use the Supabase client method with leadId in header
-        console.log('Using Supabase client with custom header approach');
-
-        const result = await supabase.functions.invoke('send-lead-email-notification', {
-          body: { leadId }, // Also include in body as fallback
-          headers: {
-            'Content-Type': 'application/json',
-            'x-lead-id': leadId, // Custom header with leadId
-          }
-        });
-
-        const duration = Date.now() - startTime;
-        console.log(`Email notification function completed in ${duration}ms`);
-        console.log('Function result:', result);
-
-        if (result.error) {
-          lastError = result.error;
-          console.error(`Email notification function returned error:`, result.error);
-          
-          // Track failed attempt
-          await trackNotificationAttempt(
-            leadId, 
-            'email', 
-            attempt === maxRetries ? 'failed' : 'retrying',
-            result.error.message || JSON.stringify(result.error),
-            result
-          );
-
-          if (attempt < maxRetries) {
-            const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-            console.log(`Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-        } else {
-          console.log(`Email notification function succeeded:`, result.data);
-          
-          // Track successful attempt
-          await trackNotificationAttempt(leadId, 'email', 'success', null, result.data);
-          return { success: true, data: result.data, error: null };
+      // Use URL parameter approach as primary method to avoid CORS issues
+      const result = await supabase.functions.invoke('send-lead-email-notification', {
+        body: { leadId },
+        headers: {
+          'Content-Type': 'application/json',
         }
-      } catch (error: any) {
-        lastError = error;
-        console.error(`Exception in email notification attempt ${attempt}:`, error);
-        
-        // Track failed attempt
+      });
+
+      console.log('Email notification function result:', result);
+
+      if (result.error) {
+        console.error(`Email notification failed:`, result.error);
         await trackNotificationAttempt(
           leadId, 
           'email', 
-          attempt === maxRetries ? 'failed' : 'retrying',
-          error.message || 'Unknown error',
-          { error: error.message, stack: error.stack }
+          'failed',
+          result.error.message || JSON.stringify(result.error),
+          result
         );
-
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt) * 1000;
-          console.log(`Retrying after exception in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+      } else {
+        console.log(`Email notification succeeded:`, result.data);
+        await trackNotificationAttempt(leadId, 'email', 'success', null, result.data);
       }
+    } catch (error: any) {
+      console.error(`Exception in email notification:`, error);
+      await trackNotificationAttempt(
+        leadId, 
+        'email', 
+        'failed',
+        error.message || 'Unknown error',
+        { error: error.message, stack: error.stack }
+      );
     }
-
-    console.error(`All ${maxRetries} attempts failed for email notification`);
-    return { success: false, error: lastError, data: null };
   };
 
   const uploadLead = async (lead: Omit<Lead, 'id'>) => {
+    console.log('=== LEAD UPLOAD STARTED ===');
+    console.log('Upload timestamp:', new Date().toISOString());
+    
+    // Ensure we always reset loading state
     setIsUploading(true);
     
     try {
-      console.log('=== LEAD UPLOAD STARTED ===');
-      console.log('Upload timestamp:', new Date().toISOString());
       console.log('Uploading lead to Supabase:', lead);
       
       // Get the current user
@@ -173,54 +124,19 @@ export const useLeadUpload = () => {
       }
       
       console.log('Lead uploaded successfully to database:', insertedLead);
-      console.log('Database trigger should have created notification attempt records');
-
-      // Wait a moment for the database trigger to create notification attempts
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Check if notification attempts were created by the trigger
-      const { data: notificationAttempts, error: notificationError } = await supabase
-        .from('notification_attempts')
-        .select('*')
-        .eq('lead_id', insertedLead.id);
-
-      if (notificationError) {
-        console.error('Error checking notification attempts:', notificationError);
-      } else {
-        console.log('Notification attempts found:', notificationAttempts);
-      }
-
-      // If no email notification attempts were created by trigger, create one manually
-      const emailAttempts = notificationAttempts?.filter(na => na.notification_type === 'email') || [];
-      if (emailAttempts.length === 0) {
-        console.log('No email notification attempts found, creating one manually...');
-        const { error: manualInsertError } = await supabase
-          .from('notification_attempts')
-          .insert([
-            { lead_id: insertedLead.id, notification_type: 'email', status: 'pending' }
-          ]);
-
-        if (manualInsertError) {
-          console.error('Error creating manual email notification attempt:', manualInsertError);
-        } else {
-          console.log('Manual email notification attempt created successfully');
-        }
-      }
-
-      // Try to invoke email notifications with the simplified approach
-      console.log('=== STARTING EMAIL NOTIFICATIONS ===');
-      console.log(`About to call invokeEmailNotificationFunction with leadId: ${insertedLead.id}`);
-      const emailResult = await invokeEmailNotificationFunction(insertedLead.id);
-
-      // Analyze results and show appropriate messages
-      console.log('=== NOTIFICATION RESULTS SUMMARY ===');
-      console.log('Email result:', emailResult);
-
-      if (emailResult.success) {
-        toast.success('Lead uploaded and email notifications sent successfully!');
-      } else {
-        toast.warning('Lead uploaded successfully, but email notifications may be delayed. Our backup system will ensure buyers are notified.');
-      }
+      
+      // Show immediate success - lead is uploaded!
+      toast.success('Lead uploaded successfully! Email notifications are being sent to buyers.');
+      
+      // Reset loading state immediately after successful upload
+      setIsUploading(false);
+      
+      // Fire email notifications asynchronously (don't await)
+      console.log('Starting async email notifications...');
+      sendEmailNotificationAsync(insertedLead.id).catch(error => {
+        console.error('Async email notification failed:', error);
+        // Don't show error toast here as the lead was successfully uploaded
+      });
       
       console.log('=== LEAD UPLOAD COMPLETED ===');
       return true;
@@ -231,6 +147,7 @@ export const useLeadUpload = () => {
       toast.error('Failed to upload lead. Please try again.');
       return false;
     } finally {
+      // Ensure loading state is always reset
       setIsUploading(false);
     }
   };

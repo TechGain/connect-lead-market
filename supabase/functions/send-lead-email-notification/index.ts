@@ -408,22 +408,22 @@ serve(async (req: Request) => {
     
     let leadId;
     
-    // PRIORITY 1: Check custom header (most reliable for our use case)
-    const headerLeadId = req.headers.get('x-lead-id');
-    if (headerLeadId) {
-      console.log("SUCCESS: Found leadId in custom header:", headerLeadId);
-      leadId = headerLeadId;
+    // PRIORITY 1: Check URL parameters (most compatible)
+    const url = new URL(req.url);
+    const urlLeadId = url.searchParams.get('leadId');
+    if (urlLeadId) {
+      console.log("SUCCESS: Found leadId in URL parameters:", urlLeadId);
+      leadId = urlLeadId;
     } else {
-      console.log("No leadId in custom header, checking URL parameters...");
+      console.log("No leadId in URL parameters, checking custom header...");
       
-      // PRIORITY 2: Check URL parameters
-      const url = new URL(req.url);
-      const urlLeadId = url.searchParams.get('leadId');
-      if (urlLeadId) {
-        console.log("SUCCESS: Found leadId in URL parameters:", urlLeadId);
-        leadId = urlLeadId;
+      // PRIORITY 2: Check custom header
+      const headerLeadId = req.headers.get('x-lead-id');
+      if (headerLeadId) {
+        console.log("SUCCESS: Found leadId in custom header:", headerLeadId);
+        leadId = headerLeadId;
       } else {
-        console.log("No leadId in URL parameters, checking body...");
+        console.log("No leadId in header, checking body...");
         
         // PRIORITY 3: Fallback to body
         try {
@@ -447,7 +447,7 @@ serve(async (req: Request) => {
       console.error("Headers searched:", req.headers.get('x-lead-id'));
       return createJsonResponse({ 
         error: "Lead ID is required", 
-        hint: "Please provide leadId as x-lead-id header, URL parameter: ?leadId=your-lead-id or in request body as JSON: { \"leadId\": \"your-lead-id\" }"
+        hint: "Please provide leadId as URL parameter: ?leadId=your-lead-id, x-lead-id header, or in request body as JSON: { \"leadId\": \"your-lead-id\" }"
       }, 400);
     }
 
