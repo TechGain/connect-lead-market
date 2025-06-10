@@ -12,9 +12,8 @@ export const sendEmailNotificationAsync = async (leadId: string) => {
 
     console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
 
-    // Use URL parameter approach as primary method to avoid CORS issues
-    const result = await supabase.functions.invoke('send-lead-email-notification', {
-      body: { leadId },
+    // Pass leadId as URL parameter to align with edge function's parsing strategy
+    const result = await supabase.functions.invoke(`send-lead-email-notification?leadId=${leadId}`, {
       headers: {
         'Content-Type': 'application/json',
       }
