@@ -409,23 +409,43 @@ serve(async (req: Request) => {
     let leadId;
     let requestBody;
     
-    // Read the request body once and store it
+    // Enhanced request body parsing with multiple strategies
     try {
       const bodyText = await req.text();
       console.log("Raw body text received:", JSON.stringify(bodyText));
+      console.log("Body text length:", bodyText.length);
+      console.log("Body text type:", typeof bodyText);
       
       if (bodyText && bodyText.trim() !== '') {
-        requestBody = JSON.parse(bodyText);
-        console.log("Parsed request body:", JSON.stringify(requestBody));
-        leadId = requestBody.leadId;
-        if (leadId) {
-          console.log("SUCCESS: Found leadId in request body:", leadId);
+        try {
+          requestBody = JSON.parse(bodyText);
+          console.log("Successfully parsed request body:", JSON.stringify(requestBody));
+          console.log("Request body type:", typeof requestBody);
+          console.log("Request body keys:", Object.keys(requestBody || {}));
+          
+          leadId = requestBody.leadId;
+          if (leadId) {
+            console.log("SUCCESS: Found leadId in request body:", leadId);
+          } else {
+            console.log("WARNING: No leadId property found in parsed body");
+            console.log("Available properties:", Object.keys(requestBody || {}));
+          }
+        } catch (jsonError) {
+          console.error("JSON parse error:", jsonError.message);
+          console.log("Attempting to extract leadId from raw text...");
+          
+          // Try to extract leadId from raw text if it contains it
+          const leadIdMatch = bodyText.match(/"leadId"\s*:\s*"([^"]+)"/);
+          if (leadIdMatch) {
+            leadId = leadIdMatch[1];
+            console.log("SUCCESS: Extracted leadId from raw text:", leadId);
+          }
         }
       } else {
         console.log("Request body is empty or whitespace only");
       }
-    } catch (parseError) {
-      console.log("Failed to parse request body as JSON:", parseError.message);
+    } catch (readError) {
+      console.error("Failed to read request body:", readError.message);
     }
 
     // If no leadId found in body, check URL parameters as fallback
