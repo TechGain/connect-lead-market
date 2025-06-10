@@ -27,6 +27,8 @@ export const useEnhancedNotificationPreferences = (userId?: string) => {
 
       try {
         setIsLoading(true);
+        console.log('Fetching notification preferences for user:', userId);
+        
         const { data, error } = await supabase
           .from('user_notification_preferences')
           .select('*')
@@ -39,13 +41,14 @@ export const useEnhancedNotificationPreferences = (userId?: string) => {
         }
 
         if (data) {
+          console.log('Found existing preferences:', data);
           setPreferences({
             email_notifications_enabled: data.email_notifications_enabled,
             preferred_lead_types: data.preferred_lead_types || [],
             preferred_locations: data.preferred_locations || []
           });
         } else {
-          // Create default preferences if none exist
+          console.log('No preferences found, creating default preferences');
           await createDefaultPreferences();
         }
       } catch (error) {
@@ -62,49 +65,85 @@ export const useEnhancedNotificationPreferences = (userId?: string) => {
     if (!userId) return;
 
     try {
-      const { error } = await supabase
+      console.log('Creating default preferences for user:', userId);
+      
+      const { data, error } = await supabase
         .from('user_notification_preferences')
         .insert({
           user_id: userId,
           email_notifications_enabled: true,
           preferred_lead_types: [],
           preferred_locations: []
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error creating default preferences:', error);
+        throw error;
       }
+
+      console.log('Created default preferences:', data);
+      
+      setPreferences({
+        email_notifications_enabled: data.email_notifications_enabled,
+        preferred_lead_types: data.preferred_lead_types || [],
+        preferred_locations: data.preferred_locations || []
+      });
+      
     } catch (error) {
       console.error('Exception creating default preferences:', error);
     }
   };
 
   const updatePreferences = async (updates: Partial<NotificationPreferences>) => {
-    if (!userId) return false;
+    if (!userId) {
+      console.error('No userId provided for preferences update');
+      return false;
+    }
 
     try {
       setIsSaving(true);
       
-      const { error } = await supabase
+      const updatedPreferences = { ...preferences, ...updates };
+      console.log('Updating preferences for user:', userId, 'with data:', updatedPreferences);
+      
+      const { data, error } = await supabase
         .from('user_notification_preferences')
-        .upsert({
-          user_id: userId,
-          ...preferences,
-          ...updates
-        });
+        .upsert(
+          {
+            user_id: userId,
+            email_notifications_enabled: updatedPreferences.email_notifications_enabled,
+            preferred_lead_types: updatedPreferences.preferred_lead_types,
+            preferred_locations: updatedPreferences.preferred_locations
+          },
+          {
+            onConflict: 'user_id',
+            ignoreDuplicates: false
+          }
+        )
+        .select()
+        .single();
 
       if (error) {
         console.error('Error updating notification preferences:', error);
-        toast.error('Failed to update notification preferences');
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        toast.error(`Failed to update notification preferences: ${error.message}`);
         return false;
       }
 
-      setPreferences(prev => ({ ...prev, ...updates }));
+      console.log('Successfully updated preferences:', data);
+      setPreferences(updatedPreferences);
       toast.success('Notification preferences updated successfully');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Exception updating notification preferences:', error);
-      toast.error('Failed to update notification preferences');
+      toast.error(`Failed to update notification preferences: ${error.message || 'Unknown error'}`);
       return false;
     } finally {
       setIsSaving(false);
@@ -112,14 +151,17 @@ export const useEnhancedNotificationPreferences = (userId?: string) => {
   };
 
   const updateEmailEnabled = async (enabled: boolean) => {
+    console.log('Updating email enabled to:', enabled);
     return updatePreferences({ email_notifications_enabled: enabled });
   };
 
   const updateLeadTypes = async (leadTypes: string[]) => {
+    console.log('Updating lead types to:', leadTypes);
     return updatePreferences({ preferred_lead_types: leadTypes });
   };
 
   const updateLocations = async (locations: string[]) => {
+    console.log('Updating locations to:', locations);
     return updatePreferences({ preferred_locations: locations });
   };
 
