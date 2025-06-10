@@ -69,14 +69,16 @@ export const useLeadUpload = () => {
         console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
         console.log(`Sending leadId: ${leadId}`);
 
-        // FIXED: Pass the object directly, let Supabase client handle JSON serialization
-        const requestBody = { leadId };
-        console.log('Request body object:', requestBody);
+        // PRIMARY FIX: Use headers to pass leadId instead of body
+        // This avoids the Supabase client body serialization issue
+        console.log('Using headers to pass leadId - more reliable than body');
 
         const result = await supabase.functions.invoke('send-lead-email-notification', {
-          body: requestBody,  // FIXED: Pass object directly instead of stringified JSON
+          body: { leadId }, // Keep as backup but use headers as primary
           headers: {
             'Content-Type': 'application/json',
+            'X-Lead-ID': leadId, // PRIMARY: Pass leadId via header
+            'X-Debug-Timestamp': new Date().toISOString(),
           }
         });
 
@@ -207,8 +209,9 @@ export const useLeadUpload = () => {
         }
       }
 
-      // Try to invoke email notifications
+      // Try to invoke email notifications with improved debugging
       console.log('=== STARTING EMAIL NOTIFICATIONS ===');
+      console.log(`About to call invokeEmailNotificationFunction with leadId: ${insertedLead.id}`);
       const emailResult = await invokeEmailNotificationFunction(insertedLead.id);
 
       // Analyze results and show appropriate messages

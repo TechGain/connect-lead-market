@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -415,72 +414,77 @@ serve(async (req: Request) => {
     let bodyText = '';
     let leadId;
     
-    // Read the body text
-    try {
-      bodyText = await req.text();
-      console.log("Raw body text received:", bodyText);
-      console.log("Body text length:", bodyText.length);
-    } catch (readError) {
-      console.error("Failed to read request body text:", readError);
-      return createJsonResponse({ 
-        error: "Failed to read request body", 
-        details: readError.message 
-      }, 400);
-    }
-    
-    // If we have body content, try to parse it as JSON
-    if (bodyText && bodyText.trim() !== '') {
+    // PRIMARY FIX: Check headers first for leadId (most reliable)
+    const headerLeadId = req.headers.get('x-lead-id') || req.headers.get('X-Lead-ID');
+    if (headerLeadId) {
+      console.log("SUCCESS: Found leadId in headers:", headerLeadId);
+      leadId = headerLeadId;
+    } else {
+      console.log("No leadId found in headers, checking body and URL params...");
+      
+      // Read the body text
       try {
-        const body = JSON.parse(bodyText);
-        leadId = body.leadId;
-        console.log("Successfully parsed JSON body:", body);
-        console.log("Extracted leadId:", leadId);
-      } catch (parseError) {
-        console.error("JSON parsing error:", parseError);
-        console.error("Failed to parse body:", bodyText);
-        
-        // Try to extract leadId from malformed JSON
-        const leadIdMatch = bodyText.match(/"?leadId"?\s*:\s*"?([^",}\s]+)"?/i);
-        if (leadIdMatch) {
-          leadId = leadIdMatch[1];
-          console.log("Extracted leadId from malformed JSON:", leadId);
-        } else {
-          return createJsonResponse({ 
-            error: "Invalid JSON in request body", 
-            details: parseError.message,
-            bodyReceived: bodyText,
-            hint: "Please provide valid JSON like { \"leadId\": \"your-lead-id\" }"
-          }, 400);
+        bodyText = await req.text();
+        console.log("Raw body text received:", bodyText);
+        console.log("Body text length:", bodyText.length);
+      } catch (readError) {
+        console.error("Failed to read request body text:", readError);
+        return createJsonResponse({ 
+          error: "Failed to read request body", 
+          details: readError.message 
+        }, 400);
+      }
+      
+      // If we have body content, try to parse it as JSON
+      if (bodyText && bodyText.trim() !== '') {
+        try {
+          const body = JSON.parse(bodyText);
+          leadId = body.leadId;
+          console.log("Successfully parsed JSON body:", body);
+          console.log("Extracted leadId from body:", leadId);
+        } catch (parseError) {
+          console.error("JSON parsing error:", parseError);
+          console.error("Failed to parse body:", bodyText);
+          
+          // Try to extract leadId from malformed JSON
+          const leadIdMatch = bodyText.match(/"?leadId"?\s*:\s*"?([^",}\s]+)"?/i);
+          if (leadIdMatch) {
+            leadId = leadIdMatch[1];
+            console.log("Extracted leadId from malformed JSON:", leadId);
+          }
         }
       }
-    } else {
-      // No body content - check URL params and headers as fallback
-      console.log("Empty body detected, checking URL params and headers for leadId...");
       
-      const url = new URL(req.url);
-      const urlLeadId = url.searchParams.get('leadId');
-      if (urlLeadId) {
-        console.log("Found leadId in URL params:", urlLeadId);
-        leadId = urlLeadId;
-      } else {
-        const headerLeadId = req.headers.get('x-lead-id');
-        if (headerLeadId) {
-          console.log("Found leadId in headers:", headerLeadId);
-          leadId = headerLeadId;
+      // If still no leadId, check URL params as final fallback
+      if (!leadId) {
+        console.log("No leadId in body, checking URL params...");
+        const url = new URL(req.url);
+        const urlLeadId = url.searchParams.get('leadId');
+        if (urlLeadId) {
+          console.log("Found leadId in URL params:", urlLeadId);
+          leadId = urlLeadId;
         }
       }
     }
 
     if (!leadId) {
-      console.error("No leadId found after all parsing strategies");
+      console.error("CRITICAL: No leadId found after all parsing strategies");
+      console.error("Checked: headers, body, URL params");
+      console.error("Headers received:", Object.fromEntries(req.headers.entries()));
+      console.error("Body received:", bodyText);
       return createJsonResponse({ 
         error: "Lead ID is required", 
-        received: { bodyText, contentLength, contentType },
-        hint: "Please provide leadId in request body as JSON: { \"leadId\": \"your-lead-id\" }"
+        received: { 
+          headers: Object.fromEntries(req.headers.entries()),
+          bodyText, 
+          contentLength, 
+          contentType 
+        },
+        hint: "Please provide leadId in X-Lead-ID header or request body as JSON: { \"leadId\": \"your-lead-id\" }"
       }, 400);
     }
 
-    console.log(`Successfully extracted leadId: ${leadId}`);
+    console.log(`SUCCESS: Using leadId: ${leadId}`);
     console.log(`Processing notification for lead: ${leadId}`);
     
     const result = await processLeadNotification(leadId);
