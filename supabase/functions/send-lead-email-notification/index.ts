@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -357,66 +356,40 @@ serve(async (req: Request) => {
     console.log("URL:", req.url);
     console.log("Headers:", Object.fromEntries(req.headers.entries()));
     
-    // Improved body parsing with multiple fallback strategies
+    // Get content info
     const contentLength = req.headers.get('content-length');
     const contentType = req.headers.get('content-type');
     console.log("Content-Length:", contentLength);
     console.log("Content-Type:", contentType);
     
-    let body;
+    let bodyText = '';
     let leadId;
     
-    // Strategy 1: Try to read body text first
-    let bodyText = '';
+    // Read the body text
     try {
       bodyText = await req.text();
-      console.log("Raw body text:", bodyText);
+      console.log("Raw body text received:", bodyText);
       console.log("Body text length:", bodyText.length);
     } catch (readError) {
       console.error("Failed to read request body text:", readError);
+      return createJsonResponse({ 
+        error: "Failed to read request body", 
+        details: readError.message 
+      }, 400);
     }
     
-    if (!bodyText || bodyText.trim() === '') {
-      console.log("Empty body detected, checking URL params and headers for leadId...");
-      
-      // Strategy 2: Check URL parameters
-      const url = new URL(req.url);
-      const urlLeadId = url.searchParams.get('leadId');
-      if (urlLeadId) {
-        console.log("Found leadId in URL params:", urlLeadId);
-        leadId = urlLeadId;
-      } else {
-        // Strategy 3: Check headers
-        const headerLeadId = req.headers.get('x-lead-id');
-        if (headerLeadId) {
-          console.log("Found leadId in headers:", headerLeadId);
-          leadId = headerLeadId;
-        } else {
-          console.error("No leadId found in body, URL params, or headers");
-          return createJsonResponse({ 
-            error: "Lead ID is required", 
-            hint: "Please provide leadId in request body as JSON, URL parameter, or x-lead-id header",
-            debug: {
-              bodyLength: bodyText.length,
-              contentLength,
-              contentType,
-              urlParams: Object.fromEntries(url.searchParams.entries()),
-              method: req.method
-            }
-          }, 400);
-        }
-      }
-    } else {
-      // Strategy 4: Parse JSON body
+    // If we have body content, try to parse it as JSON
+    if (bodyText && bodyText.trim() !== '') {
       try {
-        body = JSON.parse(bodyText);
+        const body = JSON.parse(bodyText);
         leadId = body.leadId;
         console.log("Successfully parsed JSON body:", body);
+        console.log("Extracted leadId:", leadId);
       } catch (parseError) {
         console.error("JSON parsing error:", parseError);
         console.error("Failed to parse body:", bodyText);
         
-        // Strategy 5: Try to extract leadId from malformed JSON
+        // Try to extract leadId from malformed JSON
         const leadIdMatch = bodyText.match(/"?leadId"?\s*:\s*"?([^",}\s]+)"?/i);
         if (leadIdMatch) {
           leadId = leadIdMatch[1];
@@ -430,18 +403,36 @@ serve(async (req: Request) => {
           }, 400);
         }
       }
+    } else {
+      // No body content - check URL params and headers as fallback
+      console.log("Empty body detected, checking URL params and headers for leadId...");
+      
+      const url = new URL(req.url);
+      const urlLeadId = url.searchParams.get('leadId');
+      if (urlLeadId) {
+        console.log("Found leadId in URL params:", urlLeadId);
+        leadId = urlLeadId;
+      } else {
+        const headerLeadId = req.headers.get('x-lead-id');
+        if (headerLeadId) {
+          console.log("Found leadId in headers:", headerLeadId);
+          leadId = headerLeadId;
+        }
+      }
     }
 
     if (!leadId) {
       console.error("No leadId found after all parsing strategies");
       return createJsonResponse({ 
         error: "Lead ID is required", 
-        received: { body, bodyText, contentLength, contentType },
-        hint: "Please provide leadId in request body, URL parameter, or header"
+        received: { bodyText, contentLength, contentType },
+        hint: "Please provide leadId in request body as JSON: { \"leadId\": \"your-lead-id\" }"
       }, 400);
     }
 
+    console.log(`Successfully extracted leadId: ${leadId}`);
     console.log(`Processing notification for lead: ${leadId}`);
+    
     const result = await processLeadNotification(leadId);
     console.log("Notification processing completed successfully:", result);
     return createJsonResponse(result);

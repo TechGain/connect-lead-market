@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -68,12 +69,15 @@ export const useLeadUpload = () => {
         console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
         console.log(`Sending leadId: ${leadId}`);
 
-        // Fixed invocation with proper body and headers
+        // CRITICAL FIX: Supabase client requires stringified JSON in body
         const requestBody = { leadId };
-        console.log('Request body being sent:', JSON.stringify(requestBody));
+        const bodyString = JSON.stringify(requestBody);
+        console.log('Request body object:', requestBody);
+        console.log('Request body string being sent:', bodyString);
+        console.log('Body string length:', bodyString.length);
 
         const result = await supabase.functions.invoke('send-lead-email-notification', {
-          body: requestBody,
+          body: bodyString,  // KEY FIX: Send stringified JSON, not object
           headers: {
             'Content-Type': 'application/json',
           }
