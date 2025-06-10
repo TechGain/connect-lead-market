@@ -13,9 +13,9 @@ export const sendEmailNotificationAsync = async (leadId: string) => {
     console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
     console.log(`Sending leadId in body:`, { leadId });
 
-    // Call the edge function with proper body formatting
+    // Call the edge function - pass body as object, Supabase client handles JSON encoding
     const result = await supabase.functions.invoke('send-lead-email-notification', {
-      body: JSON.stringify({ leadId }),
+      body: { leadId },
       headers: {
         'Content-Type': 'application/json',
       }
