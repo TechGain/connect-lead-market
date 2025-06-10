@@ -69,15 +69,12 @@ export const useLeadUpload = () => {
         console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
         console.log(`Sending leadId: ${leadId}`);
 
-        // CRITICAL FIX: Supabase client requires stringified JSON in body
+        // FIXED: Pass the object directly, let Supabase client handle JSON serialization
         const requestBody = { leadId };
-        const bodyString = JSON.stringify(requestBody);
         console.log('Request body object:', requestBody);
-        console.log('Request body string being sent:', bodyString);
-        console.log('Body string length:', bodyString.length);
 
         const result = await supabase.functions.invoke('send-lead-email-notification', {
-          body: bodyString,  // KEY FIX: Send stringified JSON, not object
+          body: requestBody,  // FIXED: Pass object directly instead of stringified JSON
           headers: {
             'Content-Type': 'application/json',
           }
