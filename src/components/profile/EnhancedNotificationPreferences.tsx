@@ -1,16 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEnhancedNotificationPreferences } from '@/hooks/use-enhanced-notification-preferences';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Skeleton } from '@/components/ui/skeleton';
-import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface EnhancedNotificationPreferencesProps {
@@ -25,36 +23,13 @@ const LEAD_TYPES = [
   'Handyman Services', 'Tree Services', 'Gutter Services', 'Siding', 'Foundation Repair'
 ];
 
-// Extract state from location string
-const extractStateFromLocation = (location: string): string => {
-  // Handle "City, State" format
-  if (location.includes(',')) {
-    const parts = location.split(',');
-    return parts[parts.length - 1].trim();
-  }
-  
-  // For single word locations, map known cities to states
-  const cityToStateMap: Record<string, string> = {
-    'Las Vegas': 'Nevada',
-    'Los Angeles': 'California',
-    'San Francisco': 'California',
-    'San Bernardino': 'California',
-    'Riverside': 'California',
-    'Palmdale': 'California',
-    'Lancaster': 'California',
-    'Irvine': 'California',
-    'Beverly Hills': 'California',
-    'Sunnyvale': 'California',
-    'Palo Alto': 'California',
-    'Oakland': 'California',
-    'Richmond': 'California',
-    'Novato': 'California',
-    'Vacaville': 'California',
-    'Georgetown': 'Texas'
-  };
-  
-  return cityToStateMap[location] || location;
-};
+const AVAILABLE_STATES = [
+  'California',
+  'Florida', 
+  'Texas',
+  'Washington',
+  'Nevada'
+];
 
 export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificationPreferencesProps) => {
   const { user } = useUserRole();
@@ -69,41 +44,8 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
     updateLocations
   } = useEnhancedNotificationPreferences(userId);
 
-  const [availableStates, setAvailableStates] = useState<string[]>([]);
   const [leadTypesOpen, setLeadTypesOpen] = useState(false);
   const [statesOpen, setStatesOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchStates = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('leads')
-          .select('location')
-          .not('location', 'is', null);
-
-        if (error) {
-          console.error('Error fetching locations:', error);
-          return;
-        }
-
-        // Extract unique states from locations
-        const states = new Set<string>();
-        data.forEach(lead => {
-          if (lead.location) {
-            const state = extractStateFromLocation(lead.location);
-            states.add(state);
-          }
-        });
-
-        const sortedStates = Array.from(states).sort();
-        setAvailableStates(sortedStates);
-      } catch (error) {
-        console.error('Exception fetching states:', error);
-      }
-    };
-
-    fetchStates();
-  }, []);
 
   const handleEmailToggle = async (checked: boolean) => {
     await updateEmailEnabled(checked);
@@ -144,7 +86,7 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
   };
 
   const handleSelectAllStates = () => {
-    updateLocations(availableStates);
+    updateLocations(AVAILABLE_STATES);
   };
 
   const handleClearAllStates = () => {
@@ -254,7 +196,7 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
                   <div className="text-left">
                     <h4 className="font-medium">Service States</h4>
                     <p className="text-sm text-gray-500">
-                      {getSelectionText(preferences.preferred_locations, availableStates.length)}
+                      {getSelectionText(preferences.preferred_locations, AVAILABLE_STATES.length)}
                     </p>
                   </div>
                   {statesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -269,7 +211,7 @@ export const EnhancedNotificationPreferences = ({ userEmail }: EnhancedNotificat
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    {availableStates.map((state) => (
+                    {AVAILABLE_STATES.map((state) => (
                       <div key={state} className="flex items-center space-x-2">
                         <Checkbox
                           id={`state-${state}`}
