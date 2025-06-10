@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for formatting values
  */
@@ -39,6 +40,7 @@ export function roundToNearestDollar(amount: number): number {
  * Formats a lead type from kebab-case to Title Case
  * Example: "full-home-renovation" -> "Full Home Renovation"
  * Special case for "hvac" -> "HVAC" (all caps)
+ * Special case for "adu" -> "ADU" (all caps)
  */
 export function formatLeadType(type: string): string {
   if (!type) return '';
@@ -46,6 +48,11 @@ export function formatLeadType(type: string): string {
   // Special case for "hvac" - return it in all caps
   if (type.toLowerCase() === 'hvac') {
     return 'HVAC';
+  }
+  
+  // Special case for "adu" - return it in all caps
+  if (type.toLowerCase() === 'adu') {
+    return 'ADU';
   }
   
   return type
