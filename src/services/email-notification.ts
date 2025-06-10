@@ -11,10 +11,11 @@ export const sendEmailNotificationAsync = async (leadId: string) => {
     await trackNotificationAttempt(leadId, 'email', 'pending');
 
     console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
+    console.log(`Sending leadId in body:`, { leadId });
 
-    // Pass leadId in request body - this is the proper way for Supabase client invoke
+    // Call the edge function with proper body formatting
     const result = await supabase.functions.invoke('send-lead-email-notification', {
-      body: { leadId },
+      body: JSON.stringify({ leadId }),
       headers: {
         'Content-Type': 'application/json',
       }
