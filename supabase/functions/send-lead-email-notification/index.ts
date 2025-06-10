@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -406,21 +407,30 @@ serve(async (req: Request) => {
     console.log("Headers:", Object.fromEntries(req.headers.entries()));
     
     let leadId;
+    let requestBody;
     
-    // PRIORITY 1: Check request body (most compatible with Supabase client)
+    // Read the request body once and store it
     try {
       const bodyText = await req.text();
-      console.log("Raw body text received:", bodyText);
+      console.log("Raw body text received:", JSON.stringify(bodyText));
       
       if (bodyText && bodyText.trim() !== '') {
-        const body = JSON.parse(bodyText);
-        leadId = body.leadId;
-        console.log("SUCCESS: Found leadId in request body:", leadId);
+        requestBody = JSON.parse(bodyText);
+        console.log("Parsed request body:", JSON.stringify(requestBody));
+        leadId = requestBody.leadId;
+        if (leadId) {
+          console.log("SUCCESS: Found leadId in request body:", leadId);
+        }
+      } else {
+        console.log("Request body is empty or whitespace only");
       }
     } catch (parseError) {
-      console.log("No valid JSON body found, checking URL parameters...");
-      
-      // PRIORITY 2: Check URL parameters (fallback)
+      console.log("Failed to parse request body as JSON:", parseError.message);
+    }
+
+    // If no leadId found in body, check URL parameters as fallback
+    if (!leadId) {
+      console.log("No leadId in body, checking URL parameters...");
       const url = new URL(req.url);
       const urlLeadId = url.searchParams.get('leadId');
       if (urlLeadId) {
@@ -429,7 +439,7 @@ serve(async (req: Request) => {
       } else {
         console.log("No leadId in URL parameters, checking custom header...");
         
-        // PRIORITY 3: Check custom header (final fallback)
+        // Final fallback: check custom header
         const headerLeadId = req.headers.get('x-lead-id');
         if (headerLeadId) {
           console.log("SUCCESS: Found leadId in custom header:", headerLeadId);
@@ -440,12 +450,17 @@ serve(async (req: Request) => {
 
     if (!leadId) {
       console.error("CRITICAL: No leadId found after all parsing strategies");
-      console.error("Body checked for leadId");
+      console.error("Request body was:", requestBody ? JSON.stringify(requestBody) : "null/undefined");
       console.error("URL searched:", req.url);
       console.error("Headers searched:", req.headers.get('x-lead-id'));
       return createJsonResponse({ 
         error: "Lead ID is required", 
-        hint: "Please provide leadId in request body as JSON: { \"leadId\": \"your-lead-id\" }, as URL parameter: ?leadId=your-lead-id, or in x-lead-id header"
+        hint: "Please provide leadId in request body as JSON: { \"leadId\": \"your-lead-id\" }, as URL parameter: ?leadId=your-lead-id, or in x-lead-id header",
+        debug: {
+          bodyReceived: requestBody,
+          urlParams: Object.fromEntries(new URL(req.url).searchParams.entries()),
+          headers: Object.fromEntries(req.headers.entries())
+        }
       }, 400);
     }
 
