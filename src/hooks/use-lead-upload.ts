@@ -69,34 +69,53 @@ export const useLeadUpload = () => {
         console.log(`Invoking send-lead-email-notification at ${new Date().toISOString()}`);
         console.log(`Sending leadId: ${leadId}`);
 
-        // PRIMARY FIX: Use headers to pass leadId instead of body
-        // This avoids the Supabase client body serialization issue
-        console.log('Using headers to pass leadId - more reliable than body');
+        // SIMPLIFIED APPROACH: Use the function with leadId as a query parameter
+        // This is more reliable than headers or body parsing
+        console.log('Using simplified URL parameter approach for maximum reliability');
 
         const result = await supabase.functions.invoke('send-lead-email-notification', {
-          body: { leadId }, // Keep as backup but use headers as primary
+          body: {}, // Empty body to avoid serialization issues
           headers: {
             'Content-Type': 'application/json',
-            'X-Lead-ID': leadId, // PRIMARY: Pass leadId via header
-            'X-Debug-Timestamp': new Date().toISOString(),
           }
+        });
+
+        // Add leadId as query parameter in the function URL (handled by supabase client)
+        const manualResult = await fetch(`${supabase.supabaseUrl}/functions/v1/send-lead-email-notification?leadId=${encodeURIComponent(leadId)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabase.supabaseKey}`,
+            'apikey': supabase.supabaseKey,
+          },
+          body: JSON.stringify({ leadId }) // Keep leadId in body as backup
         });
 
         const duration = Date.now() - startTime;
         console.log(`Email notification function completed in ${duration}ms`);
-        console.log('Function result:', result);
+        
+        let finalResult;
+        if (manualResult.ok) {
+          const responseData = await manualResult.json();
+          finalResult = { data: responseData, error: null };
+          console.log('Manual fetch succeeded:', responseData);
+        } else {
+          const errorText = await manualResult.text();
+          finalResult = { data: null, error: { message: errorText, status: manualResult.status } };
+          console.error('Manual fetch failed:', errorText);
+        }
 
-        if (result.error) {
-          lastError = result.error;
-          console.error(`Email notification function returned error:`, result.error);
+        if (finalResult.error) {
+          lastError = finalResult.error;
+          console.error(`Email notification function returned error:`, finalResult.error);
           
           // Track failed attempt
           await trackNotificationAttempt(
             leadId, 
             'email', 
             attempt === maxRetries ? 'failed' : 'retrying',
-            result.error.message || JSON.stringify(result.error),
-            result
+            finalResult.error.message || JSON.stringify(finalResult.error),
+            finalResult
           );
 
           if (attempt < maxRetries) {
@@ -106,11 +125,11 @@ export const useLeadUpload = () => {
             continue;
           }
         } else {
-          console.log(`Email notification function succeeded:`, result.data);
+          console.log(`Email notification function succeeded:`, finalResult.data);
           
           // Track successful attempt
-          await trackNotificationAttempt(leadId, 'email', 'success', null, result.data);
-          return { success: true, data: result.data, error: null };
+          await trackNotificationAttempt(leadId, 'email', 'success', null, finalResult.data);
+          return { success: true, data: finalResult.data, error: null };
         }
       } catch (error: any) {
         lastError = error;
@@ -209,7 +228,7 @@ export const useLeadUpload = () => {
         }
       }
 
-      // Try to invoke email notifications with improved debugging
+      // Try to invoke email notifications with simplified approach
       console.log('=== STARTING EMAIL NOTIFICATIONS ===');
       console.log(`About to call invokeEmailNotificationFunction with leadId: ${insertedLead.id}`);
       const emailResult = await invokeEmailNotificationFunction(insertedLead.id);

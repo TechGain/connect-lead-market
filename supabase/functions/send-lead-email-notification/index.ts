@@ -405,82 +405,38 @@ serve(async (req: Request) => {
     console.log("URL:", req.url);
     console.log("Headers:", Object.fromEntries(req.headers.entries()));
     
-    // Get content info
-    const contentLength = req.headers.get('content-length');
-    const contentType = req.headers.get('content-type');
-    console.log("Content-Length:", contentLength);
-    console.log("Content-Type:", contentType);
-    
-    let bodyText = '';
     let leadId;
     
-    // PRIMARY FIX: Check headers first for leadId (most reliable)
-    const headerLeadId = req.headers.get('x-lead-id') || req.headers.get('X-Lead-ID');
-    if (headerLeadId) {
-      console.log("SUCCESS: Found leadId in headers:", headerLeadId);
-      leadId = headerLeadId;
+    // SIMPLIFIED APPROACH: Check URL parameters first (most reliable)
+    const url = new URL(req.url);
+    const urlLeadId = url.searchParams.get('leadId');
+    if (urlLeadId) {
+      console.log("SUCCESS: Found leadId in URL parameters:", urlLeadId);
+      leadId = urlLeadId;
     } else {
-      console.log("No leadId found in headers, checking body and URL params...");
+      console.log("No leadId in URL parameters, checking body...");
       
-      // Read the body text
+      // Fallback: Try to read from body
       try {
-        bodyText = await req.text();
+        const bodyText = await req.text();
         console.log("Raw body text received:", bodyText);
-        console.log("Body text length:", bodyText.length);
-      } catch (readError) {
-        console.error("Failed to read request body text:", readError);
-        return createJsonResponse({ 
-          error: "Failed to read request body", 
-          details: readError.message 
-        }, 400);
-      }
-      
-      // If we have body content, try to parse it as JSON
-      if (bodyText && bodyText.trim() !== '') {
-        try {
+        
+        if (bodyText && bodyText.trim() !== '') {
           const body = JSON.parse(bodyText);
           leadId = body.leadId;
-          console.log("Successfully parsed JSON body:", body);
-          console.log("Extracted leadId from body:", leadId);
-        } catch (parseError) {
-          console.error("JSON parsing error:", parseError);
-          console.error("Failed to parse body:", bodyText);
-          
-          // Try to extract leadId from malformed JSON
-          const leadIdMatch = bodyText.match(/"?leadId"?\s*:\s*"?([^",}\s]+)"?/i);
-          if (leadIdMatch) {
-            leadId = leadIdMatch[1];
-            console.log("Extracted leadId from malformed JSON:", leadId);
-          }
+          console.log("Found leadId in body:", leadId);
         }
-      }
-      
-      // If still no leadId, check URL params as final fallback
-      if (!leadId) {
-        console.log("No leadId in body, checking URL params...");
-        const url = new URL(req.url);
-        const urlLeadId = url.searchParams.get('leadId');
-        if (urlLeadId) {
-          console.log("Found leadId in URL params:", urlLeadId);
-          leadId = urlLeadId;
-        }
+      } catch (parseError) {
+        console.error("Failed to parse body:", parseError);
       }
     }
 
     if (!leadId) {
       console.error("CRITICAL: No leadId found after all parsing strategies");
-      console.error("Checked: headers, body, URL params");
-      console.error("Headers received:", Object.fromEntries(req.headers.entries()));
-      console.error("Body received:", bodyText);
+      console.error("URL searched:", req.url);
       return createJsonResponse({ 
         error: "Lead ID is required", 
-        received: { 
-          headers: Object.fromEntries(req.headers.entries()),
-          bodyText, 
-          contentLength, 
-          contentType 
-        },
-        hint: "Please provide leadId in X-Lead-ID header or request body as JSON: { \"leadId\": \"your-lead-id\" }"
+        hint: "Please provide leadId as URL parameter: ?leadId=your-lead-id or in request body as JSON: { \"leadId\": \"your-lead-id\" }"
       }, 400);
     }
 
