@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -408,46 +407,45 @@ serve(async (req: Request) => {
     
     let leadId;
     
-    // PRIORITY 1: Check URL parameters (most compatible)
-    const url = new URL(req.url);
-    const urlLeadId = url.searchParams.get('leadId');
-    if (urlLeadId) {
-      console.log("SUCCESS: Found leadId in URL parameters:", urlLeadId);
-      leadId = urlLeadId;
-    } else {
-      console.log("No leadId in URL parameters, checking custom header...");
+    // PRIORITY 1: Check request body (most compatible with Supabase client)
+    try {
+      const bodyText = await req.text();
+      console.log("Raw body text received:", bodyText);
       
-      // PRIORITY 2: Check custom header
-      const headerLeadId = req.headers.get('x-lead-id');
-      if (headerLeadId) {
-        console.log("SUCCESS: Found leadId in custom header:", headerLeadId);
-        leadId = headerLeadId;
+      if (bodyText && bodyText.trim() !== '') {
+        const body = JSON.parse(bodyText);
+        leadId = body.leadId;
+        console.log("SUCCESS: Found leadId in request body:", leadId);
+      }
+    } catch (parseError) {
+      console.log("No valid JSON body found, checking URL parameters...");
+      
+      // PRIORITY 2: Check URL parameters (fallback)
+      const url = new URL(req.url);
+      const urlLeadId = url.searchParams.get('leadId');
+      if (urlLeadId) {
+        console.log("SUCCESS: Found leadId in URL parameters:", urlLeadId);
+        leadId = urlLeadId;
       } else {
-        console.log("No leadId in header, checking body...");
+        console.log("No leadId in URL parameters, checking custom header...");
         
-        // PRIORITY 3: Fallback to body
-        try {
-          const bodyText = await req.text();
-          console.log("Raw body text received:", bodyText);
-          
-          if (bodyText && bodyText.trim() !== '') {
-            const body = JSON.parse(bodyText);
-            leadId = body.leadId;
-            console.log("Found leadId in body:", leadId);
-          }
-        } catch (parseError) {
-          console.error("Failed to parse body:", parseError);
+        // PRIORITY 3: Check custom header (final fallback)
+        const headerLeadId = req.headers.get('x-lead-id');
+        if (headerLeadId) {
+          console.log("SUCCESS: Found leadId in custom header:", headerLeadId);
+          leadId = headerLeadId;
         }
       }
     }
 
     if (!leadId) {
       console.error("CRITICAL: No leadId found after all parsing strategies");
+      console.error("Body checked for leadId");
       console.error("URL searched:", req.url);
       console.error("Headers searched:", req.headers.get('x-lead-id'));
       return createJsonResponse({ 
         error: "Lead ID is required", 
-        hint: "Please provide leadId as URL parameter: ?leadId=your-lead-id, x-lead-id header, or in request body as JSON: { \"leadId\": \"your-lead-id\" }"
+        hint: "Please provide leadId in request body as JSON: { \"leadId\": \"your-lead-id\" }, as URL parameter: ?leadId=your-lead-id, or in x-lead-id header"
       }, 400);
     }
 
