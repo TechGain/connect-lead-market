@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Pencil, Trash2, RefreshCcw } from 'lucide-react';
+import { Calendar, Pencil, Trash2, RefreshCcw, RotateCcw } from 'lucide-react';
 import { Lead } from '@/types/lead';
 import { generateGoogleCalendarUrl } from '@/lib/utils';
+import { useRefundRequest } from '@/hooks/use-refund-request';
+import RefundRequestDialog from '@/components/refund/RefundRequestDialog';
 
 interface LeadCardActionsProps {
   lead: Lead;
@@ -22,6 +24,17 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
   onRate,
   isPurchased = false
 }) => {
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [existingRefundRequest, setExistingRefundRequest] = useState<any>(null);
+  const { checkExistingRequest } = useRefundRequest();
+
+  // Check for existing refund request when component mounts
+  useEffect(() => {
+    if (isPurchased && lead.status === 'sold') {
+      checkExistingRequest(lead.id).then(setExistingRefundRequest);
+    }
+  }, [lead.id, isPurchased, lead.status, checkExistingRequest]);
+
   // Check if lead can be edited/deleted
   const isErased = lead.status === 'erased';
   const canEditLead = isOwner && !['sold', 'paid', 'refunded'].includes(lead.status);
@@ -60,9 +73,31 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
 
   // Only show the Add to Calendar button for purchased leads with appointment times
   const showCalendarButton = isPurchased && lead.appointmentTime;
+
+  // Show refund request button for purchased leads that haven't been refunded
+  const showRefundButton = isPurchased && 
+    lead.status === 'sold' && 
+    !existingRefundRequest;
+
+  // Show refund request status if there's an existing request
+  const getRefundStatus = () => {
+    if (!existingRefundRequest) return null;
+    
+    const statusColors = {
+      pending: 'text-yellow-600',
+      approved: 'text-green-600', 
+      denied: 'text-red-600'
+    };
+    
+    return (
+      <span className={`text-xs px-2 py-1 rounded-full bg-gray-100 ${statusColors[existingRefundRequest.status as keyof typeof statusColors]}`}>
+        Refund {existingRefundRequest.status}
+      </span>
+    );
+  };
   
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       {isPurchased && (
         <>
           {onRate && (
@@ -87,6 +122,21 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
               <span className="hidden sm:inline">Add to Calendar</span>
             </Button>
           )}
+
+          {showRefundButton && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRefundDialogOpen(true)}
+              className="flex items-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50"
+              title="Request Refund"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span className="hidden sm:inline">Request Refund</span>
+            </Button>
+          )}
+
+          {getRefundStatus()}
         </>
       )}
       
@@ -115,6 +165,12 @@ const LeadCardActions: React.FC<LeadCardActionsProps> = ({
           <Trash2 className="h-4 w-4" />
         </Button>
       )}
+
+      <RefundRequestDialog 
+        open={refundDialogOpen}
+        onOpenChange={setRefundDialogOpen}
+        lead={lead}
+      />
     </div>
   );
 };

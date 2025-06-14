@@ -306,6 +306,56 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_requests: {
+        Row: {
+          admin_notes: string | null
+          buyer_id: string
+          created_at: string
+          id: string
+          lead_id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string
+          requested_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          buyer_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason: string
+          requested_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string
+          requested_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_notification_preferences: {
         Row: {
           created_at: string
